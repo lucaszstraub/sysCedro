@@ -1,0 +1,38 @@
+{
+  "name": "sys-cedro-wms",
+  "version": "1.0.0",
+  "description": "Sistema de Gerenciamento de Armazém para loja de móveis",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && nodemon --watch electron --ext js --exec \\\"electron .\\\"\"",
+    "build": "vite build",
+    "start": "npm run build && electron .",
+    "db:setup": "node scripts/setup-db.js",
+    "db:diagrama": "node scripts/gerar-diagrama-db.js"
+  },
+  "keywords": [
+    "wms",
+    "electron",
+    "react",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "pdf-lib": "^1.17.1",
+    "pdfkit": "^0.15.2",
+    "pg": "^8.13.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^9.1.0",
+    "electron": "^33.4.11",
+    "nodemon": "^3.1.14",
+    "vite": "^6.0.3",
+    "wait-on": "^8.0.1"
+  }
+}
