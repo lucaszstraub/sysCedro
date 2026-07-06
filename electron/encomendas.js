@@ -903,6 +903,35 @@ async function estornarRecebimento(recebimentoId) {
   }
 }
 
+async function aumentarReservaVendaItem(client, vendaItemId, quantidade) {
+  if (!vendaItemId || quantidade <= 0) return;
+
+  const viResult = await client.query('SELECT * FROM venda_itens WHERE id = $1', [vendaItemId]);
+  if (viResult.rowCount === 0) return;
+  const vi = viResult.rows[0];
+  if (!vi.produto_id) return;
+
+  const reserva = await client.query(`
+    SELECT id FROM estoque_reservas
+    WHERE venda_item_id = $1 AND status = 'ativa'
+    LIMIT 1
+  `, [vendaItemId]);
+
+  if (reserva.rowCount > 0) {
+    await client.query(`
+      UPDATE estoque_reservas
+      SET quantidade = quantidade + $2, atualizado_em = NOW()
+      WHERE id = $1
+    `, [reserva.rows[0].id, quantidade]);
+    return;
+  }
+
+  await client.query(`
+    INSERT INTO estoque_reservas (venda_id, venda_item_id, produto_id, quantidade, status)
+    VALUES ($1, $2, $3, $4, 'ativa')
+  `, [vi.venda_id, vendaItemId, vi.produto_id, quantidade]);
+}
+
 async function receberEncomendaItem(data) {
   const db = getPool();
   const client = await db.connect();
@@ -1021,7 +1050,12 @@ async function receberEncomendaItem(data) {
 
     await atualizarStatusEncomendaRecebimento(client, item.encomenda_id);
 
-    const vendaItemId = destino === 'cliente' ? (item.venda_item_id || data.venda_item_id || null) : null;
+    const vendaItemIdReserva = item.venda_item_id || data.venda_item_id || null;
+    if (vendaItemIdReserva) {
+      await aumentarReservaVendaItem(client, vendaItemIdReserva, qty);
+    }
+
+    const vendaItemId = destino === 'cliente' ? vendaItemIdReserva : null;
     if (vendaItemId) {
       await markupVendas.processarMarkupAposRecebimento(client, {
         recebimentoId: recebimento.rows[0].id,
@@ -1032,6 +1066,18 @@ async function receberEncomendaItem(data) {
     }
 
     await client.query('COMMIT');
+
+    if (vendaItemId) {
+      const vendaRef = await db.query(
+        'SELECT venda_id FROM venda_itens WHERE id = $1',
+        [vendaItemId]
+      );
+      const vendaIdSync = vendaRef.rows[0]?.venda_id;
+      if (vendaIdSync) {
+        const { sincronizarComissoesVenda } = require('./comissaoVendas');
+        await sincronizarComissoesVenda(vendaIdSync);
+      }
+    }
 
     const entregaIds = await db.query(`
       SELECT DISTINCT e.id

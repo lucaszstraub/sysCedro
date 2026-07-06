@@ -7,7 +7,7 @@ const {
   calcularValorComissao,
   getRegrasMap,
 } = require('./comissaoRegras');
-const { mesReferenciaFromDate, registrarAjusteComissao } = require('./comissaoAjustes');
+const { mesReferenciaFromDate, mesReferenciaFromVenda, registrarAjusteComissao } = require('./comissaoAjustes');
 
 function round2(n) {
   return Math.round((Number(n) || 0) * 100) / 100;
@@ -138,7 +138,8 @@ async function sincronizarComissaoItem(client, itemRow, regras, vendaCtx, gerent
     [itemRow.venda_item_id]
   );
 
-  const mesReferencia = mesReferenciaFromDate(vendaCtx.criado_em);
+  const mesReferencia = await mesReferenciaFromVenda(client, itemRow.venda_id)
+    || mesReferenciaFromDate(vendaCtx.criado_em);
   const ctxBase = {
     mes_referencia: mesReferencia,
     venda_id: itemRow.venda_id,
@@ -289,6 +290,20 @@ async function limparComissoesVendasInvalidas(client) {
   }
 }
 
+async function repararPrecosVendasInconsistentes(client) {
+  const { recalcularTotaisVenda } = require('./vendaEdicao');
+  const inconsistentes = await client.query(`
+    SELECT id FROM vendas
+    WHERE status IN ('confirmada', 'entregue')
+      AND COALESCE(desativada, false) = false
+      AND COALESCE(total_pago, 0) > COALESCE(subtotal_bruto, 0) + 0.01
+  `);
+  for (const row of inconsistentes.rows) {
+    await recalcularTotaisVenda(client, row.id);
+  }
+  return inconsistentes.rowCount;
+}
+
 async function sincronizarComissoes() {
   assertAcessoComissaoVendas();
   const db = getPool();
@@ -298,6 +313,7 @@ async function sincronizarComissoes() {
   try {
     await client.query('BEGIN');
     await limparComissoesVendasInvalidas(client);
+    await repararPrecosVendasInconsistentes(client);
 
     const gerenteBeneficiarioId = await resolverBeneficiarioGerente(client, regras.gerente);
 
@@ -368,6 +384,9 @@ async function sincronizarComissoesVenda(vendaId) {
       await client.query('COMMIT');
       return { itens_processados: 0 };
     }
+
+    const { recalcularTotaisVenda } = require('./vendaEdicao');
+    await recalcularTotaisVenda(client, vendaId);
 
     const itens = await client.query(`
       SELECT

@@ -1,0 +1,916 @@
+pedido_id,pedido_data,pedido_vendedora,pedido_vtotal,pedido_rt,clientName,clientCpf,clientPnumber,clientAddress,clientEmail,FatorDesconto,,,
+26602,03/07/2024,Liane,"5.776,00",0,Joice SIlveira Andretti,888.308.029-72,(48) 98431-6280,"Rua sete de setembro, 611,Biguaçu, SC, 88160164",,1,3,7,2024
+27056,06/07/2024,Salete,"4.380,00",0,Robson Rodrigues,054.378.649-81,(47) 99217-2888,"R. Papa João Paulo I - Centro, 75,Palhoça, SC, 88131170",,"0,9201680672",6,7,2024
+27055,06/07/2024,Salete,"8.800,00",0,João Rafael Rubk,046.739.249-83,(48) 99205-2092,"R. Cel. Eleseu Guilherme,São José, SC, 88101430",,1,6,7,2024
+26603,04/07/2024,Salete,"1.790,00",0,Bell Fanney de Medeiros,245.270.419-91,(48) 99642-3614,"Rua José Candido da Silva, 385,Florianópolis, SC,",,1,4,7,2024
+26605,04/07/2024,Liane,"14.000,00",0,Zaira Medeiros De souza,303.261.099-00,(48) 99949-4649,"Rua Almirante Alvim,Florianópolis, SC,",,"1,000571755",4,7,2024
+27057,06/07/2024,Liane,"9.678,00",0,Marcela Nomura,064.919.149-84,(48) 99946-3434,"Rua Bocaiuva, 1581,Florianópolis, SC,",,1,6,7,2024
+26606,05/07/2024,Liane,"3.885,00",0,Gabriel Sousa,069.949.019-71,,"Avenida Brasilia, 196,São José, SC,",,"1,000772798",5,7,2024
+27058,08/07/2024,Liane,"17.890,00",0,Debora Raquel Neuenfeld,035.981.429-86,(48) 98438-6331,"rua academico reinaldo consoni, 654,Florianópolis, SC, 88307000",,1,8,7,2024
+26607,06/07/2024,Liane,"6.400,00",0,Sanda Severi Rauber,648.079.320-04,(48) 99145-2105,"Rua Itapiranga, 267,Florianópolis, SC, 88034480",,1,6,7,2024
+27054,05/07/2024,Rose,"45.350,00",0,Dario Gonçalves,417.580.139-15,(48) 99913-1600,"Rua Almirante Lamego, 1240,Florianópolis, SC,",,"1,000000441",5,7,2024
+26604,04/07/2024,Rose,"11.000,00",0,Ricardo Pedersen,951.644.720-15,(48) 98834-5770,"Avenida Mauro Ramos, 1512,Florianópolis, SC, 88020302",,1,4,7,2024
+27059,08/07/2024,Rose,"6.186,00",0,Flavia Baldessar,747.909.359-49,(48) 98845-8701,"Rua Professor Custódio Campos, 276,Florianópolis, SC,",,1,8,7,2024
+27060,08/06/2024,Rose,"2.100,00",0,Margareth Berreta,853.209.439-20,(48) 99924-0655,"Rua Irineu Bornhausen, 3200,Florianópolis, Centro,",,"0,8936170213",8,6,2024
+27062,09/07/2024,Liane,"3.200,00",0,Claudete Barauna,295.941.469-15,(48) 99956-1194,"Rua Lauro Linhares, 689,Florianópolis, Santa Catarina,",,1,9,7,2024
+26609,09/07/2024,Neide,"1.600,00",0,Annalisa Blando Dalzatto,,(48) 99191-5425,"Avenida Beira mar, 3400,Florianópolis, SC,",,1,9,7,2024
+27061,09/07/2024,Salete,"1.420,00",0,Rafael Bez,,(48) 99172-9888,"Avenida Almirante Lamego, 1304,Florianópolis, Centro, 88015601",,1,9,7,2024
+27063,09/07/2024,Liane,"4.300,00",0,Gustavo Costa,089.500.739-86,(48) 99119-1987,"Jose candido da silva, 98,Florianópolis, Estreito,",,1,9,7,2024
+26608,01/07/2024,Neide,"10.000,00",0,Fabio Murakami,034.644.599-00,(41) 98808-4198,"Avenida dos salmoes, 405,Florianópolis, SC, 88053365",,1,1,7,2024
+26611,10/07/2024,Liane,"10.200,00",0,Miriam Demarchi Lunchmann,571.793.109-30,(48) 99961-6220,"Rua Graciliano Ramos, 125,Florianópolis, SC,",,"1,000196117",10,7,2024
+27064,10/07/2024,Rose,"1.750,00",0,Margareth Berretta,853.209.439-20,(48) 99924-0655,"Irineu Bornhausen, 3200,Florianópolis, SC,",,1,10,7,2024
+27066,11/07/2024,Salete,"7.630,00",0,Valdete Lopes,909.242.159-68,(48) 99187-1415,"Rua Gerino de belmiro dos santos, 80,Governador celso ramos, Sc, 88190000",,"0,8487208009",11,7,2024
+27065,11/07/2024,Rose,"1.900,00",0,Ricardo,,, ,,1,11,7,2024
+26614,12/07/2024,Salete,"11.890,00",0,Jorge Henrique Martini,071.241.379-00,(48) 99989-1410,"Rua João Batista Dalascio,Florianópolis, Santa Catarina, 88080145",,"0,8742647059",12,7,2024
+26613,12/07/2024,Rose,"5.200,00",0,Maristela Ferreira,443.716.169-68,(48) 99957-5400,"Rua Professor Jose Brasilicio de Souza, 66,Florianópolis, Santa Catarina,",,1,12,7,2024
+26612,12/07/2024,Rose,"50.000,00",0,Ida Krause,,(48) 98476-2046,"Rua 305, 136,Itapema, Santa Catarina,",,"0,9999800004",12,7,2024
+27067,12/07/2024,Salete,"6.300,00",0,Rafael Reitz,025.809.079-04,(48) 98405-0579,"Rua dos golfinhos,Governador Celso Ramos, Santa Catarina, 88190000",,1,12,7,2024
+26616,13/07/2024,Liane,"1.645,00",0,Aline Moreira,075.505.699-08,(48) 98433-5000,"Rua do Iano, 92,São José, Santa Catarina,",,1,13,7,2024
+26615,13/07/2024,Salete,"6.350,00",0,Luiza Villela Schmitz,044.181.019-50,(48) 98833-5424,"Rua Angelo Laporta, 53,Florianópolis, Santa Catarina, 88020600",,1,13,7,2024
+26617,13/07/2024,Rose,"5.500,00",0,João Clemente Wuerges,070.639.609-03,(48) 99651-5916,"Rua Marques de Carvalho, 205,Florianópolis, Santa Catarina, 88080200",,1,13,7,2024
+26618,13/07/2024,Salete,"2.000,00",0,Paulo Zoldan,520.856.789-01,(48) 99616-0447, ,,1,13,7,2024
+27068,15/07/2024,Rose,"11.950,00",0,Bruna Eggere,089.288.879-25,(48) 99915-8437,"Rodovia Haroldo Soares Glavan, 3874,Florianópolis, Santa Catarina,",,1,15,7,2024
+26619,15/07/2024,Neide,"6.700,00",0,Iris Odete Pinheiro,935.781.649-68,(48) 99127-2715,"Avenida das trutras, 358,Florianópolis, Santa Catarina, 88053332",,1,15,7,2024
+26621,16/07/2024,Salete,"7.780,00",0,Fernando Schmidt,036.994.019-95,(48) 98837-6520,"Rua Vera Linhares de andrade,Florianópolis, Santa Catarina, 88034700",,1,16,7,2024
+27069,17/07/2024,Salete,"2.100,00",0,Mari Lucia,252.610.809-15,, ,,1,17,7,2024
+26622,17/07/2024,Liane,"8.400,00",0,Carlos Augusto Bedin,343.702.349-72,(48) 99985-2599,"Rua Rui Barbosa,Florianópolis, Santa Catarina,",,1,17,7,2024
+26623,18/07/2024,Liane,"5.346,00",0,Leila Flores Boppre,298.492.179-87,(48) 99607-0919,"Rua Germano Wendhausen,Florianópolis, Santa Catarina, 88015460",,1,18,7,2024
+27070,18/07/2024,Rose,"9.900,00",0,Maria Helena Marcondes,662.920.188-49,(48) 99831-4833,"Rua João pio duarte da silva,Florianópolis, Santa Catarina,",,"0,9939759036",18,7,2024
+26624,18/07/2024,Rose,"2.660,00",0,Debora Berlanda,097.621.299-46,(48) 98807-3143,"Rua Coronel Pedro de Moro,Florianópolis, Santa Catarina,",,1,18,7,2024
+26625,18/07/2024,Liane,"7.600,00",0,Maria Carlota Abreu,000.064.349-16,(48) 98465-1327,"Avenida Farropilha,Florianópolis, Santa Catarina, 88117110",,1,18,7,2024
+26626,19/07/2024,Liane,"4.500,00",0,Rodrigo Florentino,053.028.429-47,(48) 98400-6930,"Rua Barcelona,Palhoça, Santa Catarina, 88134734",,1,19,7,2024
+27071,19/07/2024,Liane,"4.647,00",0,Daniela Passoni,073.556.155-12,(48) 99926-9416,"Rua Agapito Veloso,Florianópolis, Santa Catarina,",,"0,9998709011",19,7,2024
+26629,22/07/2024,Salete,"3.300,00",0,Tereza winter,459.509.970-34,(48) 99193-9907,"Rua Demetrio Ribeiro,Florianópolis, Santa Catarina,",,1,22,7,2024
+27074,22/07/2024,Salete,"6.300,00",0,Mariza Almeira,078.856.605-91,(48) 99104-2131,"Servidão do Palmeiras,Florianópolis, Santa Catarina, 88034380",,1,22,7,2024
+27072,22/07/2024,Rose,"6.088,00",0,Chiarelli Vale bezerra albuquerque de araújo,011.153.344-92,(48) 98842-0737,"Rodovia adma gonzaga,Florianópolis, Santa Catarina, 88034000",,1,22,7,2024
+26628,22/07/2024,Salete,"5.200,00",0,Francisco Conte,036.606.487-87,(48) 99950-3366,"Desembargador Armo Hoesh,Florianópolis, Santa Catarina, 88015620",,1,22,7,2024
+26627,22/07/2024,Liane,"2.042,00",0,Debora Nevenfeld,,(48) 98438-6331, ,,1,22,7,2024
+27073,22/07/2024,Rose,"6.400,00",0,Vitória Danucni,,(48) 98411-4497,"Rua Manchein de souza,São José, Santa Catarina, 88102500",,1,22,7,2024
+27076,23/07/2024,Rose,"3.360,00",0,Ilse Maria Correia Coelho,649.435.349-53,(48) 99959-3727,"Rua Antonio Gomes Coelho,Florianópolis, Santa Catarina,",,1,23,7,2024
+26630,23/07/2024,Liane,"18.355,00",0,TJSC,,, ,,1,23,7,2024
+27077,24/07/2024,Rose,"6.200,00",0,Giseli Kremer,932.281.209-53,(48) 99989-7977,"Rua Villa tenente sapucaia,Florianópolis, Santa Catarina,",,1,24,7,2024
+27079,26/07/2024,Liane,"10.080,00",0,Emanuela Nicolazi,039.961.099-54,(48) 99625-9364,"Rua Afonso Pena,Florianópolis, Santa Catarina, 88070650",,1,26,7,2024
+26634,26/07/2024,Rose,"14.500,00",0,Leticia Medeiros,095.395.039-57,(48) 99180-9023,"Rua Salvatina Feliciana dos santos,Florianópolis, Santa Catarina, 88034600",,"1,000001379",26,7,2024
+26633,26/07/2024,Liane,"6.645,00",0,Roberta Schein,000.356.520-39,(51) 99136-3755,"Rua Professor Bento Aguido Vieira,Florianópolis, Santa Catarina, 88036410",,1,26,7,2024
+26637,27/07/2024,Rose,"4.400,00",0,Ana Luisa Coelho,001.356.417-05,(48) 99111-2401,"Rua Alves de Brito,Florianópolis, Santa Catarina,",,1,27,7,2024
+27081,27/07/2024,Neide,"4.680,00",0,Jamil Valente,298.603.509-49,(48) 99119-5544,"Rua das Algas,Florianópolis, Santa Catarina,",,1,27,7,2024
+27082,27/07/2024,Salete,"2.360,00",0,Sarah Gonzaga,105.635.707-14,(21) 98865-2960,"Rua da praça,Palhoça, Santa Catarina, 88137086",,1,27,7,2024
+27080,27/07/2024,Salete,"15.150,00",0,Elisabete de souza Machado,533.846.368-53,(48) 99962-2997,"Rua Florindo Cunha,Florianópolis, Santa Catarina, 88070460",,1,27,7,2024
+27083,29/07/2024,Rose,"3.000,00",0,Everton Marquardt,933.138.020-87,(48) 99969-6147,"Rua Professora Antonieta de Barros,Florianópolis, Santa Catarina,",,1,29,7,2024
+26639,30/07/2024,Rose,"13.480,00",0,Colégio Catarinense,,(48) 99981-2137, ,,1,30,7,2024
+27084,30/07/2024,Salete,"6.550,00",0,Renata Caipsho,074.576.059-75,(48) 98482-2936,"Avenida Vereador Valter Borges,São José, Santa Catarina, 88101030",,1,30,7,2024
+27086,31/07/2024,Salete,"18.840,00",0,Edenir Silva,510.802.739-72,(48) 99624-7020,"Br 282 km 70,Rancho Queimado, Santa Catarina, 88470000",,1,31,7,2024
+27085,31/07/2024,Salete,"5.000,00",0,Everton Perera,949.999.299-53,(48) 99969-3945,"Rua Almirante Lamego,Florianópolis, Santa Catarina, 88015600",,1,31,7,2024
+26640,31/07/2024,Rose,"5.000,00",0,Ines Fritzen,468.238.169-53,(48) 99919-8860,"Rua Fulvio Aducci,Florianópolis, Santa Catarina,",,1,31,7,2024
+26643,01/08/2024,Rose,"25.000,00",0,Michelle Vaz,,(48) 99921-9658, ,,1,1,8,2024
+27087,01/08/2024,Salete,"3.000,00",0,Ney Laine Rodrigues,398.791.359-20,(48) 99115-3827,"Rua Pedro de Moura,Florianópolis, Santa Catarina, 88070501",,1,1,8,2024
+26644,02/08/2024,Salete,"6.940,00",0,Terezinha Flores,425.775.350-15,(48) 99958-9049,"Avenida Rubens de arruda ramos,Florianópolis, Santa Catarina,",,1,2,8,2024
+27090,03/08/2024,Salete,"5.100,00",0,Andrea Regis,591.717.749-04,(48) 98864-3356,"Avenida Otto Gama Deça,Florianópolis, Santa Catarina, 88015240",,1,3,8,2024
+26646,03/08/2024,Rose,"7.560,00",0,Cristiane Muller,025.901.969-03,(48) 99953-7626,"Rua do copo de leite,Palhoça, Santa Catarina,",,1,3,8,2024
+26351,03/08/2024,Rose,"3.654,00",0,Nereu da Silva,344.091.229-91,(48) 99119-9698,"Rua Coronel Elizeu Guilherme,São José, Santa Catarina, 88101430",,1,3,8,2024
+26401,03/08/2024,Salete,"6.100,00",0,Cristina de Bem,888.325.719-91,(48) 99174-5369,"Rua Rafael Bandeira,Florianópolis, Santa Catarina, 88015450",,"0,7865892972",3,8,2024
+27089,03/08/2024,Liane,"3.880,00",0,Daniela de Abreu,,(48) 99926-9416, ,,1,3,8,2024
+27091,05/08/2024,Salete,"20.000,00",0,Heitor Pinto,026.799.249-16,(48) 99668-3349,"Rua Pedro Gregório,Florianópolis, Santa Catarina,",,"0,9960159363",5,8,2024
+26352,05/08/2024,Salete,"705,00",0,Renata Kreusch,,(48) 99113-7565,"Rua Dinorte Domingues,São José, Santa Catarina,",,1,5,8,2024
+26402,05/08/2024,Rose,"5.960,00",0,Daniela Pereira,,(48) 99914-3032,"Rua Santos Saraiva,Florianópolis, Santa Catarina,",,1,5,8,2024
+27092,05/08/2024,Salete,"3.980,00",0,Luca Lanius,107.786.739-52,(48) 99987-1201,88470000,,1,5,8,2024
+26354,07/08/2024,Salete,"3.536,00",0,Wanderley Pereira,070.679.768-87,(48) 99919-1485,"Avenida Rio Branco,Florianópolis, Santa Catarina, 88015200",,"0,9198751301",7,8,2024
+26403,07/08/2024,Liane,"12.779,00",0,Luciana Sagardoy,329.702.548-40,(48) 99988-8272,"Avenida do antão,Florianópolis, Santa Catarina, 88025150",,1,7,8,2024
+26356,07/08/2024,Rose,"9.571,00",0,Marcia Kuntze,,(48) 99151-7617,"Rua São Pedro,Florianópolis, Santa Catarina,",,1,7,8,2024
+26648,09/08/2024,Rose,"900,00",0,Roselene,,, ,,1,9,8,2024
+26404,09/08/2024,Rose,"1.634,00",0,Sheila Kusterbo,,, ,,1,9,8,2024
+26649,09/08/2024,Rose,"23.600,00",0,Graziela Pacheco,003.824.149-85,(48) 99159-5441,"Avenida Esteves Junior,Florianópolis, Santa Catarina,",,1,9,8,2024
+26407,12/08/2024,Rose,"25.000,00",0,Ieda Balri,,(48) 99159-4545,"Rua Frei Caneca,Florianópolis, Santa Catarina,",,1,12,8,2024
+26409,13/08/2024,Rose,"12.300,00",0,Vitória Damiani,008.856.259-00,(48) 99628-6611,"Rua Orlando Odilio Koerich,Florianópolis, Santa Catarina,",,1,13,8,2024
+26411,15/08/2024,Rose,"20.000,00",0,Diogo Rangel,,(48) 98412-3590,"Rua Luiz Boiteaux Piazza,Florianópolis, Santa Catarina, 88056000",,1,15,8,2024
+26358,15/08/2024,Salete,"52.000,00",0,Jose Houat,123.321.142-87,(91) 99276-8397,"Rodovia Duque de caxias,Macapá, Amapá, 68906990",,"1,000038463",15,8,2024
+27093,15/08/2024,Salete,"8.970,00",0,Olenka Ramos,436.188.120-00,(48) 99111-4764,"Rua Acari Silva,Florianópolis, Santa Catarina, 88035440",,1,15,8,2024
+26357,15/08/2024,Salete,"9.000,00",0,Silvia Floch,791.510.517-53,(48) 98422-5529,88053372,,1,15,8,2024
+27095,16/08/2024,Liane,"6.050,00",0,Futura Alimentos,,(48) 99924-2003,88115400,,1,16,8,2024
+27097,16/08/2024,Salete,"2.000,00",0,Shirley de Paula,316.893.450-04,(48) 99175-0368,88010560,,1,16,8,2024
+27096,16/08/2024,Salete,"38.180,00",0,Luiz Silva,433.100.019-20,(48) 99980-5191,88015395,,1,16,8,2024
+26359,16/08/2024,Liane,"2.890,00",0,Marcela Nomura,064.919.149-84,(48) 99946-3434, ,,1,16,8,2024
+26360,17/08/2024,Salete,"2.000,00",0,Janete Muller,589.633.839-20,(48) 98441-3501,88106240,,"0,8849557522",17,8,2024
+26361,17/08/2024,Liane,"10.500,00",0,Ana Possetti,419.292.208-80,(48) 99650-3668,"Rodovia Joao Paulo,Florianópolis, Santa Catarina, 88030300",,1,17,8,2024
+27098,17/08/2024,Rose,"6.100,00",0,José Guilherme Araújo,220.195.468-25,(48) 99865-3040,"Servidão Leoncio Amaro Duarte,Florianópolis, Santa Catarina,",,1,17,8,2024
+27099,17/08/2024,Rose,"2.964,00",0,Leticia Silva,094.585.789-65,(48) 99150-4875,"Rua Deodoro,Florianópolis, Santa Catarina,",,1,17,8,2024
+26645,03/08/2024,Leila,"19.000,00",0,Giancarlo Scolaro,056.754.819-82,(48) 99808-4043,"Rua Ademar Gonzaga,Florianópolis, Santa Catarina,",,"0,8984301116",3,8,2024
+26413,16/08/2024,Liane,"11.600,00",0,Fabiane Heinzen,000.076.359-40,(48) 99997-8804,"Rua das baleias franca,Florianópolis, Santa Catarina,",,"0,9999956897",16,8,2024
+26362,17/08/2024,Salete,"3.990,00",0,Adriana Battisti,032.487.069-88,(48) 98502-7951,"Avenida Almirante Lamego,Florianópolis, Santa Catarina, 88015601",,1,17,8,2024
+26363,19/08/2024,Liane,"15.500,00",0,André de Souza Alves,910.473.589-72,(47) 99950-1290,"Servidão amaral antero bastos,Florianópolis, Santa Catarina, 88034150",,"0,5337649368",19,8,2024
+26364,19/08/2024,Liane,"500,00",0,Valdir Filho,,(48) 99908-7609, ,,1,19,8,2024
+27100,20/08/2024,Salete,"2.100,00",0,Melissa Amaral,,(48) 99185-1888, ,,1,20,8,2024
+26414,20/08/2024,Liane,"4.000,00",0,Alessandra Ramos,003.332.499-92,(48) 99982-1539,"Rua Alba Dias Cunha,Florianópolis, Santa Catarina, 88036020",,1,20,8,2024
+26417,22/08/2024,Rose,"42.285,00",0,Cristini da Silva,,(61) 98100-3513, ,,1,22,8,2024
+26418,22/08/2024,Neide,"19.200,00",0,Ilana,,(48) 99967-0614,"Rua Fulvio Aducci,Florianópolis, Santa Catarina,",,1,22,8,2024
+26370,22/08/2024,Rose,"6.560,00",0,Iara Knabben,039.375.049-31,(48) 99621-8008,"Travesa Felipe Godinho,Florianópolis, Santa Catarina,",,1,22,8,2024
+26368,22/08/2024,Liane,"3.600,00",0,Nani Rossato,002.847.840-10,(48) 99927-4434,"Rua Leonel Pereira,Florianópolis, Santa Catarina, 88056300",,1,22,8,2024
+26367,22/08/2024,Liane,"3.800,00",0,Bruno Vieira,068.795.029-54,(48) 99613-2586,"Avenida Atlantica,Florianópolis, Santa Catarina, 88095700",,1,22,8,2024
+26365,22/08/2024,Salete,"6.495,00",0,Eudo Nerino Rebelo Filho,399.284.209-63,(48) 99961-2874,"Travessa Nagibo Ambrosio Marques,Florianópolis, Santa Catarina, 88058341",,1,22,8,2024
+26366,22/08/2024,Salete,"800,00",0,Ana,,, ,,1,22,8,2024
+26415,13/08/2024,Liane,"12.840,00",0,Olga Huedepohl,591.380.929-72,(48) 98822-9689,"Avenida Almirante Lamego,Florianópolis, Santa Catarina, 88015600",,"0,8500496524",13,8,2024
+26416,21/08/2024,Rose,"13.780,00",0,Juliana Gamborgi,730.101.389-20,(49) 99151-6263,"Rua Nereu Ramos,Florianópolis, Santa Catarina,",,1,21,8,2024
+26410,15/08/2024,Rose,"45.177,00",0,Murilo dos Santos,,, ,,"1,022636213",15,8,2024
+26419,23/08/2024,Salete,"3.800,00",0,Paloma Arima,,(11) 99247-9643,"Rua Antonio Gomes,Florianópolis, Santa Catarina, 88075290",,"0,9793814433",23,8,2024
+26371,23/08/2024,Liane,"6.170,00",0,Marta Bello,379.321.950-04,(48) 99611-5540,"Rua Rafael Bandeira,Florianópolis, Santa Catarina, 88015450",,1,23,8,2024
+26420,24/08/2024,Liane,"7.260,00",0,Bruno Nass,046.303.779-05,(48) 99612-1249,"Rua cristovao nunes pires,Florianópolis, Santa Catarina, 88010120",,1,24,8,2024
+26375,24/08/2024,Rose,"2.200,00",0,Cinthya Garcia,,(48) 98413-5144,"Rua João Motta Espezin,Florianópolis, Santa Catarina, 8804547",,1,24,8,2024
+26374,23/08/2024,Salete,"5.960,00",0,Carolina Pixerpitz,008.186.119-28,(48) 99911-2994,"Rua veriador coelho pires,São José, Santa Catarina, 88101280",,1,23,8,2024
+26373,24/08/2024,Rose,"9.100,00",0,Heitor Teixeira,008.594.410-67,(48) 99116-8851,"Servidão João Batista Pires,Florianópolis, Santa Catarina,",,1,24,8,2024
+26372,23/08/2024,Liane,"15.000,00",0,Newton Terisatto,020.181.959-72,(47) 99984-3006,"Avenida Atlântica,Balneário Camburiú, Santa Catarina, 88330414",,1,23,8,2024
+26376,27/08/2024,Liane,"1.900,00",0,André Alves,910.473.589-72,(47) 99950-1290,"Servidão amaro antero Bastos,Florianópolis, Santa Catarina, 88034150",,1,27,8,2024
+26423,27/08/2024,Rose,"10.000,00",0,Vitória Damiani,008.856.259-00,(48) 99628-6611,"Rua Orlando Odilio Koerich,Florianópolis, Santa Catarina,",,"1,00020004",27,8,2024
+26421,27/08/2024,Liane,"5.900,00",0,Elaine Fuzaro,044.637.539-02,(48) 99961-9495,"Rua Iano,Florianópolis, Santa Catarina, 88117850",,1,27,8,2024
+26422,27/08/2024,Rose,"7.800,00",0,Dirlei Rodrigues,526.638.689-49,(48) 99963-5534,"Rua Estrada Geral do Vargeado,Rancho Queimado, Santa Catarina,",,1,27,8,2024
+26381,30/08/2024,Salete,"7.200,00",0,Mariana de Resende,881.101.609-59,(48) 99981-9828,"Rua Boaventura Antonio Pereira,Florianópolis, Santa Catarina,",,1,30,8,2024
+26382,31/08/2024,Rose,"3.700,00",0,Ariela Marques,327.603.698-38,(11) 98219-9027,"Rua Dr. Claudio aAmerica Prates,Florianópolis, Campeche,",,1,31,8,2024
+26380,30/08/2024,Rose,"4.065,00",0,Lúcia,,(48) 99156-7521, ,,"0,9200995926",30,8,2024
+26378,28/08/2024,Rose,"1.000,00",0,Julieta Sampaio,803.205.709-91,(49) 99160-1098,"Aracy Vaz Callado,Florianópolis, Estreito,",,1,28,8,2024
+26377,28/08/2024,Liane,"1.450,00",0,Naiubi Hoffmann,,(48) 98425-4644,"Estrada Haroldo Soares Glaven,Florianópolis, ,",,1,28,8,2024
+28212,19/09/2024,Rose,"20.900,00",0,Hotel Sete Ilhas,,(48) 99965-9947,"Jurerê, florianópolis",,"0,8965339739",19,9,2024
+28164,19/09/2024,Neide,"6.200,00",0,Ana Friedrich,053.995.279-60,(48) 99166-7477,"Jurerê internacional, Florianópolis",,"0,9927942354",19,9,2024
+28211,19/09/2024,Rose,"2.100,00",0,Vanusa pinto,,,,,1,19,9,2024
+28206,12/09/2024,Rose,"6.900,00",0,Lucia,,,,,1,12,9,2024
+26435,16/09/2024,Neide,"3.380,00",0,Aglaia Bernardes,825.006.309-00,(48) 99918-7672,"Balneário, Florianópolis",,1,16,9,2024
+28210,17/09/2024,Neide,"5.580,00",0,Greicy Bessen,008.515.379-60,(48) 99974-1441,"Corrego Grande, Florianópolis",,"0,9",17,9,2024
+28163,18/09/2024,Rose,"5.000,00",0,Elizabete,223.310.509-53,(48) 99983-6697,"Bosque das mansões, São José",,"0,8",18,9,2024
+28162,18/09/2024,Salete,"2.800,00",0,Ana Albuquerque,991.113.069-04,(48) 99972-5094,"Estreito, Florianópolis",,1,18,9,2024
+28165,18/09/2024,Neide,"5.000,00",0,Tania,,,,,1,18,9,2024
+28209,17/09/2024,Rose,"9.900,00",0,Malela Bragança,690.413.421-68,(48) 99200-2107,"Ingleses, Florianópolis",,"0,9768130242",17,9,2024
+26389,17/09/2024,Rose,"4.500,00",0,Maicon Rodrigues,008.055.340-08,(48) 99104-1856,"Estreito, Florianópolis",,1,17,9,2024
+28159,17/09/2024,Rose,"16.980,00",0,Marcela Bittencout,050.900.549-75,(48) 99963-2109,"Jurerê Internacional, Florianópolis",,"0,9999411107",17,9,2024
+28160,17/09/2024,Liane,"5.700,00",0,Carlos Martendal,008.010.209-30,(48) 99971-0332,"Balneário, Florianópolis",,1,17,9,2024
+28161,17/09/2024,Rose,"3.190,00",0,Elisa Ramos,078.612.009-65,(48) 99123-1693,"Centro, Florianópolis",,1,17,9,2024
+26388,17/09/2024,Liane,"33.000,00",0,Marina Martini,621.128.059-91,(48) 99167-1166,"Jurerê, Florianópolis",,"0,9189640769",17,9,2024
+28169,28/09/2024,Salete,"22.000,00",0,Juliana Franzoi,042.419.579-86,(48) 99989-0022,"Agronômica, Florianópolis",,"0,8115685407",28,9,2024
+28222,28/09/2024,Rose,"31.273,00",0,Rafael Matos,026.643.589-01,(48) 99119-8000,"João Paulo, Florianópolis",,1,28,9,2024
+26399,28/09/2024,Salete,"13.600,00",0,Felipe Santos,023.572.010-02,(51) 99283-7677,"Pagani, Palhoça",,"0,8740359897",28,9,2024
+28170,28/09/2024,Salete,"2.400,00",0,Alane Fontanella,089.365.124-98,(84) 98835-1711,"Areias, São José",,1,28,9,2024
+28220,26/09/2024,Rose,"4.860,00",0,Fabiana Possette,041.060.859-92,(48) 99120-2097,"Agronômica, Florianópolis",,1,26,9,2024
+28221,26/09/2024,Rose,"6.600,00",0,Bruna Duarte,030.539.769-94,(48) 99983-5314,"Centro, Santo Amaro da Imperatriz",,1,26,9,2024
+28168,26/09/2024,Liane,"4.592,00",0,Vera Gularte,550.822.039-91,(48) 98417-1664,"Rio Vermelho, Florianópolis",,1,26,9,2024
+26394,23/09/2024,Neide,"4.440,00",0,Lucio Diniz,017.647.747-01,(48) 98414-6538,"Daniela, Florianópolis",,1,23,9,2024
+28215,23/09/2024,Rose,"4.600,00",0,Tanise Diniz,012.598.170-83,(51) 99353-5455,"Ingleses, Florianópolis",,"0,887345679",23,9,2024
+28167,21/09/2024,Leila,"4.000,00",0,Claudia Amendola,749.261.287-72,(48) 99841-3005,"João Paulo, Florianópolis",,"0,9394081729",21,9,2024
+28214,21/09/2024,Salete,"1.100,00",0,Marcos Castilho,,(48) 98409-3952,,,1,21,9,2024
+28213,21/09/2024,Liane,"7.200,00",0,Lurdes Riva,950.701.250-87,(48) 99148-1972,"Centro, Florianópolis",,"0,8778346745",21,9,2024
+28166,21/09/2024,Salete,"2.690,00",0,Natalia Macedo,093.482.869-51,(48) 99641-3096,"Centro, Florianópolis",,1,21,9,2024
+28155,09/09/2024,Rose,"2.100,00",0,Miriam Bello,413.603.540-34,(51) 99911-7964,"Jurerê, Florianópolis",,"0,8588957055",9,9,2024
+28219,25/09/2024,Rose,"8.964,00",0,Juliana Schlindwein,010.627.189-09,(47) 98803-3342,"Centro, Florianópolis",,1,25,9,2024
+26397,25/09/2024,Salete,"1.859,00",0,Luciano Bortoluzzi,026.118.780-56,(48) 99137-4005,"Morro das Pedras, Florianópolis",,1,25,9,2024
+28217,24/09/2024,Rose,"6.600,00",0,Bruna Duarte,030.539.769-94,(48) 99983-5314,"Centro, Santa Amaro da Imperatriz",,1,24,9,2024
+26393,20/09/2024,Liane,"12.200,00",0,Luiz Teixeira,369.685.019-53,(45) 99971-0956,"Campeche, Florianópolis",,1,20,9,2024
+28158,16/09/2024,Rose,"2.852,00",0,Maiara Leite,,(48) 98484-8805,"Campeche, Florianópolis",,1,16,9,2024
+26386,13/09/2024,Rose,"6.500,00",0,Rita Cassia,,,,,1,13,9,2024
+26438,23/09/2024,Liane,"11.508,00",0,Cicero Kotaka,745.566.909-78,(48) 99138-5838,"Abraão, Florianópolis",,1,23,9,2024
+28207,14/09/2024,Salete,"10.400,00",0,Patricia Silva,018.104.690-31,(48) 99638-0846,"Itacorubi, Florianópolis",,"0,9971236817",14,9,2024
+26434,14/09/2024,Salete,"21.680,00",0,Leila Santos,020.303.919-05,(48) 98817-9171,"Agronômica, Florianópolis",,"0,8498627989",14,9,2024
+26387,14/09/2024,Liane,"5.960,00",0,Samara de Sena,006.827.259-60,(48) 99622-7290,"Centro, Florianópolis",,1,14,9,2024
+26433,14/09/2024,Liane,"17.000,00",0,Luana Pereira,031.471.169-48,(48) 99163-1300,"Pedra Branca, Palhoça",,"0,9860788863",14,9,2024
+26432,06/09/2024,Rose,"5.600,00",0,Lara Knabben,039.375.049-31,(48) 99621-8008,"Agronômica, Florianópolis",,1,6,9,2024
+28204,11/09/2024,Salete,"1.560,00",0,Olenca Ramos,,(48) 99111-4764,,,1,11,9,2024
+28205,12/09/2024,Salete,"3.566,00",0,Condominio Izaura Andrade,,(48) 99683-1817,"Estreito, Florianópolis",,1,12,9,2024
+28157,11/09/2024,Rose,"6.300,00",0,Cynthia Brisola,433.290.809-06,(48) 99127-8127,"Centro, Florianópolis",,1,11,9,2024
+26424,02/09/2024,Salete,"5.000,00",0,Gilberto dos Santos,507.341.139-00,(48) 99908-2041,"Campinas, São José",,1,2,9,2024
+26428,05/09/2024,Liane,"2.500,00",0,Nilda,,,,,1,5,9,2024
+26427,05/09/2024,Liane,"4.000,00",0,nILDA,,(48) 99960-2934,"Canasvieiras, Florianópolis",,1,5,9,2024
+26429,05/09/2024,Neide,"5.346,00",0,Vera Grillo,289.227.009-04,(48) 99191-5425,"Praia Brava, Florianópolis",,1,5,9,2024
+26385,10/09/2024,Salete,"5.000,00",0,Carmorina Vasconcelo,851.994.519-87,(48) 99621-5416,"Centro, Florianópolis",,1,10,9,2024
+28156,10/09/2024,Neide,"230,00",0,Rayane Freitas,058.857.059-17,(48) 98437-0112,"Centro, Criciuma",,1,10,9,2024
+28153,09/09/2024,Liane,"4.180,00",0,Ana Dalva Pereira,504.950.030-34,(48) 99941-8550,"Abraão, Florianópolis",,1,9,9,2024
+28152,09/09/2024,Liane,"8.589,00",0,José Bolda,645.846.079-15,(48) 99117-1986,"Balneário, Florianópolis",,1,9,9,2024
+28203,09/09/2024,Salete,"3.100,00",0,Nelson Vieira,122.700.759-00,(48) 99972-5550,"Saco dos Limões, Florianópolis",,1,9,9,2024
+28202,09/09/2024,Salete,"3.700,00",0,Elise Dantes,894.201.872-68,(48) 98832-0063,"Agronômica, Florianópolis",,1,9,9,2024
+26431,06/09/2024,Salete,"7.900,00",0,Santicler Koguri,,(48) 99932-9340,"Trindade, Florianópolis",,1,6,9,2024
+26384,06/09/2024,Neide,"14.000,00",0,Tania,,(48) 99662-8989,"Campinas, São José",,"0,9161104567",6,9,2024
+26430,06/09/2024,Liane,"3.310,00",0,Carine,010.109.239-35,(48) 99966-5717,"Itacorubi, Florianópolis",,1,6,9,2024
+28151,06/09/2024,Liane,"8.700,00",0,Jana Elneser,801.777.489-31,(48) 98856-3920,"Centro, Florianópolis",,1,6,9,2024
+28171,30/09/2024,Rose,"2.200,00",0,Juventina Piccolli,022.034.069-25,(48) 99919-2166,"Pantanal, Florianópolis",,2,30,9,2024
+28173,30/09/2024,Rose,"7.434,00",0,Antonio Barros,038.896.069-89,(48) 99105-2599,"Agronômica, Florianópolis",,1,30,9,2024
+26398,27/09/2024,Rose,"6.600,00",0,Flavia Ramos,,(48) 99919-8330,"Trindade, Florianópolis",,1,27,9,2024
+26439,16/09/2024,Salete,"22.000,00",0,Marcos Fonseca,915.265.407-97,(48) 98844-8493,"Canelinha, Bom Retiro",,"0,9689495706",16,9,2024
+28216,26/09/2024,Rose,"2.200,00",0,Glaucia,,,,,1,26,9,2024
+26442,30/09/2024,Rose,"46.000,00",0,Arlete Torri,346.512.339-53,(48) 99972-2480,"Varginha, Santo Amaro da Imperatriz",,"0,998480573",30,9,2024
+26396,24/09/2024,Liane,"30.000,00",0,Patricia Machado,,(48) 99951-8792,"Pedra Branca, Palhoça",,1,24,9,2024
+26436,20/09/2024,Liane,"195.000,00",0,Am Construções,,,,,1,20,9,2024
+28224,05/10/2024,Liane,"7.460,00",0,Mariana Abreu,059.199.529-89,(48) 99600-6666,"Santa Monica, Florianópolis",,1,5,10,2024
+26445,05/10/2024,Neide,"8.000,00",0,Joseney Pereira,912.535.199-00,(48) 99833-5708,"Jardim Atlântico, Florianópolis",,1,5,10,2024
+26444,04/10/2024,Rose,"14.000,00",0,Bartira,,(48) 99963-2807,,,"0,994954161",4,10,2024
+28177,04/10/2024,Salete,"27.740,00",0,Luciano Gentilini,005.662.379-89,(48) 99981-3509,"Rua 1520, Balneário Camburiu",,1,4,10,2024
+26446,05/10/2024,Rose,"14.370,00",0,Sergio Sancini,342.050.399-72,(48) 98405-9448,"Praia Brava, Florianópolis",,1,5,10,2024
+28225,05/10/2024,Liane,"8.890,00",0,Paulo Vieira,455.133.419-72,(48) 99127-1668,"Centro, Florianópolis",,1,5,10,2024
+28174,01/10/2024,Rose,"5.000,00",0,Ida,,,,,1,1,10,2024
+26400,01/10/2024,Liane,"1.600,00",0,Marta Bello,379.321.950-04,(48) 99611-5540,"Centro, Florianópolis",,1,1,10,2024
+26441,01/10/2024,Neide,"19.000,00",0,Everson Custódio,352.307.478-97,(48) 99920-1464,"Centro, Florianópolis",,1,1,10,2024
+28223,03/10/2024,Salete,"10.000,00",0,Doris,,(48) 99981-9626,"Centro, Florianópolis",,1,3,10,2024
+26447,03/10/2024,Rose,"44.000,00",0,Rodrigo Cavalheiro,024.813.769-78,(48) 99902-1251,"Centro, Florianópolis",,1,3,10,2024
+28226,08/10/2024,Neide,"6.500,00",0,Pedro Tavares,108.361.969-10,(48) 99918-2183,"Centro, Santa Catarina",,1,8,10,2024
+28227,08/10/2024,Liane,"17.480,00",0,Sadi Grimm,055.186.280-72,(48) 99161-1540,"Jurerê, Florianópolis",,"0,9302820649",8,10,2024
+28178,05/10/2024,Salete,"9.590,00",0,Sali Einsfeld,401.755.700-78,(48) 99915-9021,"Centro, Garopaba",,1,5,10,2024
+28179,09/10/2024,Liane,"1.700,00",0,Renata,,(48) 99983-5757,"Saco Grande, Florianópolis",,1,9,10,2024
+26448,10/10/2024,Neide,"5.100,00",0,Pedro Tavares,,,,,1,10,10,2024
+28180,09/10/2024,Salete,"17.760,00",0,Maurino Corte,004.723.449-00,(48) 99971-6993,"Centro, Florianópolis",,1,9,10,2024
+28187,16/10/2024,Salete,"4.300,00",0,Juliana Franzo,042.419.579-86,(48) 99989-0022,"Agronomica, Florianópolis",,1,16,10,2024
+28186,16/10/2024,Rose,"13.500,00",0,Antonio Amaral e Silva,674.632.239-49,(48) 99191-6229,"Jurerê, Florianópolis",,"0,9998518738",16,10,2024
+26449,11/10/2024,Liane,"4.800,00",0,Nilda PEDIDO 26427,,,,,1,11,10,2024
+28184,15/10/2024,Rose,"21.000,00",0,Daniela Felicioni,048.567.189-16,(48) 98442-0852,"Pedra Branca, Palhoça",,1,15,10,2024
+28185,15/10/2024,Liane,"7.500,00",0,Thays Tumelero,051.876.429-01,(48) 98408-3633,"Coqueiros, Florianópolis",,1,15,10,2024
+28232,15/10/2024,Salete,"20.000,00",0,Rodrigo (Com decoradora) da Silva,,,,,"0,8517887564",15,10,2024
+28183,15/10/2024,Salete,"8.000,00",0,Jorge,,(61) 99976-8751,"Cachoeira do bom jesus, Florianópolis",,"0,674593136",15,10,2024
+27751,15/10/2024,Rose,"3.445,00",0,Inacio Viana,669.521.661-49,(48) 99185-2323,"Lagoa da conceição, Florianópolis",,1,15,10,2024
+28181,11/10/2024,Salete,"53.000,00",0,Jorge Mussi (RT),289.047.379-15,(61) 99976-8751,"Cachoeira do bom jesus, Florianópolis",,1,11,10,2024
+28231,14/10/2024,Liane,"3.999,00",0,Orlando Cardoso,552.348.529-20,(48) 99947-0518,"Carianos, Florianópolis",,1,14,10,2024
+28182,14/10/2024,Salete,"1.800,00",0,Dimitri Katzias,,(48) 98418-0800,,,1,14,10,2024
+28229,11/10/2024,Liane,"100.000,00",0,Edio Meurer,375.976.399-53,,"Centro, Balneário Camburiú",,"0,6706998082",11,10,2024
+28188,16/10/2024,Salete,"900,00",0,Lucia Becka,245.220.159-68,(48) 99981-5511,"Centro, Florianópolis",,1,16,10,2024
+28189,17/10/2024,Rose,"2.300,00",0,Claudia Luciano,616.511.760-00,(48) 99658-2347,"Centro, Florianópolis",,1,17,10,2024
+28233,17/10/2024,Salete,"500,00",0,Elizete Coral de Medeiros,,(48) 99900-6661,,,1,17,10,2024
+28190,17/10/2024,Salete,"18.000,00",0,Marcelo,,(48) 99981-9626,"Mauro Ramos, Florianópolis",,"0,8032128514",17,10,2024
+28234,17/10/2024,Rose,"10.752,00",0,Ana Carolina Barroso,026.239.579-75,(48) 99175-2525,"Coqueiros, Florianópolis",,1,17,10,2024
+28193,21/10/2024,Neide,"18.440,00",0,Janaina Santa Cruz,,48998516786,"RUa Lagoinha, 65. Pedra Branca, Palhoça. SC.",,1,21,10,2024
+28241,30/10/2024,Salete,"28.600,00",0,Metaltek Soluções e serviços,40121017000111,48998322306,"Rua Professor Aureliano Francisco de medeiros, 736. Aririu, Palhoça. Sc.",,1,30,10,2024
+28003,30/10/2024,Rose,"4.000,00","0,1",Fernanda Otto da Fonseca,,48991620449,"Rodovia Baldicero Filomeno, 2757. Alto Ribeirão, Florianópolis, Sc.",fof1976@yahoo.com.br,"0,8746993221",30,10,2024
+27759,30/10/2024,Rose,"7.537,00",0,Daniela Nunes de Souza Bosqueiro,02639045989,47992936159,"Rua Girassol, 40. Ibirapuera, Imbituba, Sc.",,"1,000026536",30,10,2024
+28002,30/10/2024,Salete,"4.800,00",0,Edson Rodrigues de Oliveira,13539484809,48999323018,"Rua Afonso Pena, 542. Estreito, Florianópolis",,1,30,10,2024
+27758,30/10/2024,Salete,"1.800,00",0,Chiarelli Vale,01115344492,48988420737,"Rodovia Ademar Gonzaga, 707. Itacorubi, Florianópolis",,"0,9595547666",30,10,2024
+27757,29/10/2024,Rose,"19.541,00",0,Valeria Cristina Nunes Gomes,73250872920,48984660294,"Rua das Embaubas, 200. Morro da cruz, Florianópolis.",,"0,8199823759",29,10,2024
+28239,28/10/2024,Rose,"390,60",0,Naiob Hoffman,,48984254644,,,1,28,10,2024
+28001,29/10/2024,Salete,"6.200,00",0,Maristela Ines ,37842706972,48999810398,"Rua Rosa, 116. Areias, São José, SC.",,1,29,10,2024
+28200,29/10/2024,Salete,"2.580,00",0,Ana de Albuquerque,99111306904,48999725094,"Rua Fulvio Aducci, 627. Estreito, Florianópolis",,1,29,10,2024
+28199,29/10/2024,Salete,"6.750,00",0,Giorgete Barros,,48991902255,,,1,29,10,2024
+28240,29/10/2024,Neide,"7.200,00",0,Beatriz Rosa Biazussi Ferasso,06162288994,48999272807,"Rua Desembargador Urbano Salles, 99. Centro, Florianópolis. Santa Catarina",,1,29,10,2024
+28198,29/10/2024,Neide,"7.250,00",0,Lúcio Lopes Diniz,01764774701,48984146538,"Rua dos Geranios, 323. Daniela, Florianópolis",,1,29,10,2024
+27752,18/10/2024,Rose,"35.770,00",0,Flávia Heidemann,00019647980,48988046814,"Rua Pastor William Richard Filho, 900. Itacorubi, Florianópolis. SC.",,"1,014780561",18,10,2024
+28197,26/10/2024,Salete,"3.800,00",0,Elisabete Araujo Leonetti,17956064953,48988089878,"Rua Dom Joaquim, 866. Florianópolis, SC.",,1,26,10,2024
+27756,26/10/2024,Rose,"11.770,00",0,Ana Paula Macucci,08698712770,19998822303,"Avenida Campeche, 1830. Campeche, Florianópolis, SC.",,1,26,10,2024
+28196,24/10/2024,Salete,"6.750,00",0,Timur Lokupov,71729071163,48991204524,"Rodovia João Paulo, 2301, João Paulo, Florianópolis, SC.",,1,24,10,2024
+28195,23/10/2024,Rose,"32.000,00",0,Roberto Carlos Gartner,50941674991,48999321004,"Rua 7 de setembro, 547. Centro, Biguaçu, SC.",,"0,7704204762",23,10,2024
+28238,23/10/2024,Salete,"10.960,00",0,Fernanda Martini Taske Correa,03757634900,48991378624,"Rua Santos Dumont, 186. Centro, Florianópolis",,"0,8",23,10,2024
+27755,23/10/2024,Salete,"17.000,00",0,Juliana Querido,05113007943,48988222890,"Avenida Vera Valter, 70. Campinas, São José, SC.",,1,23,10,2024
+28237,23/10/2024,Rose,"4.872,50",0,Nair Terezinha da Silva,25696491987,48991044738,"Avenida Buriti, 131. Parque São Jorge, Florianópolis, SC.",,1,23,10,2024
+28194,23/10/2024,Neide,"8.112,00",0,Claudemir Zardo,47210397949,48984020224,"Rua José Candido da Silva, 509. Balneário Estreito, Florianópolis, SC.",,"0,9013333333",23,10,2024
+27754,22/10/2024,Salete,"5.800,00",0,Doroti Rosa Sacuti,21353930025,51983007838," Ivo Silveira, 177. Estreito, Florianópolis, SC.",,1,22,10,2024
+28236,22/10/2024,Salete,"4.600,00",0,Felipe Patricio Melo,06129119933,48988149859," Rua Najla Carone Guedert, 181, Pagani, Palhoça, SC.",,1,22,10,2024
+28192,21/10/2024,Rose,"11.000,00",0,Camile,,12997501410,"Rua Luiz Delfino, 89. Centro, Florianópolis. SC.",,"0,9683098592",21,10,2024
+27753,18/10/2024,Rose,"14.621,00",0,Dyanine Besen,07378950980,4891840016,"Rua Afonso Pena, 1125. Estreito, Florianópolis, SC.",,1,18,10,2024
+28191,19/10/2024,Leila,"8.200,00",0,João Alfredo Schappo,24655686987,48991881958,"Rua Alexandrina da Silva, 158. Camboa, Governador Celso Ramos, SC.",,"0,9357525961",19,10,2024
+27760,31/10/2024,Salete,"4.200,00",0,Michele Formonte,03109209900,48988075004,"Rua Estrada Aroldo Soares Grevon, 4320, Cacupé, Florianópolis",,1,31,10,2024
+28244,05/11/2024,Liane,"11.800,00",0,Luiz Antonio Garbelot,57199418949,48999243032,"Rua Beija-Flor, 67. Governador Celso Ramos, SC.",,1,5,11,2024
+28009,07/11/2024,Rose,"49.990,00",0,Roberta,11111111111111,48999823996,1111111111,111111111111,"0,8642210082",7,11,2024
+28011,08/11/2024,Salete,"4.480,00",0,"Ivone 0,1on de Carvalho",27505936972,48991499532,"Rua Marquês de Carvalho, 186. Coqueiros, Florianópolis, SC.",,"0,7006568658",8,11,2024
+27767,08/11/2024,Neide,"7.300,00",0,Ricardo Schmitt Maes,04848828996,41988803663,"Rua Pedr Gregório, 279. Barreiros, São José, SC.",,"0,8468677494",8,11,2024
+28010,08/11/2024,Salete,"5.900,00",0,28010,46451196991,4899734221,"Centro, Florianópolis, SC. ",,1,8,11,2024
+27766,08/11/2024,Salete,"3.000,00",0,Maria de gloria vett de candido,34693602949,48999731316,"Rua João Carvalho, 133. Agronômica, Florianópolis, SC.",,1,8,11,2024
+28015,09/11/2024,Salete,"5.040,00",0,Talita Marino Andre,06086874999,48984941252,"Rua Quilombo, 204. Itacorubi, Florianópolis, SC.",,1,9,11,2024
+27772,09/11/2024,Neide,"16.000,00",0,Alessandro Lohmeyer,86055534991,48988187097,"Rua das Algas, 991. Jurere, Florianópolis, SC. ",,1,9,11,2024
+28014,09/11/2024,Rose,"500,00",0,Fabricia Gon,02978372907,48999259015,,,"0,9124087591",9,11,2024
+27771,09/11/2024,Liane,"5.600,00",0,Sandra Regina Wensing Raimann,67417388949,48999618999,"Rua Flores da Cunha, 74. Estreito, Florianópolis, SC.",,1,9,11,2024
+28020,12/11/2024,Salete,"7.500,00",0,Leonardo Gomes de Oliveira,91028731968,48988180606,"Est. Haroldo Soares Gloven, 1830. Cacupé, Florianópolis, SC.",,1,12,11,2024
+27769,09/11/2024,Rose,"4.839,00",0,Marcos Oliveira,02544019700,48991648820,"Almirante Lamego, 1346. Centro, Florianópolis, SC.",,1,9,11,2024
+27768,08/11/2024,Rose,"6.350,00",0,Rafael Lisboa de Souza,02196701963,48984254644,"Rua Haroldo Soares Gloven, 4320. Cacupé, Florinópolis, SC.",,"1,00031506",8,11,2024
+27773,05/11/2024,Liane,"3.200,00",0,Felipe,,48988227644,,,1,5,11,2024
+27765,07/11/2024,Neide,"11.000,00",0,Leandro Martins,,48991274360,"Rua das Alamandas, 353. Palmas, Governador Celso Ramos, SC.",,1,7,11,2024
+28249,07/11/2024,Rose,"7.190,00",0,Jean Carlo Bolsoni,06373006964,48991210222,"Rua Luiz Delfino, 146. Centro, Florianópolis, SC.",,1,7,11,2024
+28005,07/11/2024,Salete,"8.400,00",0,Henrique Locks Junior,71916809915,48999197799,"Rua 294, 220. Itapema, Meia Praia, SC.",,1,7,11,2024
+28006,07/11/2024,Liane,"1.000,00",0,Denise Chuster Alves,56130287968,48999736330,,,1,7,11,2024
+27764,06/11/2024,Rose,"2.700,00",0,Gabriela Salazar Funck,04552372980,48988318891,,,1,6,11,2024
+28247,06/11/2024,Liane,"30.000,00",0,Francisco Rogério Lisboa,51437589987,48988240070,"João Meirelles, 325. Itaguaçu, Florianópolis, SC.",,"1,000000667",6,11,2024
+27761,04/11/2024,Salete,"9.000,00",0,Jana Elnesen,80177748931,48988563920,"Rua Esteves Junior, 545. Centro, Florianópolis, SC.",,1,4,11,2024
+28018,12/11/2024,Liane,"18.300,00",0,Michella Mendes,91149932104,62982039887,"Deputado Antônio Edu Vieira, 1310. Pantanal, Florianópolis, SC.",,1,12,11,2024
+28245,05/11/2024,Liane,"12.715,00",0,TJSC,,00000000,,,"1,000393391",5,11,2024
+28046,28/11/2024,Rose,"16.236,00",0,Condominio Ed. Camarus,03208409000196,48988439057,"Rua Almirante Lamego, 943. Centro, Florianópolis",,"0,9999384123",28,11,2024
+28060,04/12/2024,Rose,"11.000,00",0,abilene cirello alves,69687862653,4899660226,"sete de setembro 547,  apto 802 ,  biguaçu",,1,4,12,2024
+28052,28/11/2024,Rose,"5.000,00",0,Patricia Sampaio Castelan,61280801972,48984260026,"Rua Dr. Cripo de Castro Faria, 90. Coqueiros, Florianópolis",,1,28,11,2024
+28047,29/11/2024,Neide,"3.350,00",0,Lucio,,48984146538,"Rua dos Geranios, 323. Daniela, Florianópolis, SC.",,1,29,11,2024
+28054,29/11/2024,Salete,"6.600,00",0,Roseli de Fatima Campos Machado,455250809155,48999310057,"Rua Coronel Eliseu Guilherme, 175. Campinas, São José, SC.",,1,29,11,2024
+28004,06/11/2024,Liane,"9.400,00",0,Ida Schlindem,54722772991,48991141633,"Rua testuliano Brito Xavier, 2540. Jurerê, Florianópolis, SC.",,"1,000002128",6,11,2024
+28055,30/11/2024,Rose,"6.000,00",0,Amalia Nazario Burigo,03772800971,48991645084,"Rua Imola, 30. Palhoça, SC.",,1,30,11,2024
+28049,30/11/2024,Rose,"4.850,00",0,Jesieli Silva Martins,04803164908,48999855064,"Rua Joao da Cruz Meira, 283. Trindade, Florianópolis, SC.",,1,30,11,2024
+28048,30/11/2024,Rose,"8.000,00",0,Vanusa Varela Pinto,04693200956,48991367211,"Rua Luiz BeEzzi, 45. Planalto, Gramado, RS.",,1,30,11,2024
+28056,30/11/2024,Salete,"11.000,00",0,Karen Aquino,04816009906,48999144248,"Avenida Campeche, 1157. Campeche, Florianópolis, SC.",,1,30,11,2024
+27784,28/11/2024,Salete,"11.500,00",0,Michele Barbosa,03562246963,111111111111,"Bairro Floresta, São José, Florianópolis. SC.",,1,28,11,2024
+28045,28/11/2024,Liane,"4.100,00",0,Condominio patio da pedra,18475381000120,48984699349,"Pedra Branca, Palhoça. SC.",,1,28,11,2024
+28024,14/11/2024,Liane,"6.390,00",0,Carlos Roberto Amaral,30222575034,48996941616,"Garopaba, SC.",,"1,066777963",14,11,2024
+27777,14/11/2024,Salete,"5.800,00",0,Aline Oliveira da Costa,,48988196988,"Rua Vereador Osni Ortiga, 2883. Lagoa da Conceição, Florianópolis, SC.",,1,14,11,2024
+28023,14/11/2024,Salete,"10.000,00",0,Marco Antonio Leal,29587204034,51993726001,"Avenida Campeche, 555. Campeche, Florianópolis, SC.",,"0,9867771857",14,11,2024
+28021,14/11/2024,Rose,"3.500,00",0,Rafael Lisboa de Souza,02196701963,48984254644,"Rua Haroldo Soares Glavan, 4320. Cacupé, Florianópolis, SC.",,1,14,11,2024
+27778,16/11/2024,Rose,"13.000,00",0,Tiago Bottini,02822310998,48999994747,"Rua Travessa Hamilton Berreta, 30. Itaguaçú, Florianópolis.",,"0,8353682046",16,11,2024
+28025,16/11/2024,Liane,"4.200,00",0,Euler Lage Moreira,24322830668,19996841735,"Avenida Campeche, 555. Campeche, Florianópolis, SC.",,1,16,11,2024
+28030,19/11/2024,Neide,"21.700,00",0,Fernanda Baggio Gasperin,04186171980,48999148587,"Rua Salvatina Feliciana dos santos, 257. Itacorubi, Florianópolis, SC.",,"1,023584906",19,11,2024
+28028,19/11/2024,Rose,"6.600,00",0,Bill de Medeiros,245270419191,48996423614,"Rua José candido da silva, Balneário, Florianópolis",,1,19,11,2024
+28033,21/11/2024,Salete,"5.200,00",0,Nadia,,4899805191,,,1,21,11,2024
+28027,18/11/2024,Rose,"300,00",0,Everton,-,1111111111,-,-,1,18,11,2024
+28026,18/11/2024,Salete,"2.900,00",0,Aline Oliveira da Costa,,48988196988,"Rua Vereador Osni Ortiga, 2883. Lagoa da conceição. Florianópolis, SC.",,1,18,11,2024
+27779,18/11/2024,Salete,"14.385,00",0,Elaine Maria Resende,75161486791,48996172712,"Rua Medico Miguel Sales Cavalcante, 38. Abraão, Florianópolis, SC.",,"0,8136772442",18,11,2024
+28034,23/11/2024,Liane,"7.000,00",0,Thays Joana Tumetero,05187642901,48984083633,"Rua João Batista Dalascio, 330. Coqueiros, Florianópolis.",,1,23,11,2024
+27782,23/11/2024,Liane,"11.200,00",0,Rodrigo Basto Vieira,01531752730,48999310521,"Rua Mediterraneo, 172. Corrego Grande, Florianópolis, SC.",,1,23,11,2024
+27781,22/11/2024,Salete,"1.300,00",0,Sonia Eunice ,,48996287706,,,1,22,11,2024
+28035,24/11/2024,Salete,"4.300,00",0,Cristiane Mara Bohnen,04714693948,48996542550,"Caminho do engenho, 160. Itacorubi, Florianópolis, sc.",,"1,000009302",24,11,2024
+28041,26/11/2024,Salete,"998,00",0,Luciana Cordeiro Fleischmann,01663912980,48999170017,"Rue Desembargador Flavio Tavares da Cunha, 186. Coqueiros, Florianópolis",,1,26,11,2024
+28039,26/11/2024,Rose,"9.300,00",0,Rogério Mazieiro,,48999662386,"Tadeu Szpoganicz, 144. Cachoeira do bom jesus, Florianópolis",,"0,992529349",26,11,2024
+28038,26/11/2024,Rose,"6.000,00",0,Maria Beatriz da Rocha,74042726100,48996823738,"Salvatina Feliciana dos santos, 391. Itacorubi, Florianópolis",,1,26,11,2024
+28037,25/11/2024,Liane,"20.000,00",0,"Maximiliano 0,1as de freitas noronha",78499739920,48996379111,Avenida dos Salmoes,,1,25,11,2024
+28042,26/11/2024,Rose,"8.000,00",0,Beatriz Bernadete Belotti,09742395004,48996172904,"Avenida Hercilio Luz, 1425. Centro, Florianópolis",,1,26,11,2024
+28051,26/11/2024,Salete,"11.000,00",0,Ernando Zatarino Junior,00895977966,48984136586,"Rua Rodrigo Rompineli Larimar, 2383. Itacorubi, Florianópolis.",,"0,8384146341",26,11,2024
+28040,26/11/2024,Liane,"5.800,00",0,Jane Marcia Marchese,47701617949,48999624278,"Rod Virgilio Varzea, 1006. Saco Grande, Florianópolis, SC.",,1,26,11,2024
+27780,18/11/2024,Liane,"60.000,00",0,Carlos Aroldo Rezende,18204678649,48988425026,"Rua Frei Caneca, 218. Centro, Florianópolis",,"0,7943442688",18,11,2024
+27803,05/12/2024,Outro,"1.580,00",0,lLONI INES LUNARDI,55145612087,55996564956,"FELIPE SCHIMIDT 869 , APTO 1703 CENTRO",LONILUNARDI@HOTMAIL.COM,1,5,12,2024
+27786,05/12/2024,Liane,"9.310,00",0,"MESA QUADRADA 1,50 X 1,50",66666,996601968,ODILON GALOTI 291 CAPOEIRAS CAS,,1,5,12,2024
+28022,14/11/2024,Rose,"25.000,00",0,Rafael,11111111,48984844004,"Rua Professor Renato Barbosa, 174. Jurere, Florianópolis",,"1,006036217",14,11,2024
+28044,27/11/2024,Liane,"18.000,00",0,Khaled Eddine,00652722938,48999124399,,,1,27,11,2024
+28019,12/11/2024,Liane,"54.000,00",0,Khaled Eddine,00652722938,48999124399,,,"1,006300372",12,11,2024
+27787,06/12/2024,Liane,"9.800,00",0,JOEL DE SOUSA,18220622920,48991022704,RUA DAS LARANJEIRAS 324 CASA JURERE,,1,6,12,2024
+27789,06/12/2024,Salete,"11.500,00",0,MARIANA CAVALCANTI CUTAIT,22933273888,48996262999,ANTONIO JOSE THOMAS DA COSTA 322 CASA 02,,1,6,12,2024
+27790,06/12/2024,Salete,"4.000,00",0,MICHELE BATISTA DE MELLO,02973751993,48999016090,SERGIO GIL 263 APTO 501 ESTREITO,,"0,999995",6,12,2024
+27788,06/12/2024,Salete,"24.420,00",0,PEDRO PAULO SANTANA LAUS,15544940959,48999180004,GUILHERME VARELA 200 CASA TIJUCAS,,"0,9999590516",6,12,2024
+27792,07/12/2024,Rose,"10.000,00",0,LEONARDO WETPHAL,04399954930,48999114234,AFONSO PENA 494 ESTREITO APTO 203,,1,7,12,2024
+27793,07/12/2024,Salete,"8.235,00",0,DANIELLA MABONI,0087798288,48984283115,VALDOMIRO JOSE VIEIRA 81 CASA 01  CAMPECHE,,1,7,12,2024
+27791 ,07/12/2024,Liane,"20.300,00",0,CAIO CESAR GARBELOTTO,088417399963,48984461470,BEIJA FLOR 67 APTO 304 PRAIA GRANDE,,1,7,12,2024
+27794,07/12/2024,Liane,"9.500,00",0,KUCIANA DA COSTA BARBOSA,59709499068,48999277117,SALVADOR DI BERNARDI  APTO 705 PRIVILEGE DECOR,,1,7,12,2024
+28063,07/12/2024,Liane,"18.900,00",0,CARLOS AROLDO REZENDE,18204678649,48988425026,FREI CANECA 218 CENTRO,,"0,8792742498",7,12,2024
+27795,09/12/2024,Salete,"6.700,00",0,ROBERTA RODRIGUES DE LIMA,08449892902,999089025,AV MAURO RAMOS 1250,,1,9,12,2024
+27797,09/12/2024,Liane,"3.200,00",0,RICARDO MARASQUIM,00696861062,48991035654,FELIPE SCHMIDT 869 CENTRO,,1,9,12,2024
+27798,09/12/2024,Liane,"5.300,00",0,ELAINE CRISTINA DOS SANTOS,00375431993,48999449540,AV HERCILIO LUZ 853,,1,9,12,2024
+28102,10/12/2024,Liane,"6.000,00",0,MARIA EMILIA  GANZAROLLI,86708201704,48998482211,DURVAL MELQUIADES DE SOUZA 755,,1,10,12,2024
+28101,10/12/2024,Salete,"57.979,00",0,NILZA SPESSOTO HERNANDES M PALHANO,22335916823,65999904113,AV ATLANTICA 4950 4202 BALN CAMB,,"1,000051746",10,12,2024
+28013,09/12/2024,Salete,"4.400,00",0,SALETE ,02197226924,48999727279,ALMIRANTE LAMEGO 674 CENTRO,,1,9,12,2024
+27799,10/12/2024,Liane,"4.390,00",0,MARIA ALUCI,00000000000,48999329709,PADREE RHORV2055   SAMBAQUI,,1,10,12,2024
+28017,11/12/2024,Rose,"3.400,00",0,RAFAEL LISBOA DE SOUZA,00000000000,48984254644,HAROLDO SOARES GLAVAN 4320,,1,11,12,2024
+28016,11/12/2024,Liane,"6.145,00",0,ELZIRA BEATRIZ DAS CHAGAS,932912803020,48996240319,SERVIDAO MARIA MARTINS DAS CHAGAS 11,,1,11,12,2024
+28104,11/12/2024,Liane,"2.320,00",0,CARLOS AUGUSTO THIVES DE CARVALHO,68696086953,48991111969,MADRE BENVENUTA 288,,1,11,12,2024
+28103,11/12/2024,Rose,"5.100,00",0,PABLO WILLIANS,03553690798,021982279864,CHIQUINHA GONZAGA 285,,1,11,12,2024
+28106,12/12/2024,Salete,"29.300,00",0,EVERSOM SALEM CUSTODIO,35230747897,48999201464,RUA HOEPCKE 179,,"0,88056741",12,12,2024
+28107,13/12/2024,Neide,"12.600,00",0,CAMILA COELHO,04094373950,48992043897,RAMON FILOMENO 255,,"0,8090926604",13,12,2024
+28109,14/12/2024,Neide,"15.800,00",0,ADMILSON REIS DA SILVA,07443677782,5199686350,ESTEVES JR 545 AP 1301 CENTRO,,"1,070678322",14,12,2024
+28108,14/12/2024,Liane,"10.000,00",0,CARLOS AUGUSTO BEDIN,34370234912,48999852599,RUA RUI BARBOSA 86,,"0,7984669435",14,12,2024
+28064,16/12/2024,Rose,"100.000,00",0,SILVA ADMINISTRADORA BENS PROPRIOS LTDA,09614357000108,48,RUA JACOBSENS 316 AREIAS,,"0,8808865242",16,12,2024
+28111,16/12/2024,Salete,"9.000,00",0,NANCY VERONICA HUBERT,85880337987,48999733330,ORLANDO KOERICH 156 JD ATLANTICO,,"0,7636178517",16,12,2024
+28110,16/12/2024,Salete,"5.800,00",0,MAURICIO DE OLIVEIRA,04308252938,48991642270,ORLANDO ODILIO KOERICH 156 T 1,,1,16,12,2024
+28065,16/12/2024,Rose,"1.072,00",0,SAMANTA CATOIA,00340648937,48991194759,GEN LIBERATO BITENCOURT 1475,,1,16,12,2024
+28066,17/12/2024,Salete,"5.000,00",0,PAULO ROBERTO ANDERSON,0000,999999360,JUSTINO ALBERTO LEAL BIGUAÇU,,"0,9838646202",17,12,2024
+28112,17/12/2024,Liane,"10.170,00",0,GERMANO DE OLIVEIRA CARBONERA,50195205963,48996395,CRUZ E SOUZA 73,,"0,8119760479",17,12,2024
+28113,17/12/2024,Rose,"4.200,00",0,RODRIGO BOUSFIELD,02808091907,48996198713,RECANTO FORTALEZA,,1,17,12,2024
+27774,11/12/2024,Liane,"1.150,00",0,ROSANI VIEIRA,61326356968,489988400602,SERVIDAO D. FLOAINA 307 CASA ESTREITO,,1,11,12,2024
+27796,10/12/2024,Rose,"4.700,00",0,AMIN ALKARAM,63582970906,48991393710,FERNANDO FERREIRA DE MELO 70 BOM ABRIGO,,1,10,12,2024
+28073,21/12/2024,Rose,"6.470,00",0,PATRICIA,CCCC,3333,CCCC,,"0,8489699514",21,12,2024
+28121,21/12/2024,Liane,"7.420,00",0,JEAN FELIPHE KEIEGL,05329352924,48991761822,VERGILIO PONCIANO  JOAO PAULO  ap 303,,1,21,12,2024
+28074,21/12/2024,Salete,"8.600,00",0,MAURICIO MULLER,13692307705,48988010053,ROD MAURO GONZAGA 4252 AP 302 RIO TAVARES,,"0,8467900748",21,12,2024
+28122,21/12/2024,Rose,"6.000,00",0,PAULINA CAMPOS,04764539926,48999020394,TENENTE SILVEIRA 741 AP 302 CENTRO,,1,21,12,2024
+28071,20/12/2024,Liane,"1.050,00",0,OLAVIO,22222,48999781618,CCC,,1,20,12,2024
+28119,20/12/2024,Salete,"1.300,00",0,DANIELA ANDRADE DE OLIVEIRA,01909064988,22222,NOSSA SENHORA DO ROSARIO 699 CASA JD ATLANTICO,,1,20,12,2024
+28070,20/12/2024,Salete,"2.237,00",0,CAMILA COELHO,04094373950,48992043897,RAMON FILOMENO 255,,1,20,12,2024
+28120,19/12/2024,Rose,"4.800,00",0,RAFAEL  ,3333,3333,EUA DOS PLATANOS 200 PALMAS,,1,19,12,2024
+28072,20/12/2024,Liane,"1.200,00",0,GEOVANO ALVES,3333,48999197676,PAULA RAMOS 1115 APT 301,,1,20,12,2024
+28114,18/12/2024,Salete,"40.000,00",0,FABIO SOAR MARTINS,416499558900,48984041735,RUA DOS IPES 77 BOSQUE,,"0,9160235418",18,12,2024
+28068,18/12/2024,Salete,"15.350,00","0,1",LEANDRINA SOARES,42890934004,48991031754,RUA HERLICLIO LUZ 97 APTO 306 CENTRO FPOLIS,,"0,8776945509",18,12,2024
+28067,17/12/2024,Neide,"45.000,00",0,NERI PAMPLONA DA ROCHA,02708722999,48991575007,GERMANO VENDAUSEN 35 APTO 702 CENTRO,,"0,8509029025",17,12,2024
+28115,19/12/2024,Rose,"4.000,00",0,CAROLINE KOBARG DAMASIO ARANTES,05626557946,48991350077,BRASIL PINHO 286 702 SAO JOSE,,1,19,12,2024
+28116,19/12/2024,Rose,"2.600,00",0,MARTA GAELH ADM LTDA,37369016000186,489918500330, ESTRADA ONILDO LEMOS 2505 COSTAO SANTINHO,,1,19,12,2024
+28117,19/12/2024,Salete,"1.000,00",0,MARINA CAVALCANTI GRETAIT,22933273888,48996262999,TRAV DA LIBERDADE 452 CAMPECHE,,1,19,12,2024
+28069,19/12/2024,Rose,"8.000,00",0,DALVA DUARTE,01677726946,48999418461,almeida coelho  95 SACO DOS LIMOES,,1,19,12,2024
+28118,19/12/2024,Rose,"2.000,00",0,ELEONORA VIEIRA,455013724049,999835674,BOULEVARD PAULO ZIMERMANN,,1,19,12,2024
+28124,23/12/2024,Outro,"4.900,00",0,ANA CLAIR BILLU,69056943987,48996526219,"MAL GUILHERME APTO 103 , SALA 501 CENTRO",,1,23,12,2024
+28123,23/12/2024,Salete,"5.000,00",0,ANA CLARA BILLEI,69056943987,48996526219,MAL GUILHERME,,1,23,12,2024
+28127,28/12/2024,Salete,"53.300,00",0,SEBASTIAO LUCIO DA SILVA TELLES,22222222222,48984046903,BOCAIUVA 2128 APTP 301 CENTRO,,"0,808139006",28,12,2024
+28126,27/12/2024,Salete,"1.900,00",0,ADRIANA SOUZA,02497793905,48999790145,JOAO MEIRELLES 884 COQUEIROS,,1,27,12,2024
+28129,30/12/2024,Rose,"14.000,00",0,ANA PAULA DOS SANTOS CORREA,03071756933,48984014055,"RUA LAGOINHA CASA 65 , PEDRA BRANCA , RESERVA DA PEDRA",,1,30,12,2024
+28128,30/12/2024,Rose,"3.948,00",0,GABRIELA TASSO,05270325900,48999991274,DAS ANDROINHAS 391 LAGOA CONCEIÇÃO,,"0,9989878543",30,12,2024
+28059,02/12/2024,Rose,"7.000,00",0,MARIA CLAUDIA ALVES,02999219997,48999157195,RUA DAS ALGAS 425 JURERE,,1,2,12,2024
+27785,03/12/2024,Salete,"22.500,00","0,1",MICHELE FORMONTE,03109209905,48988075004,AROLDO SOARES GLAVAN 4320 202 T 4 CACUPÉ,,"0,8767827917",3,12,2024
+28131,02/01/2025,Liane,5380,0,MARIA APARECIDA SAUER,000000,48999801816,ARNO HOESCHEL 361  CENTRO FPOLIS,,1,2,1,2025
+28130,02/01/2025,Salete,6000,0,SEBASTIAO LUCIO TELES JR,00000,48984046905,BOCAIUVA 2128 CENTRO FPOLIS,,"0,9836065574",2,1,2025
+28132,03/01/2025,Rose,18000,0,NILZETE MARIA SCHMITZ DESCHAMPS,41724844920,48999601787,EDUARDO NADER 589 BOM ABRIGO FPOLIS,,1,3,1,2025
+28075,04/01/2025,Liane,1530,0,MARCELO MARTINS DA SILVA,39886611987,4899147866,CAMPINAS SJ,,1,4,1,2025
+28133,04/01/2025,Liane,19000,0,FERNANDO MAURO TOLEDO PRADO,58798781987,4899148906,FELIPE SCHMIDT 869 CENTRO FPOLIS,,"0,8936970837",4,1,2025
+28076,06/01/2025,Rose,8500,0,PAULO ROBERTO MENDES,45540527968,48999331460,VERA LINHARES DE ALMEIDA 2795 ITACORUBI FPOLIS,,"0,9826589595",6,1,2025
+28134,07/01/2025,Liane,8100,0,ROSE NERI VARGAS PACHECO,60954558049,999170120,JOSE CANDIDO DA SILVA 144 APT 302 BAL EST,,1,7,1,2025
+28078,08/01/2025,Rose,8230,0,ALEX BUTTCHEVITZ,06757036975,48999336077,ROD JOAO PAULO 2301 AP 402 JOAO PAULO FPOLIS,,1,8,1,2025
+28077,08/01/2025,Rose,5408,0,WAGNER BARREIROS JUNIOR,0000,48991665036,ABEL CAPELA 494 COQUEIROS FPOLIS SC,,1,8,1,2025
+28081,11/01/2025,Rose,13500,0,ANDERSON SCHIRHAUS G ANDRADE,00342465929,48991933261,RUA JARI 63 PEDRA BCA PALHOÇA,,"0,9960159363",11,1,2025
+28084,13/01/2025,Rose,11120,0,FILIPE MENEZES VASCONCELOS MACHADO,006177646227,48996441224,SALVADOR DI BERNARDI 840 AP 202 CAMPINAS SJOSE,,1,13,1,2025
+28083,13/01/2025,Liane,3400,0,CAMILA DUARTE PRAZERES,07113613964,48984100940,WILSON LUZ 145 APTO 702 COQUEIROS FPOLIS,,1,13,1,2025
+28082,13/01/2025,Liane,6600,0,LISIANE PAGNUSSATI,00274671042,48999129508,TRAV FELIPE GODINHO E SILVA 30 AP 502 AGRONOMICA,,1,13,1,2025
+28135,17/01/2025,Liane,9200,0,DANILO SILVA BITTAR,00843537914,43999555232,PRESIDENTE COUTINHO 297 AP 202 CENTRO FPOLIS,,1,17,1,2025
+28137,17/01/2025,Liane,3700,0,LUCENIR HILDA DE SOUSA ,01955715911,48991748877,AV SANTA CATARINA 1130  ESTREITO AP 903 FPOLIS,,1,17,1,2025
+28087,16/01/2025,Rose,2000,0,IVANISE RAMOS MANCIO,20319760677,519811162271,AV PADRE CACIQUE 470 AP 801 PORTO ALEGRE,,1,16,1,2025
+28136,17/01/2025,Liane,2000,0,KERLY,0000,0000000,BOSQUE DAS MANÇOES,,1,17,1,2025
+28138,18/01/2025,Liane,2100,0,THEREZINHA BENTO MACHADO,0000,48999155804,SANTOS SARAIVA 469 AP 404 B FPOLIS,,1,18,1,2025
+28079,10/01/2025,Rose,4550,0,CLELIO MARCOS PEREIRA,01484352971,49998360777,SANTOS SARAIVA 469 AP 505 BLOCO A FPOLIS,,1,10,1,2025
+28086,15/01/2025,Liane,3980,0,JULIANA DA ROSA VIEIRA,00727002031,51985219773,ROD JOAO PAULO 2031 JOAO PAULO FPOLIS AP 202,,1,15,1,2025
+28140,23/01/2025,Liane,2336,0,JERUSA CRISTINA CENTRO,90903480930,48999613277,CENTRO,,1,23,1,2025
+28089,23/01/2025,Rose,1260,0,BARTIRA,000000,0000,CENTRO,,1260,23,1,2025
+28141,23/05/2025,Salete,2500,0,MARCELO DA SILVA FREITAS,95198938904,4899641111,ALMIRANTE LAMEGO 810 APTO 502 CENTRO FPOLIS,,1,23,5,2025
+28092,25/01/2025,Salete,8770,0,JANE MARCIA MARCHESE,47701617949,48999634278,ROD VERGILIO VARZEA 1006,,1,25,1,2025
+28093,25/01/2025,Neide,6000,0,SAULO JOSE FLORINDO,22213964807,48996268415,DES PEDRO SILVA  2306 APTO 102 COQUEIROS FPOLIS,,1,25,1,2025
+28144,25/01/2025,Rose,2800,0,IVONE KLEIN,00000,48991647506,PEDRO CUNHA 968 AP 312 COQUEIROS FPOLIS,,1,25,1,2025
+28091,25/01/2025,Liane,6999,0,JEAN FELIPHE KIEGEL,05329352924,48991761822,VERGILIO PONCIO 48 AP 303 JOAO PAULO FPOLIS,,"1,001287554",25,1,2025
+28094,25/01/2025,Salete,10400,0,MARISA THALES VALLE BARRETO,04838101932,48991121978,CAMARIN 221 C 18 CAMPECHE FPOLIS,,1,25,1,2025
+28090,24/01/2025,Rose,9300,0,MARIA ISABEL COSTA,41562798987,48991193167,ALMIRANTE LAMEGO 910 AP 202 CENTRO FPOLIS SC,,"1,86559679",24,1,2025
+28139,20/01/2025,Rose,1940,0,ELIANE NETTO,039830149994,48996444176,JORNALISTA TITO DE CARVALHO 155,,1,20,1,2025
+27101,28/01/2025,Salete,13950,0,CLAUDIA MARIA PEITER,45786151972,48999726617,SERVIDAO 55 CENTRO AP 551/202 FPOLIS,,1,28,1,2025
+28146,27/01/2025,Rose,8995,0,ELIZABETH,00000,48991276900,ABEL CAPELA CASA,,1,27,1,2025
+28145,27/01/2025,Liane,8995,0,ELIZABETH,00000,4444,COQUEIROS,,1,27,1,2025
+27102,29/01/2025,Rose,2480,0,BIA AKEMI TATIBANA,04836441960,48999169638,BRIG SILVA ´PAES 85 AP 1208 CAMPINAS SJOSE,,1,29,1,2025
+27901,29/01/2025,Liane,7500,0,KAROLINA DUARTE VELHA,06016204960,48991702904,BRASIL PINHO 95 AP 202 KOBRASSOL SJOSE,,"1,000266738",29,1,2025
+27902,29/01/2025,Rose,13938,0,TAMIRA,00000,00000,00000,,"0,999856528",29,1,2025
+27903,29/01/2025,Rose,1000,0,IDA,00000,00000,COQUEIROS,,1,29,1,2025
+27854,31/01/2025,Liane,12000,0,ERICA VIEIRA,02876323831,48984055949,DELMINDA SILVEIRA 535 AP 103 A AGRONOMICA,,1,31,1,2025
+27906,31/01/2025,Liane,3790,0,LUMIERE CLINIQUE,252322,48999764618,SANTOS DUMOND 182 SALA 204 CENTRO,,1,31,1,2025
+28096,31/01/2025,Salete,5240,0,CLAUDIAMMARIA PEITER,45786151972,48999726617,SERVIDAO 55 55/202 CENTRO FPLIS,,1,31,1,2025
+27907,31/01/2025,Salete,5150,0,NEIDE MARA COSTA,45496285968,48984646077,APENINOS  114 AP 406 CORR GDE FPOLIS,,1,31,1,2025
+27904,30/01/2025,Rose,2400,0,MICHELE,00000,00000,000000,0000,1,30,1,2025
+27905,30/01/2025,Liane,1920,0,VITOR COSTA BOTELHO,0000,48991096757,MMMMM,,1,30,1,2025
+27852,30/01/2025,Liane,6000,0,DANIELA HAFNER,03432518765,48991330717,TAFAEL BANDEIRA 162 AP 204,,1,30,1,2025
+27900,12/02/2025,Salete,6350,0,MARIA NIEHEUSS,20027893987,48991458147,LUIZ GONZAGA VALENTE 1033 CAPOEIRAS,,1,12,2,2025
+27861,13/02/2025,Liane,5000,0,CLAUDIA COPOLLI,0000,48984478877,D,,1,13,2,2025
+27919,24/02/2025,Salete,3700,0,RES MAR DEL PRATA,86805405000112,9998512194,MARIA HELENA KRETZER 580  SAO JOSE,,1,24,2,2025
+27920,24/02/2025,Salete,19370,0,ROSAURA  FLORES PEREIRA DOS SANTOS,34383590900,48996482402,AV CLAUDIO DE SOUZA 15  ROÇADO SAO JOSE SC,,"1,183262065",24,2,2025
+27119,27/02/2025,Salete,2700,0,ANA HAMER,38059317865,489887824,AV CAMPECHE 555 AP 6024 CAMPECHE,,1,27,2,2025
+27118,27/02/2025,Salete,7000,0,MARCELL KARAM,02634253982,48991522000,AV DELTA VILLE 150 CASA 75 BEIRA RIO,,1,27,2,2025
+27872,22/02/2025,Salete,3400,0,SUELYN MACHADO DO AMARAL,06871541977,48988128808,IRMAOS VIEIRA 967,,1,22,2,2025
+27108,11/02/2025,Salete,3980,0,FRANCIANE MACFADYEN,0000000,000000,DOS BADEJOS 217 JURERE,,"0,9974937343",11,2,2025
+27909,12/02/2025,Salete,6350,0,MARIA LUCIA NIEHEUS,20027893987,48991458147,LUIZ GONZAGA VALENTE 1033 CASA CAPOEIRAS,,1,12,2,2025
+27107,10/02/2025,Salete,19220,0,ELAINE,0000000,48984726914,RUA DAS LARANJEIRAS 100  PEDRA BRANCA,,1,10,2,2025
+28100,03/02/2025,Salete,6540,0,"MARIA EDUARDA 0,1ON MEDEIROS  ",04215709032,51999013594,RUA SANTANA 1092 AP 1004 SANTANA PORTO ALEGRE,,1,3,2,2025
+27105,10/02/2025,Salete,3540,0,ELIZABETH RODRIGUES DE LIMA,37707965949,4899606088,AV MAURO RAMOS 1250  AP24 BL 02,,1,10,2,2025
+27857,09/02/2025,Salete,20000,0,LUIZ CARLOS DALAZEN,60295201053,48988011025,RUA DA UNIVERSIDADE 89 PEDRA BRANCA,,1,9,2,2025
+27867,17/02/2025,Salete,11000,0,IGOR DE LUNA,01929903308,48,VVVVVV,,"1,000090917",17,2,2025
+27917,21/02/2025,Liane,9500,0,SERGIO MURILO DA SILVA,46095489920,4899824733,ROD TERTULIANO BRITO XAVIER 3104 APTO 212 A 3 JURERE,,1,21,2,2025
+27114,21/02/2025,Liane,6380,0,GABRIELA YORI MONTEIRO SHOJI,10357851960,47997010340,JULIO TEODORO MARTINS 3854 AP 304 RIO CAVEIRAS  BIGUAÇU,,1,21,2,2025
+27913,20/02/2025,Liane,6490,"0,1",ASCELI DE SOUZA,45025630991,4899722496,RUA DA BALISA 194 CASA CACHOEIRA,,1,20,2,2025
+27869,18/02/2025,Liane,11000,"0,1",MARIA ELOISA NEVES MAY,41789474949,48999722141,DUARTE SCHUTEL 204 AP 902 CENTRO,,1,18,2,2025
+27870,18/02/2025,Liane,10300,0,RENATO DA SILVA,00125713002,48984957655,AV DO CAMPECHE 555 6124 AP T6,,"0,9502721653",18,2,2025
+27865,18/02/2025,Liane,6790,0,FLAVIA KACKRADT,02817899911,48988254740,JOAO PAULO 820 501 D,,1,18,2,2025
+27910,14/02/2025,Liane,9942,0,RAFAEL BEZ CLAUMANN,00594594928,48984266887,ALMIRANTE LAMEGO 1304 AP 23 CENTRO,,1,14,2,2025
+27863,14/02/2025,Liane,2190,0,SALETE DE OLIVEIRA,37606794987,489994440108,VVVVV,,1,14,2,2025
+27860,13/02/2025,Liane,5000,0,CLAUDIA ROCHA COPOLLI,76146456691,489844478877,DUARTE SCHUTEL 181  AP 1421 CENTRO,,1,13,2,2025
+27109,11/02/2025,Liane,6000,0,MAX FREDERICO HABLITZEL,0000000,48999820800,RUBENS DE ARRUDA RAMOS 2062 AP 601,,1,11,2,2025
+27110,11/02/2025,Liane,5800,0,FELIPE ARMANI,34370466830,489883665557,PEDRO VIERIA VIDAL 128 PANTANAL,,1,11,2,2025
+27104,07/02/2025,Liane,13000,0,ALEXANDRE K CONSTRUTORA,10592750000153,48991281970,PEDRA BRANCA,,1,7,2,2025
+27858,08/02/2025,Liane,8900,0,LUIZ ANTONIO MARTINS ELIAS,00850166918,48991128580,RUA 323 B 91 AP 602 MEIA PRAIA,,1,8,2,2025
+27908,01/02/2025,Rose,7400,0,JULIO CESAR SALA,05524138952,48996701177,FELIPE SCHIMIDT 1011 CENTRO,,1,1,2,2025
+28097,01/02/2025,Rose,4760,0,TELMA MARA CESAR,88101250,4899118494,AV BRIGADEIRO SILVA PAES 180 AP 401 CAMPINAS,,1,1,2,2025
+27117,26/02/2025,Neide,6000,0,RODRIGO,0000000,48996198713,SERVIDAO RECANTO DA FORTALEZA 214 CASA  BARRA DA LAGOA,,1,26,2,2025
+28099,03/02/2025,Neide,"14520,09",0,ROSA ALBUQUERQUE,0000000,48991214142,ALTAMIRO GUIMARAES 245 AP 903 CENTRO,,1,3,2,2025
+27106,10/02/2025,Neide,9400,0,RODRIGO,0000000,489996198713,BARRA DA LAGOA,,1,10,2,2025
+28150,08/02/2025,Neide,2300,0,RODRIGO BOUSFIELD,0000000,480000,PEDRA BRANCA,,1,8,2,2025
+27103,01/02/2025,Neide,11540,0,DENIZE KIRCHOF,00906159997,48999778225,SERVIDAO VITORIANA LOPES 1344 CAMPECHE,,"1,086117647",1,2,2025
+27112,12/02/2025,Outro,1705,"0,1",NEIVA DE OLIVEIRA,17505844091,45991915425,DOS PALIOS 40 JURERE,,1,12,2,2025
+27915,20/02/2025,Outro,11660,"0,1",DANIELA MARTINS MONTENEGRO,04697355984,48991230433,BOULEVARD PAULO   101 AGORONOMICA,,1,20,2,2025
+27914,20/02/2025,Outro,2000,0,MONIQUE MATIOSKI,08033810939,48998654725,DESEMB ARNO HOESCHEL 39,,1,20,2,2025
+27113,13/02/2025,Outro,5000,0,CLAUDIA COPOLLI,0000000,480000,CENTRO,,"1,00040016",13,2,2025
+27859,11/02/2025,Outro,4000,0,RENATA GUIMARAES,536657725153,48985025886,LAURO LINHARES 1390,,1,11,2,2025
+28148,06/02/2025,Outro,3200,0,ANDRE LONCINI,00344374017,48998515561,ALM BARROSO 22 AP 603 JOAO PAULO,,1,6,2,2025
+27864,15/02/2025,Outro,4740,0,JOSE ROBERTO OLIVEIRA,00358795990,48,FELIPE SSCHIMIDT 869 CENTRO,,1,15,2,2025
+27912,17/02/2025,Outro,4200,0,JADIR JOAQUIM PERREIRA,24643696915,48,RUA CATARINA MEIRA DOS SANTOS 557 CASA BARREIROS,,1,17,2,2025
+27911,15/02/2025,Outro,1890,0,JEANE CORREA,03195944902,48954044501,DAS LARANJEIRAS 110 BOSQUE DAS MANSOES,,1,15,2,2025
+27873,25/02/2025,Liane,12092,0,CLAUDIA VERDI GUAZZEELI,37829130000,48988661824,AV TROMPOSVSKI 420 AP 607 CENTRO,,"1,009686039",25,2,2025
+27115,21/02/2025,Salete,2480,0,FABIANA MARIA PIRES,03533547914,48988330086,WAKDEMIRO JOSE VIEIRA 65 AP 301 CAMPECHE,,"0,9185185185",21,2,2025
+27871,28/02/2025,Salete,4399,0,ANA CLAUDIA DAROS,00000,48999639750,AV RIO BRANCO 354 CENTRO,,1,28,2,2025
+27918,22/02/2025,Salete,6391,0,MARIA DE FATIMA MORREIRA,39920020982,48999815688,CRISPIM MIRA 97 AP 201 CENTRO,,1,22,2,2025
+27855,01/02/2025,Liane,4740,0,MARIA ROSANGELA ARALDI,50837974968,48996362395,PROF ANTONIETA DE BARROS 534 CANTO,,1,1,2,2025
+27116,25/02/2025,Leila,13800,0,PEROLA REGINA CORGHI,31795282819,44991062309,AV CAMPECHE 533,,1,25,2,2025
+27121,28/02/2025,Liane,6000,0,adriana wieneus,00004745922,48999828118,luiz gonzaga valente 1043,,1,,,
+27124,06/03/2025,Salete,14000,N,BEATRIZ DELLA GIUSTINA,78512590963,48999816738,PRES COUTINHO 414 1404 CENTRO,,1,6,3,2025
+27876,04/03/2025,Salete,7800,N,SILVIA CALDAS DO NASCIMENTO,90290712904,48988584631,EUCLIDES MACHADO 341  801 ESTREITO,,1,4,3,2025
+27122,04/03/2025,Salete,4900,N,ARNALDO VEIGA,12175624196,4+244923508106,ARLINDO ISAQUE COSTA 83 LAGOA CONCEIÇÃO CASA,,1,4,3,2025
+27875,05/03/2025,Rose,9000,N,AIRES ANGELO FILHO,51345242972,48000000,OTAVIO DO PATROCINIO MEDEIROS 245 804 FLORESTA SAO JOSE,,1,5,3,2025
+27877,04/03/2025,Salete,47990,NAO,BRUNO LUCHMANN,07961435956,48998230263,AV ASSIS BRASIL 1409 CASA PONTA DE BAIXO SAO JOSE,,1,4,3,2025
+27879,07/03/2025,Iza,450,N,ANAXAGORA ALVES MACHADO RATES,00450563901,48995590515,ROD BR 101 KM 02  4161 AP 61 SERRARIA SAO JOSE,,1,7,3,2025
+27925,04/03/2025,Salete,3000,NAO,DANIELE FERREIRA,05075786600,48988015734,JORNALISTA NARBAL VILELLA 56  JOAO PAULO,,1,4,3,2025
+27926,07/03/2025,Liane,3300,N,RENATO LA SILVA,0000,48984957655,AV DO CAMPECHE 555 AP 6124,,1,7,3,2025
+27928,08/03/2025,Liane,4600,N,JULIANA SONAGLIO,02015795960,48999384590,AV BURITI 750 ITACORUBI,,1,8,3,2025
+27927,08/03/2025,Salete,8150,N,SILVANA RAMOS,59669047900,48991695260,DUARTE SCHUTEL 181 AP 1013 CENTRO,,1,8,3,2025
+27929,11/03/2025,Rose,11300,NAO,BEATRIZ FURTADO,908948806900,48991356630,DES PEDRO SILVA  2070 202 C COQUEIROS,,"1,09178744",11,3,2025
+27882,11/03/2025,Salete,5440,N,POSTO 401,07781549000100,48991335029,ROD JOSE CARLOS DAUX 4290 FPOLIS,,1,11,3,2025
+27930,13/03/2025,Salete,1985,N,QUEILA FANINI,00070494045,48984258383,TIM MAIA 110 AP 401 SACO GRANDE,,1,13,3,2025
+27993,15/03/2025,Liane,8680,NAO,DANIEL PIOVANI,01140348930,48999123957,PROF OTILIA CRUZ 48  JARDIM ATLANTICO,,1,15,3,2025
+27932,15/03/2025,Salete,10000,N,RICARDO SANGALI,03572166950,48999890925,LAURINDO JANUARIO DA SILVEIRA 4367 CASA 06 LAGOA,,"0,998003992",15,3,2025
+27931,15/03/2025,Iza,2202,N,CHARLES MORREIRA,000000,45999321663,EURICO GASPAR DUTRA 730,,1,15,3,2025
+27887,24/03/2025,Rose,4830,NAO,CARLOS LUIZ CASTILHO,0000000,000000,00000,,1,24,3,2025
+27134,26/03/2025,Liane,2100,NAO,alceu vieira neto,0000,0000,JURERE TRAD   RUA DAS ALGAS,,1,26,3,2025
+27132,22/03/2025,Iza,5500,NAO,MARISTELA BERNARDETE,44540426915,48996100033,OLAVO BILAC 116 AP 505 ESTREITO,,"0,9588563459",22,3,2025
+27943,21/03/2025,Salete,5700,NAO,ROMERO DE CARVALHO LIMA,00966878949,48988041965,AV TROMPOSKY 300 CENTRO,,1,21,3,2025
+27133,22/03/2025,Iza,40000,NAO,CARLOS DA SILVA,82486670904,48991517071,JOSE CUSTODIO PEREIRA 343   GAROPABA,,1,22,3,2025
+27128,18/03/2025,Liane,5150,NAO,RESIDENCIAL AMANDA,21007460000111,21976853709,AVENIDA BRIGADEIRO SILVA PAES 767 CAMPINAS,,1,18,3,2025
+27937,18/03/2025,Iza,5990,NAO,DANNY MATTOS,05939754996,48999953072,MOURA 319 BARREIROS,,1,18,3,2025
+27941,20/03/2025,Liane,3800,NAO,SAMUR CLAUDIO BEBER,54539650963,48999828080,TRAVESSA DOS PESCADOS 121 JURERE,,1,20,3,2025
+27130,20/03/2025,Rose,2985,NAO,GABRIELE BENTO,07846992910,48991625166,RUA ARACUA 399 CASA PANTANAL,,1,20,3,2025
+27885,19/03/2025,Salete,8000,NAO,ADRIANA BARAO,72750650968,4899588000,PADRE ELY NODARE 160 CAPOEIRAS FPOLIS,,"2,150537634",19,3,2025
+27939,19/03/2025,Salete,3200,NAO,MARIANA MEDEIROS,05161599928,48984334049,ARISTIDES DA SILVA 37 FAZ SATO ANTONIO,,1,19,3,2025
+27940,19/03/2025,Liane,19000,NAO,ALCEU VIEIRA  ,0000,000000,00000,,"1,003485793",19,3,2025
+27883,13/03/2025,Iza,14000,NAO,FREDERICO AGENOR ALVAREZ,72464356891,4898406333,AV BARAO DO RIO BRANCO 79 AP 1601 CENTRO FPOLIS,,1,13,3,2025
+27934,17/03/2025,Salete,4500,NAO,ZALI TEREZINHA MEURER,37563270949,48999332132,FRANCISCO NAPAI 654 B. IPIRANGA SAO JOSE,,1,17,3,2025
+27923,05/03/2025,Iza,82602,NAO,LEONARDO GARCIA MACHADO,92281273091,48954156338,ROD DR  ANTONIO LUIZ MOURA GRANZOTTO 3525 CASA 09 RIO TAVARES,,"1,069904799",5,3,2025
+27936,17/03/2025,Salete,4700,NAO,NELSON MONTEIRO PINA,21941212100,48991935088,PREFEITO DIB SCHEREM 2608 CAPOEIRAS AP 302,,1,17,3,2025
+27935,17/03/2025,Rose,6600,NAO,MARTA BECKER,41789709920,48999917086,MANOEL LOUREIRO 257,,1,17,3,2025
+27946,31/03/2025,Iza,5600,n,prsicilla l dos santos,91544410030,48991343134,PEDRO SILVA 2100ap 205  COQUEIROS,,1,31,3,2025
+27947,31/03/2025,Iza,1220,N,JOAO CARLOS DOS SANTOS,09308024034,45991273935,PROF EULALIA BOSS SCHIMIDTT 66,,1,31,3,2025
+27892,28/03/2025,Iza,10000,NAO,ADRIANA LISBOA DIOTALLER,57912890904,45999610496,AV IRINEU BORNHAUSEN 3770,,1,28,3,2025
+27893,31/03/2025,Iza,9200,N,JULIANA COPETTI MATTOS DA CONCEIÇÃO,02942700947,48999093588,OTILIA DE SOUZA OLIVEIRA 277  IMBITUBA SC,,1,31,3,2025
+27894,31/03/2025,Rose,8300,NAO,MARIANI WAGNER,000000,4898848555,AV NEREU RAMOS 1055,,1,31,3,2025
+27945,28/03/2025,Liane,2145,SIM,PAYLAB TECNOLOGIA LTDA,30261719000147,4800000,PROF OTHO GAMA DEÇA 677,,"0,9976744186",28,3,2025
+27944,25/03/2025,Iza,1795,N,MARISTELA BERNARDETE,44540426915,48 988064165,OLAVO BILAC ESTREITO,,"0,9983314794",25,3,2025
+27135,28/03/2025,Liane,6600,N,MARIANA FARINA FATURI,00471495077,47992214181,ROD ADMAR GONZAGA 1669 AP 501,,1,28,3,2025
+27136,28/03/2025,Rose,25780,NAO,KAROL MMMMM,000000,48999723850,LUIS ELIAS DAUX 831 BLOCO B AP 208,,1,28,3,2025
+27890,28/03/2025,Rose,20985,N,LEILA SABADIN,79975143920,61999968781,FREI CANECA 506 AP 201 BL B1 AGRONOMICA,,"0,9995236961",28,3,2025
+27938,19/03/2025,Iza,19000,N,MAYARA PAULI,07940031929,48996173969,OTAVIO DO PATROCINIO 245,,1,19,3,2025
+27880,10/03/2025,Salete,11800,N,FELIPE ALMEIDA,10616267924,489911633223,ANTONIO SHEREM 330 AP 306 KOBRASSOL,,"0,8425562299",10,3,2025
+26660,30/04/2025,Iza,5990,N,HR COMERCIO DE VEICULOS ,07161046000131,48.991936565 KELEN,MARIA BERNARDINA VAZ BORGES S/N KOBRASSOL,,1,30,4,2025
+27679,29/04/2025,Iza,4185,N,HR COMERCIO DE VEICULOS ,07161046000131,48.991936565 KELEN,MARIA BERNARDINA VAZ BORGES S/N KOBRASSOL,,1,29,4,2025
+27149,16/04/2025,Iza,4200,N,JANI BOLDRINI GARCIA,0000000000,48996130606,AV OTHON GAMA DEÇA 643 ED ALGARVE CENTRO,,1,16,4,2025
+27655,14/04/2025,Iza,5595,NAO,ANDREA DOS SANTOS BENITES,43250017000,51998820159,ORLANDO ODILIO KOERICH 307,,1,14,4,2025
+27896,01/04/2025,Iza,5400,N,ALINA SILEYMAMOVA,79539222190,489901973735,av elza luchi 300 PONTE DO IMARUIM,,"0,9987053819",1,4,2025
+27140,04/04/2025,Iza,980,N,ADRIANA LISBOA,57912890904,48999610496,IRINEU BORNHAUSEN 3770 AP 603 AGRONOMICA,,1,4,4,2025
+27662,17/04/2025,Iza,8800,N,CARLA SCHIMITZ,03009001953,48999154321,PAULO ZIMMER 101 AGRONOMICA,,1,17,4,2025
+27651,07/04/2025,Rose,6720,N,ISABEL OLIVEIRA DE VASCONCELLOS,62101587068,489883388472,ELISEU DI BERNARDUI 200 1403 CAMPINAS SAO JOSE,,1,7,4,2025
+27898,08/04/2025,Rose,19300,n,TAISA TROGLIO,37518984091,48984668810,DOS IMIGRANTES 123 CASA RACHADEL ANTONIO CARLOS,,1,8,4,2025
+27656,14/04/2025,Rose,13990,S,KATHERINE CAVALAZZI,11350243914,48999339042,FELIPE SCHMITD 869,,"1,00647482",14,4,2025
+27148,16/04/2025,Rose,4500,N,LEILA SANTOS,02030391905,43988179171,ARNO HOESCHEL 254 AP 801 CENTRO,,"0,9997778271",16,4,2025
+27670,23/04/2025,Rose,9870,N,RAFAEL MENDES,00008185930,48999234282,DUARTE SCHUTEL 135 AP 902 CENTRO,,1,23,4,2025
+27665,22/04/2025,Rose,13000,N,ANTONINHO BALDISERA,39944395820,48991645152,JOAO ROBERTO SANFORD 174 AP 102 COQUEIROS,,1,22,4,2025
+27667,22/04/2025,Rose,3630,N,CAMILA TRVES,000000,489999999,ABEL AÇVARES JUNIOR 504 INGLES DO RIO VERMELHO,,1,22,4,2025
+27664,22/04/2025,Rose,13960,N,LEONARDO BONEM,03016775905,49999962555,ANDRE LANKA 129 AP 404 URUBICI,,"1,000286615",22,4,2025
+27677,29/04/2025,Rose,38000,N,ANDREZA ROCHA,00365478911,48984328266,DAS SAUVAS 120 PEDRA BRANCA ,,1,29,4,2025
+27676,28/04/2025,Rose,11992,N,PEDRO PASSOS RESIDENCE,031000000,48984222006,LAURO LINHARES 1315 TRINDADE,,1,28,4,2025
+27657,14/04/2025,Liane,7740,S,MAURICIO PASSAIA,000000,48996149056 GRAZIELA,MARCILIO DIAS 265 AP 801 TORRE 02 JD ATLANTICO,,1,14,4,2025
+27659,17/04/2025,Liane,4740,S,MARIANA CAVALLI,07813957989,49991365286,VEREADOR FREDERICO VERAS 159  PANTANAL,,"1,000633312",17,4,2025
+27671,24/04/2025,Liane,1400,N,ALEXANDRE K INCORPORAÇÕES,10592720000153,489912881970,PEDRA BRANCA,,1,24,4,2025
+26654,29/04/2025,Liane,3000,N,MARISE RAMOS,000000,48984315811,RUA DA CONCORDIA 109 202 BALNEARIO EST,,1,29,4,2025
+26655,30/04/2025,Liane,8980,N,ANDREI GRUBBA TAVARES,074826667989,48996172723,ALMIRANTE LAMEGO 830 AP 405 CENTRO,,1,30,4,2025
+27682,30/04/2025,Liane,5800,N,TERESA FONTOURA,000000,48991777899,JOAO CARVALHO 284 CASA AGRONOMICA,,1,30,4,2025
+27661,17/04/2025,Liane,1700,N,CRISTINA ADLER SALEM,000000,48988124525,VITOR CONDER 302  AP 404 CENTRO,,1,17,4,2025
+27663,19/04/2025,Liane,10000,N,THAMARA E B B CAVALHEIRO,000000,48991380668,ANTONIO SCHERER 564 AP 602 KOBRASSOL,,1,19,4,2025
+27658,15/04/2025,Liane,11300,N,FERNANDO POLI,200000000,011974562150,AV CAMPECHE 805 AAP 102 CAMPECHE,,1,15,4,2025
+27652,11/04/2025,Liane,7450,N,DEISE LUIZ VIEIRA,04612412931,48999587727,SAO LUFGERO 1758,,1,11,4,2025
+27895,01/04/2025,Liane,1890,N,ANDREZA,000000,00000,00000,,1,1,4,2025
+27141,04/04/2025,Liane,1380,N,MARGARETH NICHELE,000000,48996135213,NNNNN,,1,4,4,2025
+27139,03/04/2025,Liane,2100,N,GUILHERME LONARDELI,00644111925,48996308738,ALMIRANTE ALVIN 550 AP 301 CENTRO,,1,3,4,2025
+27138,03/04/2025,Liane,7345,N,TATIANE GOMES,315027007829,48992255815,AGAPITO VELOSO 67 CENTRO ,,1,3,4,2025
+27144,08/04/2025,Liane,890,N,MARIA MACARINI,000000,48,NNNNN,,1,8,4,2025
+27672,25/04/2025,Salete,15550,S,CASA DE SAUDE S SEBASTIAO,80485287000126,GLEIDSON 34 991603102,LARGO SAO SEBASTIAO 72 CENTRO,,"0,901762932",25,4,2025
+27669,29/04/2025,Salete,6500,NAO,RENATA DITTRICH,03735797997,48984029642,VERA LINHARES ANDRADE 2890 CASA 01  ITACORUBI,,1,29,4,2025
+26651,26/04/2025,Salete,2720,N,POSTO 401 SHELL,07781549000100,48991335029,ROD JOSE CARLOS DAUX 4290 SACO GRANDE,,1,26,4,2025
+26652,28/04/2025,Salete,3000,N,NERI PAMPLONA,000000,48,CENTRO,,1,28,4,2025
+27680,29/04/2025,Salete,5500,N,FERNANDA MARCELO SCOTTI,06692205900,48999120936,ARACY VAZ CALADO 1564 408 ESTREITO,,1,29,4,2025
+26653,29/04/2025,Salete,10760,N,MARGARETH BITTENCOURT,22140964934,48999725008,JOAO PIO DUARTE SILVA 1070   301 CORREGO GRDE,,1,29,4,2025
+26661,30/04/2025,Salete,19400,N,METAL TECK,88888,996357101,DESEMBARGADOR ROUCHINOIS 54  CASA PEDRA BRANCA,,"1,132912871",30,4,2025
+27681,30/04/2025,Salete,720,N,DANILO VICENTE,00000,48984846002,BBBBBB,,1,30,4,2025
+27660,16/04/2025,Salete,5000,N,MARIA GRAÇA FERNANDES,22290451991,32331666,HOPER 179 108 CENTRO ,,1,16,4,2025
+27897,04/04/2025,Salete,13500,N,VALDIR WISBECK,66374855868,48991489280,OSVALDO CRUZ 345  BALNEARIO EST,,1,4,4,2025
+27142,05/04/2025,Salete,14000,N,TEREZINHA  LIEGE DE FLORES,42577535015,48999589049,BEIRA  MAR NORTE 1052 101 CENTRO,,"1,000714796",5,4,2025
+27145,08/04/2025,Salete,2200,N,VALDIR NNNN,0000,48,NNNNN,,1,8,4,2025
+27146,09/04/2025,Neide,3280,N,CAROLINA RIBEIRO NUNES,47290638808,48981866221,AV RIO BRANCO 476,,"0,8519480519",9,4,2025
+27147,15/04/2025,Salete,8200,N,NILSON NANTI,00000,48991043235,HERCOILIO LUZ 1117 AP 801,,"0,9704142012",15,4,2025
+26659,30/04/2025,Iza,24858,N,UBIRATA CUNHA BARBOSA,25337417153,48999710662,AV BUZIOS 2965 CASA 21 B,,1,30,4,2025
+27708,29/05/2025,Rose,6800,N,DUANI SAMPAIO GALVANI,01840311096,996541140,AFONSO PENA  494 AP 603 ESTREITO,,1,29,5,2025
+26692,28/05/2025,Rose,3984,N,ELIAS IACOVSKI,00966630904,991276919,DUARTE SCHUTEL 271 AP 401 CEnTRO,,1,28,5,2025
+26679,20/05/2025,Rose,9673,N,LUZIANE FEIJO,00000,48,DANIELA,,1,20,5,2025
+26696,30/05/2025,Rose,28560,N,DINAH MARIA DE CARVALHO,76940250930,48999165448,RODOVIA SOARES GLAVAN 1830 CASA 01CACUPE,,1,30,5,2025
+26681,21/05/2025,Rose,12500,n,BRUNNA AMARAL ZOPOMI,31067703845,017996332244,"JOAO CARVALHO 101 AGRONO,MICA",,"0,8015903553",21,5,2025
+26680,21/05/2025,Rose,4000,n,"SOFA PLAZA 2,20",04747518991,48988145412,FERREIRA LIMA 178 CENTRO,,1,21,5,2025
+26682,22/05/2025,Rose,2720,N,LUIZ ANTONIO PACHECO,21059225034,48999255673,DAS MOREIAS 16 AP 403,,1,22,5,2025
+26683,22/05/2025,Rose,16722,N,CAMILA MENEZES COSTA,00000,31989521267,PEDRA BCA,,1,22,5,2025
+26685,23/05/2025,Rose,2500,N,LIDIANE LIBERATO FARACO,02463908912,48999854555,MMMMM,,1,23,5,2025
+26672,15/05/2025,Rose,7370,N,KATIA DEÇA,00406683980,4899489218,AV TROMPOSKI 84 CENTRO,,1,15,5,2025
+26670,09/05/2025,Rose,550,N,MARIA HELENA,02999282923,48998332020,CENTRO,,"2,075471698",9,5,2025
+27702,08/05/2025,Rose,13895,N,VILMA MARIA DOS ANJOS,02917029960,48999726013,ANDRE OSVALDO DA ROSA 17 CASA CARIANOS,,"1,000071974",8,5,2025
+26663,05/05/2025,Rose,5900,N,ADRIANA RODRIGUES CARDOSO,82384690906,48984288488,RUA SANTANA 4843  CENTRO SANTO AMARO IMPERATRIZ,,1,5,5,2025
+27685,05/05/2025,Rose,11330,N,VITORIA DAMIANI,00885628900,4890000,ORLANDO KOERICH 307  JDIM ATLANTICO,,"1,187008905",5,5,2025
+27088,06/05/2025,Rose,3766,N,IVANA DA SILVA LEITE,66397227391,48991155999,ROD JOAO PAULO 435 AP 207 A  JOAO PAULO,,1,6,5,2025
+26662,02/05/2025,Rose,2394,N,CLAUDIA ROSA,66545803972,48996197611,MARIA DA SILVA 337 CASA SERTAO MARUIM,,1,2,5,2025
+26675,19/05/2025,Liane,4960,N,EDSON LUIZ HOSANG,254561,48996572426,DEMETRIO RIBEIRO 106 601 CENTRO,,1,19,5,2025
+26694,29/05/2025,Liane,4000,N,NASILE FERREIRA,41647823900,48996952999,INGLESES,,1,29,5,2025
+26688,24/05/2025,Liane,10240,N,LORRAINE MATTE,00209985108,48998463064,,PROF IRANY FRANZOI PERREIRA 35 CASA ANTONIO CARLOS,1,24,5,2025
+27693,07/05/2025,Liane,16156,N,NANCY DA ROSA,25496948134,48999478298,DES PEDRO SILVA 2800 102 COQUEIROS,,1,7,5,2025
+27703,15/05/2025,Liane,3300,N,GEORANG SCHURHAUS,00000,4899608579,GETULIO VARGAS 2687 AP 505 CENTRO FPOLIS,,"1,75066313",15,5,2025
+26671,10/05/2025,Liane,5300,N,LIARA PALMEIRA 32,00000,48999623203,DAS PALMEIRAS 32 CASA BOSQUE DAS MANSOES,,"1,000188715",10,5,2025
+27701,08/05/2025,Liane,7630,N,TATIANA GOMES,00000,48992255815,AGAPITO VELOSO 67 CANTO 205,,1,8,5,2025
+27684,04/05/2025,Liane,4452,N,CRSTIANE ,00000,48991502320,DES PEDRO SILVA 1952 COQUEIROS,,1,4,5,2025
+26664,06/05/2025,Liane,6800,SSIM,VANIA MANSUR,10687944880,48988041377,DOS ARAÇAS CANTO A LAGOA,,1,6,5,2025
+26676,19/05/2025,Liane,4000,N,RICARDO OLIVEIRA 1005,00000,48996150925,AV TOM TRAUGOLD WILD PRAOA BRAVA 1005 AP 203,,1,19,5,2025
+26693,28/05/2025,Salete,5750,N,RAQUEL DAMIANI ROSARIO,05408244962,48991647588,MANOEL DE OLIVEIRA 147  1501 ESTREITO,,1,28,5,2025
+26689,26/05/2025,Salete,13000,n,JORGE MUSSI,00000,61999768751,ESTEVES JUNIOR 527 401 CENTRO FPOLIS,,1,26,5,2025
+27706,28/05/2025,Salete,3500,N,ANDRE NASCIMENTO AMARAL,05035245900,48999620802,VIDAL RAMOS 524  CENTRO 401,,1,28,5,2025
+27705,27/05/2025,Salete,5400,N,ALDANIR SILVEIRA,637356610978,48996677466,INTENDENTE JOAO NUNES VIEIRA 22 CASA INGLESES,,1,27,5,2025
+26678,20/05/2025,Salete,18000,n,CADEMA CONSTRUC E INCORP LTDA,09361113000430,48996627575 SARAH,LAURINDO JANUARIO DA SILVEIRA 4655 LAGOA,,"0,7505629222",20,5,2025
+26684,23/05/2025,Salete,3440,N,RENATA DIAS,97559148034,51993880213,AV DAS LAGOSTAS 1008 JURERE INT,,1,23,5,2025
+26687,24/05/2025,Salete,6990,N,DEISY EHRHARDT,89277597968,48     ,AV MAURO RAMOS 1512 CENTRO FPOLIS,,1,24,5,2025
+27691,07/05/2025,Salete,1100,N,GABRIELA FLORES,00000,4899849972,NNNN,,1,7,5,2025
+26673,17/05/202558,Salete,3499,N,RENATA DIAS,97559148034,51993880213,VVVV,,1,17,5,202558
+27690,12/05/2025,Salete,5000,N,CLAUDIA MARIA PETER,00000,48999726617,MMMM,,1,12,5,2025
+27695,10/05/2025,Salete,4000,N,MARCELO NASCIMENTO,04200171945,48991170708,FREI CANECA 490 AGRONOMICA,,1,10,5,2025
+27696,12/05/2025,Salete,6996,N,ISABELA LENI ATHERINO,06536797930,48999035618,AV TROMPOWSKI 99  CENTRO,,1,12,5,2025
+26668,08/05/2025,Neide,2796,N,GABRIELA MEDRONHA,01224401026,489999,RUA MILAO 186 CASA 03 PAGANI PALHOÇA,,1,8,5,2025
+26669,09/05/2025,Iza,34108,SIM,NOEMI PAULA GARCIA,02002156980,48996215432,AV PEDRA BRANCA 196 103 PEDRA BRANCA,,1,9,5,2025
+26691,27/05/2025,Iza,1800,N,LEONARDO MACHADO,92281273091,45954156335,RODOVIA LUIZ MOURA RIO TAVARES,,"0,6666666667",27,5,2025
+26686,29/05/2025,Iza,6350,N,HR COMERCIO DE VEICULOS,07161046000131,48993936868,MARIA BENEDITINA VAZ BORGES S/N  KOBRASSOL,,"1,833140878",29,5,2025
+27704,22/05/2025,Iza,4990,N,FLAVIO DA SILVA,05262961940,48++1097076,VEREADOR JACOB KNABEN DA SILVA 3050 PEDRA BCA 101 PALHOÇA,,1,22,5,2025
+27700,14/05/2025,Iza,2720,N,MARIA RIBEIRO SIQUEIRA,04692660902,48984666546,FRANCISCO PETRY 220 CENTRO BIGUAÇU,,1,14,5,2025
+26667,08/05/2025,Iza,3200,N,VALEUTUR GENES,00000,45991045857,AV MARECHAL CASTELO BRANCO 175  CAMPINAS 201  SAO JOSE,,"0,8421052632",8,5,2025
+27710,31/05/2025,Iza,7000,N,VITOR LOOCKS,30580550900,48999834149,RUA SAO JOSE 179 CASA BIGUAÇU,,1,31,5,2025
+27683,03/05/2025,Iza,10601,N,ANDRE ROSITO MARQUINARDT,67574963053,45991197760,ABILIO COSTA 164 CORREGO CASA,,"1,00009434",3,5,2025
+26665,07/05/2025,Iza,10480,SIM,ADELITA RIBEIRO DE SOUZA BIANCHINI,03088834975,49998184502,AV HENRIQUE EDUARDO BBELL 190 CASA BELA VISTA   BOM RETIRO,,1,7,5,2025
+27709,30/05/2025,Iza,32747,N,SUZIE BETO ARAUJO 154,54540917900,48996100440,EDARDO MIERS 154   BAIRRO ATIRADORES JOINVILLE,,1,30,5,2025
+27889,25/05/2025,Iza,13168,N,ASSOCIAÇÃO DOS MAGISTRADOS CATARINENSES,83934323000180,991393132,RUA DOS BAMBUS 116  CASA ITACORUBI,,"1,002130898",25,5,2025
+26666,08/05/2025,Iza,14000,N,HM VEICULOS,07161046000131,48991936868,MARIA BERNARDINO VAZ BORGRES S/N KOBRASSOL,,"1,000714796",8,5,2025
+27687,07/05/2025,Iza,3720,N,LAIS CESAR DALLA COSTA,9501219291]15,4899999,JONAS ALVES MESSINA 211 STA MONICA ,,1,7,5,2025
+27694,10/05/2025,Iza,13000,N,VICTOR DE OLIVEIRA,32917105844,48991107517,QUATORZE BIZ 70 CASA CARIANOS ,,1,10,5,2025
+27707,28/05/2025,Leila,60000,N,IRINEU MEURER,15682684915,44991298788,rua 57 CENTRO BALNEARIO,,"1,105155551",28,5,2025
+27728,30/06/2025,Rose,1070,n,INES FRITZEN,0000,4899198862,NNNN,NNNN,1,30,6,2025
+27459,17/06/2025,Rose,23199,N,SAN CARLOS NEGOCIOS IMOB,05897997000148,48999720440,AV JORNALISTA RUBENS DE ARRUDA RAMOS 2082,,"0,9430487805",17,6,2025
+27724,20/06/2025,Rose,2149,N,VANESSA SALAZAR SHILLER,00000,48999123556,JOCI JOSE MARTINS 247  SALA 203,,1,20,6,2025
+27453,09/06/2025,Rose,3260,n,marcio albuquerque passarelA,04537323809,48999579345,ROS SC 110 KM 355 CANELEIRA BOM RETIRO,,1,9,6,2025
+27716,10/06/2025,Rose,4080,n,julio cesar ribeiro,01655641999,48999922721,rod amaro antonio vieira 2463  itacorubi,,1,10,6,2025
+27451,05/06/2025,Rose,6000,N,SONIA REGINA LINHARES,82633355900,4899813312,LACERDA COUTINHO 70  CENTRO RES HEITOR FERRARI,,1,5,6,2025
+26697,02/06/2025,Rose,4200,N,GABRIELA FAGUNDES ,00401507041,48991444914,ROD TERTULIANO BRITO XAVIER 2979 JURERE CASA,,1,2,6,2025
+26698,04/06/2025,Rose,2500,N,NADIA ANTUNES,67183247953,489988071314,AV ADOLFO KONDER 1226 TRAÇADP URUBICI,,1,4,6,2025
+27711,02/06/2025,Rose,4000,N,IVONETE BARRETO HAGSMA,67236294934,41999625257,RUA DA PEDRA 347 AP 305 PEDRA BRANCA PALHOÇA,,1,2,6,2025
+27465,30/06/2025,Iza,4530,N,GABRIELA CAMACHO,00000,48999483303,ESTRADA GERAL DA FAZENDA DE DENTRO  BIGUAÇU,,1,30,6,2025
+27466,30/06/2025,Iza,16400,N,DANIELA BITTENCOURT DA SILVA,03396516919,48996878139,RUA MARIA ANA BITTENCOURT 140 CARIANOS CASA,,"1,044652526",30,6,2025
+27723,18/06/2025,Iza,4950,N,ADELITA RIBEIRO DE SOUZA BIANCHINI,03088834975,49998184502,BOM RETIRO,,"0,9987893462",18,6,2025
+27956,23/06/2025,Iza,7000,N,PEDRO DA COSTA PERREIRA,06745047955,48999449599,JOSE JOAO MARTENDAL 315 CARVOEIRA,,1,23,6,2025
+27958,25/06/2025,Iza,9440,N,CSELE VAN DE SAND,02266738994,48999191804,SIDNEY NOLETTI 75 AGRONOMICA,,"0,9024856597",25,6,2025
+27458,17/06/2025,Iza,1499,N,PLACIDINA VIDAL,52175005934,48999714766,EUCLIDES MACHADO 112 ESTREITO,,1,17,6,2025
+27727,28/06/2025,Iza,6000,N,AMANDA CARNEIRO,04103997958,4800000,00000,,1,28,6,2025
+27462,24/06/2025,Iza,4650,n,ROSELENE SELLA FURLIN GRANETTI,05257293803,48988048993,EUGENIO PORTELA 617 BARREIROS,,"1,021978022",24,6,2025
+27722,12/06/2025,Iza,2200,N,FRANCISCO ALBERTO DE OLIVEIRA COUTO,00823967191,48988269991,MAURINO ROAR 147 AÇORES ,,1,12,6,2025
+27713,05/06/2025,Iza,9000,N,MAYARA PRIM PAULI,00000,4800000,NOSSA SENHORA ROSARIO,,"1,000111123",5,6,2025
+27712,02/06/2025,Iza,3780,N,BARBARA GONÇALVES,06527968930,4899980000,PASTOR WILLIAM R S FILHO 868 ITACORUBI,,"1,909090909",2,6,2025
+27953,14/06/2025,Liane,7150,N,MARCIA FERREIRA DE MATTOS,22000216072,48981877296,"AV PEQUENO PRINCIPE 1320 CA,PECHE",,1,14,6,2025
+27720,11/06/2025,Liane,1300,N,ELEONORA FUHMTER,53456360959,48991100144,ITAGUAÇU  CASA,,1,11,6,2025
+27951,06/06/2025,Liane,2885,N,LUIZ ROBERTO DE OLIVEIRA,69125503987,48999638133,AV JOAO RINZA,,1,6,6,2025
+27961,30/06/2025,Salete,7760,N,CRISTIANE DELBACKER,90052536572,48991401406,BARAO DE BATOVI 621,,1,30,6,2025
+27957,23/06/2025,Salete,8000,N,VALTENIR LUIZ GOMES,00758655053,48999151566,ALMIRANTE LAMEGO 830 CENTRO,,1,23,6,2025
+27456,14/06/2025,Salete,8000,N,GUSTAVO FEURER,07682073985,4899966618,PREFEITO NELSON MARTINS CENTRO PALHOÇA,,1,14,6,2025
+27955,20/06/2025,Salete,4320,N,ELIANE PASSOS HEITEINHRCH,30597676962,48984365918,BALDISERO FILOMENO 7195 RIBEIRAO DA ILHA,,1,20,6,2025
+27954,17/06/2025,Salete,10000,N,MARCELO PEDRASSANI,90963791087,4899123252,HOEPCKE 179 CENTRO FPOLIS,,1,17,6,2025
+27460,23/06/2025,Salete,500,N,LEONARDO GOMES DE OLIVEIRA,00000000,48988180606,ESTRADA AROLDO SOARES 1830 CACUPE,,1,23,6,2025
+27463,25/06/2025,Salete,8800,N,BRUNO DINIZ,48524742810,48999311777,FELIPE SCHIMTZ 869 CENTRO,,1,25,6,2025
+27959,27/06/2025,Salete,14760,N,INDIANA PARTES E PEÇA LTDA,00000000,48996627361,VEREADOR ARTUR MANOEL DE MIRANDA 501 FORQUILHAS SJ,,1,27,6,2025
+27725,24/06/2025,Salete,11958,N,TELMA LOVESBEZ,37568639991,4832233097,HERMANN BLUMENAU 95 CENTRO,,1,24,6,2025
+27721,11/06/2025,Salete,8500,N,ISADORA CAROLINA LEITE MARTINS,06332541938,48999232440,OTMAR GANMA DEÇA 809 FPOLIS SC CENTRO,,1,11,6,2025
+27718,11/06/2025,Salete,4830,n,luiz haroldo mattos,53055802934,48991085879,VALGAS NEVES 75 ESTREIITO,,1,11,6,2025
+27719,11/06/2025,Salete,2300,N,MARIA APARECIDA BIANCHINNI,000,00000,ESTREITO,,1,11,6,2025
+27952,06/06/2025,Salete,2600,N,MARGARETE BITENCOURT,22140964934,48999725008,JOAO PIO DUARTE SILVA 1070,,1,6,6,2025
+27715,07/06/2025,Salete,4270,N,DIEGO NETTO MADEIRA,00686181905,48991063047,ERONILDES JOSE DA SILVA 216 N SRA ROSARIO,,1,7,6,2025
+27452,05/06/2025,Salete,3080,N,SANDRA MARA VIEIRA,58267476920,48999612216,LEONEL PERREIRA 929 CACHOEIRA BOM JESUS,,1,5,6,2025
+26699,05/06/2025,Salete,11400,N,BRUNO TECHSTAY,051226257000105,51997871507,PONTA DE BAIXO,,1,5,6,2025
+27464,29/06/2025,Rose,1700,N,JAQUELINE NOGUEIRA,0000,00000,0000,,1,29,6,2025
+27717,10/06/2025,Liane,15500,N,LUCIANO CAMPOS,813326351915,48999723277,JOSE LUIZ HOFFMANN 335 CENTRO,,15500,10,6,2025
+27976,21/07/2025,Rose,1996,N,THUANY BARCELOS,0000000,48996497441,CAPITAO EUCLIDES DE CASTRO 403 COQUEIROS,,1,21,7,2025
+27977,22/07/2025,Rose,2200,N,ALVEU VIEIRA NETO,0000000,48999621593,HENRIQUE BRUGEMANN 97 CENTRO,,1,22,7,2025
+27747,22/07/2025,Rose,1820,N,ROSILEIA CUNHA DA SILVA,88812510949,48999770526,PREF OSMAR CUNHA 183 SALA 701 CENTRO,,1,22,7,2025
+27978,22/07/2025,Rose,9670,N,VANIA MARLI S BACKES,35696214053,48999633838,AV DAS LAGOSTAS 780 JURERE INT AP 202,,1,22,7,2025
+27981,25/07/2025,Rose,10200,N,ALEKSEY BANANENKO,00604169981,48988176881,AV WILSON CASTELO BRANCO 376 DELTA VILLE BIGUAÇU,,1,25,7,2025
+27980,24/07/2025,Rose,2000,N,MARCUS MORREIRA,0000000,998363550,CEL PEDRO DE MORO 1507,,1,24,7,2025
+27501,27/07/2025,Rose,5000,N,ARLETE,0000000,00000,00000,,"0,9966115208",27,7,2025
+27482,12/07/2025,Rose,10000,N,ELIZANDRA HEISSEN,04371966900,48999238530,FERNANDO COSTA 40 CASA,,1,12,7,2025
+27973,18/07/2025,Rose,5600,N,ALINE PACHECO DE MICHE,03651565904,48999150508,AV ENG MAX DE SOUZA 1596   402 COQUEIROS,,1,18,7,2025
+27480,16/07/2025,Rose,2937,N,SANDRA MARIA DE MENDONÇA,0000000,4799781810,VEREADOR JOSE DO VALE PEREIRA 220  AP 603,,1,16,7,2025
+27734,10/07/2025,Rose,1800,N,CHIM MEI LIM,23389678875,48991501888,JOSE CARLOS DAUX 3336 AP 316 SACO GRANDE,,1,10,7,2025
+27479,07/07/2025,Rose,6800,N,JESSICA BOSQUETTI,0000000,4899710092,BALNEARIO,,"1,117685733",7,7,2025
+27468,02/07/2025,Rose,2800,N,BARBARA NNN,0000000,48991315814,VERGILIO DE SOUZA 325  904,,1,2,7,2025
+27475,05/07/2025,Rose,2400,N,JULIANA E DIEGO,0000000,48333333,BARREIROS,,1,5,7,2025
+27968,05/07/2025,Rose,1550,N,ARTUR,36546131548,0484558552,NNNNNN,,1,5,7,2025
+27963,01/07/2025,Rose,6000,N,BRUNO ALEXANDRE MORISCO BUARQUE DE GUSMAO,00916965101,48999440160,14 DE JULHO 133 ESTREITO AP 601,,1,1,7,2025
+27729,01/07/2025,Rose,400,N,VITORIA DAMIANI,0000000,00000,0000NNNN,,"1,860465116",1,7,2025
+27731,01/07/2025,Rose,6600,N,GUSTAVO SOUZA,301981068,48991757351,AV PAULO ROBERTO VIDAL 1455 PALHOÇA,,"0,1",1,7,2025
+27741,16/07/2025,Rose,3415,N,JULIANA DA SILVA,00908139986,48999914322,DALCI SILVEIRA 75 CASA CAPOEIRAS,,"1,000292912",16,7,2025
+27476,04/07/2025,Neide,1690,N,FELIPE DE LIMA,08821838900,48999515432,CENTRO,,1,4,7,2025
+27966,04/07/2025,Iza,8496,N,JACKSON GUSTAVO  SHWEITZER,03925223908,48984162020,PRAIA DE PALMAS,,1,4,7,2025
+27496,31/07/2025,Iza,19564,S,LUCIANA RABELLO,79325670178,48991419331,MADRE BENVENUTA 322 AP 1116 TRINDADE,,1,31,7,2025
+27497,31/07/2025,Iza,1260,N,ROSANE DEICONT,46459770920,4800000,CENTRO,,1,31,7,2025
+27486,14/07/2025,Iza,6000,N,GILBERTO COSTA DE OLIVEIRA,62317474920,48999194477,GAROPABA,,1,14,7,2025
+27502,29/07/2025,Iza,6442,S,GUSTAVO TEIXEIRA VENTURA,09209767910,480000000,SAO BENEDITO 1096 SERRARIA,,"1,000310559",29,7,2025
+27503,29/07/2025,Iza,650,n,EWERTON  DE MEDEIROS,38969690930,48 991391114,AV MARINHEIRO MAX SCHRAMM 2701 AP 211 ESTREITO,,1,29,7,2025
+27481,11/07/2025,Iza,16570,N,JACSON GUSTAVO SCWEITZER,03925223908,48984162010,GOVERNADOR CELSO RAMOS,,1,11,7,2025
+27744,18/07/2025,Iza,5355,N,DANIEL CARDOSO,03652985907,48999051025,ANTONIO COSTA 11 AP 702,,1,18,7,2025
+27492,18/07/2025,Iza,8890,N,FERNANDA SAMPAIO,18422049805,48999110147,CAMINHO DOS AÇORES 1750,,"1,302564103",18,7,2025
+27740,16/07/2025,Iza,5212,N,JOSE ROQUE DAMASCO NETTO,03344839993,48991012990,SERVIDAO MARTINS JULIO DA SILVA 100  CASA,,1,16,7,2025
+27493,18/07/2025,Iza,7390,N,JOSE ROQUE DAMASCO NETO,03344839993,480000000,MARTIN JULIO DA SILVA 100 RATONES,,1,18,7,2025
+27960,08/07/2025,Iza,13500,N,HILDEBRADO ALVES DOS SANTOS,00996513949,48984146129,PRESIDENTE COUTINHO 212 AP 302 CENTRO,,1,8,7,2025
+27735,10/07/2025,Iza,2390,N,ANDRE LUIZ OBLOSKO,04549499958,48988690260,JORNALISTA MANOEL MENEZES 64 ITACORUBI,,1,10,7,2025
+27732,05/07/2025,Iza,9000,N,DANIEL ESPINDOLA,03267341904,48999612805,EUCLIDES MACHADO 112,,1,5,7,2025
+27474,05/07/2025,Iza,699,N,JANICE MARTINS,0000,48988232027,COND BOULEVARD STELLA BONITO CENTRO,,1,5,7,2025
+27970,25/07/2025,Salete,11365,N,FORCA B NASCIMENTO ASSOC,01558911000100,48999727155,MAURO RAMOS 1450 CENTRO,,1,25,7,2025
+27985,28/07/2025,Salete,12800,N,MARIANA MIRANDA,04569304931,48991745885,SERVIDAO VILA HARMONIA  125 CAMPECHE,,1,28,7,2025
+27738,14/07/2025,Salete,900,N,ROSEMARY MACHADO,00000,480000000,000502,,1,14,7,2025
+27485,14/07/2025,Salete,9100,N,MARIA OLINDA ROCHA,02055268961,48999117075,DUARTE SHUTELL 76 901 CENTRO,,"0,9995606327",14,7,2025
+27488,15/07/2025,Salete,17120,N,CESAR DELLACOSTA,06979162185,51995494918,WILSON RAMOS 91 CENTRO,,1,15,7,2025
+27478,07/07/2025,Salete,4795,N,ROSEMARY MACHADO,22102736091,48991559933,RUA DAS POLOPITAS 136 CASA JURERE,,1,7,7,2025
+27739,15/07/2025,Salete,11000,N,FRANCISCO CARLOS BATISTA,41577280920,48991121973,AV BRIGADEIRO SILVA PAES 754 AP 309 CAMPINAS,,1,15,7,2025
+27974,19/07/2025,Salete,16500,N,SILVIA RENATA CARVALHO,15620198804,48 992899210,PRERS COUTINHO  CENTRO ,,1,19,7,2025
+27743,18/07/2025,Salete,12450,N,ANA CRISTINA SACHET,57358478991,48991275080,JAIRO CALADO 113 CENTRO,,1,18,7,2025
+27972,17/07/2025,Salete,1200,n,MARIA MMMM,022222,480000000,ESTREITO,,1,17,7,2025
+27733,058/07/2025,Salete,87000,N,SERGIO IZIDORO HEIL,02978199920,4899854133,CENTRO,,"0,9999655184",58,7,2025
+27504,30/07/2025,Salete,3540,N,GRACIELA GIARDONI,46451196991,4899734221,AV DAS TAINHAS 73 AP 204 JURERE,,1,30,7,2025
+27990,31/07/2025,Rose,3800,N,GRASSIELLI ANDRADE,06225324992,48988280404,CANASVIEIRas,,1,31,7,2025
+27495,29/07/2025,Liane,6530,N,LEANDRO ZAGO DA SILVA,02358221910,48991053369,ROD VERGILIO VARZEA 1019 AP 210 SACO GRANDE,,1,29,7,2025
+27748,22/07/2025,Liane,575,N,BRUNA,25545,480555,5551NMMB,,1,22,7,2025
+27746,22/07/2025,Liane,4400,N,simone muller,50737511915,48999535304,SANTO INACIO DE LOIOLA 135  703 CENTRO,,1,22,7,2025
+27982,25/07/2025,Liane,12000,N,LUIZA CARLA SOARES GOMES,58804250968,48999617079,JOAO PIO DUARTE SILVA 1070 AP 204 CORREGO GRANDE,,1,25,7,2025
+27494,28/07/2025,Liane,6200,N,JOSE DOS PASSOS STEINER,10080309020,48991088566,AV BRIGADEIRO SILVA PAES 754 CAMPINAS ,,"1,548064919",28,7,2025
+27984,28/07/2025,Liane,28860,N,LILIAN TEREZINHA MADALONI,54290929915,4899851377,JORN MAURICIO SIROTSKI SOBRINHO 5095  AP 701 JURERE,,"0,0009199596824",28,7,2025
+27484,14/07/2025,Liane,14260,N,ALEXANDRFE PARIZE,25826,4825222,TRINDADE,,1,14,7,2025
+27736,11/07/2025,Liane,3000,N,MARIA DE LOURDES CASCAIS,37520210987,48999013133,MADRE BENVENUTA 388 1125 TRINDADE ,,1,11,7,2025
+27737,12/07/2025,Liane,34000,N,LUCIANO BORDASCH,61773900000,48999250374,ALMIRANTE LAMEGO 748  304 CENTRO,,"1,18355554",12,7,2025
+27483,14/07/2025,Liane,44000,N,CARLOS EDUARDO DE OLIVERA,00439877962,48996022548,DR AGOSTINHO SILESNKI 287 CASA SANTA MONICA,,"0,815948076",14,7,2025
+27745,19/07/2025,Liane,1980,N,RODRIGO BEVILAQUA,08441689989,48999338118,HENRQIE BRUGMENN 64 AP 302 CENTRO,,1,19,7,2025
+27742,17/07/2025,Liane,1700,N,ANDREI TAVARES,07482667989,48996172723,ALMIRANTE LAMEGO 830  AP 405 CENTRP,,1,17,7,2025
+27472,04/07/2025,Liane,32580,N,CLAUDIO HADLICH,48658634949,48999260298,DOS FICUS PALMAS,,"0,9998772404",4,7,2025
+27467,02/07/2025,Liane,3900,n,CARLOS SCHMIDT,48542863000,48996528416,JOAO DE DEUS MACHADO 292  304 TRINDADE,,1,2,7,2025
+27470,04/07/2025,Liane,4600,N,MARCELO LIMA,79904017972,48999725403,JOAO CARVALHO 101  1101 AGRONOMICA,,"0,9965337955",4,7,2025
+27505,31/07/2025,Liane,14500,N,JULIANA PEREIRA DA ROSA,03651522938,4898731612,FELIPE SCHIMIDT 869 1901 CENTRO,,"1,002281053",31,7,2025
+27987,30/07/2025,Iza,8260,N,SUZYELLI DYBA,09685397937,45995367652,PEDRO GREGORIO 157 AP 1301 BARREIROS,,1,30,7,2025
+27989,31/07/2025,Rose,10000,N,ALEXANDRE,25391225,48988230404,AV PROF MILTON LEITE DA COSTA 339 AP 31 CANASVIEIRAS,,1,31,7,2025
+27988,30/07/2025,Rose,11000,N,GRASSIELLI DE ANDRADE,06225324992,489988280404,MADRE MARIA VILAC 2176 AP 301 CANASVIEIRAS,,1,30,7,2025
+27975,21/07/2025,Salete,3597,N,SERGIO E LOLITA,2564121,2641201,CENTRO,,1,21,7,2025
+27469,03/07/2025,Rose,7120,N,CATIA ROSANA C MARQUES,51188759949,48991206563,TEREZA CRISTINA 410 CASA ESTREIRO,,1,3,7,2025
+27525,27/08/2025,Iza,6200,N,PLINIO CEZAR MOREIRA,14560860904,48991520080,RUA BOCAIUVA 1821 AP 1001 CENTRO 88015530,,1,27,8,2025
+27431,27/08/2025,Iza,30000,N,SILVANA DE SOUZA MAGALHAES,93255527953,511959214199 MATEUS 11988970994 MANUELA,PROFESSOR OTILIA CRUZ 48 JD ATLANTICO SAO JOSE 307A E 306A,,1,27,8,2025
+27512,16/08/2025,Iza,11000,N,CARLOS EDUARDO VERZOLA,02921240904,48999920217,RUA ITAPIRANGA 200 103 PQ SAO JORGE,,1,16,8,2025
+27518,23/08/2025,Iza,8847,N,ANA PAULA SAQUETTI,05552973909,48988155892,SAO TOMAZ DE AQUINO 129 AP 210 TRINDADE,,"0,99808213",23,8,2025
+25519,23/08/2025,Iza,34795,sim,maria fernanda gorge lorenzini,34037832860,480000,rua seiscentos  eni   lote a 32 casa campeche,,1,23,8,2025
+27428,26/08/2025,Iza,16000,n,mateus alvarenga de alencar,07834345960,48996620910,julio vieira 237 ap 1303 joao paulo,,1,26,8,2025
+27416,12/08/2025,Iza,9530,sim,EWERTON DE MEDEIROS,85969690930,48991391114,AV MARINHEIRO MAX SCHRAM 2701 AP 211 ESTREITO,,1,12,8,2025
+27407,08/08/2025,Iza,12600,n,DANIEL MOREIRA,06029003950,48996043300,JOAO DARIO DE SOUZA AP 101 CENTRO PALHOÇA,,1,8,8,2025
+27409,09/08/2025,Iza,3500,N,CHIARELLI ALBUQUERQUE,00000000,48999606505,PREF SIMAO JOSE HESS 190 TRINDADE AP 519 H,,1,9,8,2025
+27507,06/08/2025,Iza,3240,sim,GABRIELA COSTA LORENZI,05490719974,4892196955,santos saraiva  1405 AP 303 CAPOEIRAS ,,1,6,8,2025
+28000,06/08/2025,Iza,5720,N,RAFAEL RIBEIRO,82523073000,54999516521,ADELINO SPIELER S/N CASA IMBITUBA,,"1,181086104",6,8,2025
+27406,06/058/2025,Iza,4130,N,FORZA BR IND E COM DE MAQ E EQUIP,13305170000126,48996331080,BR 101 QUADRA 02 LOTE 04 PALHOÇA,,1,6,58,2025
+27996,04/08/2025,Iza,3800,N,RDA PARCTICIPAÇÕES LTDA,48694250000103,48000000,AV NEREU RAMOS MORETES ITAPEMA,,1,4,8,2025
+27992,01/08/2025,Iza,3850,N,MARIA ERADI CARRANI,54886422934,48999370602,AV RIO BRANCO 476 AP 904 CENTRO,,"0,9922680412",1,8,2025
+27556,30/08/2025,Salete,10760,NAO,ADRIANA PIAZZA,62501674982,489999736506,OLAVO BILAC 78 CENTRO AP 1101,,1,30,8,2025
+27528,30/08/2025,Salete,1100,N,RAQUEL DUTRA COSTA ,30585201900,48 991628314,LUIZ DE COSTA FRESS LEBEN 79 JARDIM ATLANTICO CASA,,1,30,8,2025
+27434 ,29/08/2025,Salete,7780,N,NADIA REGINA CORREIA,48003980968,48,00000,,1,29,8,2025
+27552,27/08/2025,Salete,21900,N,RES SAN RAPHAEL,05166928000164,48,JOSE CANDIDO DA SILVA 118,,"1,033018868",27,8,2025
+27554,28/08/2025,Salete,1600,n,VANESSA SANTOS,03271065900,48991079933,DOM JOAQUIM 827 AP 202 CENTRO FPOLIS,,1,28,8,2025
+27553,28/08/2025,Salete,2000,N,KATIA MENEZES,25767666920,4899811283,ERNESTO STODIACK 268 CASA MORRO DA CRUZ,,1,28,8,2025
+27426,23/08/2025,Salete,13250,N,ELIANE MIRRIAN DA SILVA ALMEIDA,65108370997,48999530739,ALM LAMEGO 870 CENTRO 102,,1,23,8,2025
+27514,20/08/2025,Salete,2990,N,FERNANDA COLOMBO,05844120965,48999165250,PRESIDENTE COUTINHO 511 AP 303 FPOLIS,,1,20,8,2025
+27420,14/08/2025,Salete,2300,N,GRAZIELA MARTINS  ,46451196941,48999734221,RUA DAS     73 JURERE,,1,14,8,2025
+27419,14/08/2025,Salete,7200,N,SONIA MARIA DE CASTILHOS,07727380920,48999112058,ALMIRANTE LAMEGO 830 CENTRO 201,,1,14,8,2025
+27414,11/08/2025,Salete,14000,N,FERNANDA DE PAULA COLOMBO,058440120965,48999165250,PRESIDENTE COUTINHO 511 AP 303 CENTRO,,1,11,8,2025
+27410,09/08/2025,Salete,8500,N,PAULO MARCOS DE FARIAS,092279309904,48991318700,AV GOV IRINEU BORNHAUSEN 3690 AP 701 CENTRO,,1,9,8,2025
+27408,09/08/2025,Salete,4520,N,ROSDANE DE LIMA,36899445034,48996162367,JOAO BATISTA DALASCIO 75 AP 204 COQUEIROS,,1,9,8,2025
+27498,02/08/2025,Salete,4950,N,MARIA SOCORRO DUARTE,35784741420,48984664473,PEDRO MOURO 1507 AP 1001 ESTREITO,,1,2,8,2025
+27402,02/08/2025,Salete,850,N,TEREZINHA JUNCKES,46822852972,48996088479,NNNNNNN,,1,2,8,2025
+27530,30/08/2025,Rose,1440,N,ROGERIO MARTINS,49361589920,48984392050,RUAS DAS AZALEIAS 964 BOSQUE DAS MANSOES SJOSE,,1,30,8,2025
+27436,30/08/2025,Rose,4673,N,LAIRA CRISTINA RIBAS,08525068993,48991532950,RUA SANTO ANTONIO 390 AP 501 BARREIROS SJOSE,,"0,999358426",30,8,2025
+27529,30/08/2025,Rose,8250,N,RAFAEL DE SOUZA ANDRADE,06092075989,48991918981,DEP CARLOS BUSCHELE 113 CASA SANTA MONICA,,1,30,8,2025
+27433,28/08/2025,Rose,6800,N,SOLANGE RIDEIRO DA SILVA,00000,48999384715,ADAO MANOEL DA SILVA 197 AP 805 A AREAIS,,1,28,8,2025
+27435,29/08/2025,Rose,1600,N,GUILHERME FERNANDES DA COSTA,04982277907,48999148984,BRIGADEIRO SILVA  PAES 85 CAMPINAS SJOSE,,1,29,8,2025
+27522,25/08/2025,Rose,2913,N,LUCIANA MORALLES,00000,4899961511,AV DAS RAIAS JURERE AP 204,,1,25,8,2025
+27521,25/08/2025,Rose,4600,N,ANA LAURA BELZ RUBIN,07291689996,4899155592,ROD JOAO PAULO 435 AP 106 JOAO PAULO,,"1,000870322",25,8,2025
+27422,19/08/2025,Rose,250,N,EROTILDES SOARES,00000,48996622352,CAP ANAXAGORAS 102 ESTREITO,,1,19,8,2025
+27423,20/08/2025,Rose,1554,N,CARLA ANETTE PULS DA SILVEIRA,00374726906,48998138328,ARVOREDO 765 AP 204 CAMPECHE,,1,20,8,2025
+27424,20/08/2025,Rose,5500,N,ANDREA CARLA PELS DA SILVEIRA,01975945905,48999624745,DAS DOCAS MARINAS DO CAMPECHE 154 CASA 02,,1,20,8,2025
+27429,26/08/2025,Rose,1150,N,MARIO TANAKA,000000,011984111224,NNNMNKKL,,1,26,8,2025
+27421,15/08/2025,Rose,7000,N,EDER AMARANTE,000000,49999654547,DAS LARANJEIRAS 110 BOSQUE,,"0,9660502346",15,8,2025
+27418,14/08/20025,Rose,4550,N,ALAN PEREIRA,89086520600,021981669888,RUA 23 DE MARÇO 349 ITAGUAÇU,,1,14,8,20025
+27417,12/08/2025,Rose,400,N,LICIA RODRIGUES,0000,48988295008,NNNN,,1,12,8,2025
+27510,08/08/2025,Rose,600,N,CLAUDETE SSER,46021612949,4899679205,NNN,,1,8,8,2025
+27411,09/08/2025,Rose,3215,N,VANUSA VARELA,025101,48991367211,AV DAS RAIAS  JURERE,,1,9,8,2025
+27412,09/08/2025,Rose,16700,N,MARCELO SCHLOSSER,79007996991,11972821637,RUA BOCAIUVA 1545 AP 703 CENTRO FPOLIS,,1,9,8,2025
+27405,06/08/2025,Rose,5500,N,RENATA LOPES,08438661955,48984556414,AV RIO BRANCO 430 AP 602,,1,6,8,2025
+27999,06/08/2025,Rose,9500,N,VERA LUCIA DUARTE SZPOGANICZ,71482652900,48991029390,SANTOS DUMOND 186 AP 800 CENTRO,,1,6,8,2025
+27500,04/08/2025,Rose,4000,N,BRUNA DE LUCCA,05870441951,48999693225,SANTO INACIO DE LOYOLA 135 CENTRO,,1,4,8,2025
+27401,02/08/2025,Rose,8719,N,ALBERTO HELLER,81951485904,48984341354,RUA DAS CORTICEIRAS 74 CASA CAMPECHE,,"0,9998853211",2,8,2025
+27513,18/08/2025,Rose,7800,N,DAIANE CAIRES,0000,48988362423,",MANOEL PEDRO VIEIRA 1248 CASA 16 MORRO DAS PEDRAS",,1,18,8,2025
+27511,11/08/2025,Liane,4285,N,EGON EDUARDO SCHADRECK,00723780935,479957996985,DUARTE SCHUTEL 233 CXENTRO,,1,11,8,2025
+27415,11/08/2025,Liane,7500,N,MORGANA NUNES,08079656932,48999441392,OLAVO  DO PATROCINIO MEDEIROS 245 APTO 702 FLORESTA,,1,11,8,2025
+27403,02/08/2025,Liane,4000,N,MARIO FLAVIO COUTINHO DIAS,182788318901,489964489102,DA UNIVERSIDADE 89 AP 502 PEDRA BCA,,1,2,8,2025
+27991,01/08/2025,Liane,8000,N,JULIANA VELOSO MACHADO,02529367019,48984867344,RUA FELIPE SCHMIDT 303 CENTRO ED DIAS VELHO,,"1,333333333",1,8,2025
+27427,23/08/2025,Salete,5888,N,EDUARDO ALBERTO FANCELLO,02808975708,48984085642,SEBASTIAO COUTINHO DA SILVA 1003  CASA CORREGO GRANDE,,1,23,8,2025
+27499,04/08/2025,Liane,20600,n,LUIZ CESAR SILVA FERREIRA,0000,48988034211,GAROPABA,,"0,9994178149",4,8,2025
+27995,02/08/2025,Iza,6238,N,SUELI MENEZESA,021641065,48998126377,AV DOS PESCADORES  SOBREDO 08 PRAIA CENTRAL GAROPABA,,1,2,8,2025
+27519,23/08/2025,Iza,34795,Nao,Maria Fernanda George Lorenzini,34037832860,48000,"Rua Jardim seissentos, lote A32. Jardim campeche. Casa",,"0,8256216781",23,8,2025
+27572,17/09/2025,Rose,8500,N,LEONARDO PIASETTA,04229157932,48999269629,SENADOR GALOTTI 149    TIJUCAS SC,,1,17,9,2025
+27543,26/09/2025,Rose,2200,N,IOLANDA,00000,489992667896,VALGAS NEVES,,"0,9990917348",26,9,2025
+27542,24/09/2025,Rose,500,N,MARIA DE LOURDES ,34361596972,999588174,SANTO ANTONIO 1320  APTO 505 BARREIROS SJOSE,,1,24,9,2025
+27539,18/09/2025,Rose,900,n,JURANDIR BOZ,30655307915,481999862585,LUIZ CARLOS BOITEUS PIAZZA 3860 CASA 13 CACHOEIRA BOM JESUS,,1,18,9,2025
+27575 ,23/09/2025,Rose,5300,N,ADRIANA SANTANA,66173973987,48999916383,AV BRIGADEIRO SILVA PAES 4754 AP 706 CAMPINAS SJOSE,,1,23,9,2025
+27259,22/09/2025,Rose,4698,N,MAURICIO FACHINNI,78511879900,48996663433,CORONEL PEDRO DE MORO 1507 AP 1004 BALNEARIO FPOLIS,,1,22,9,2025
+27445,10/09/2025,Rose,9520,N,LUCIANA VIEIRA SARKIS,50963465953,48984292970,AV SANTA CATARINA 189 ESTREITO FPOLIS,,1,10,9,2025
+27447,11/09/2025,Rose,48295,N,DIRLEI DE OLIVEIRA,69596735853,11996454617,AV CAMPECHE 1900 AP 211 C  CAMPECHE,,"0,6488211191",11,9,2025
+27448,12/09/2025,Rose,16500,N,COLEGIO CATARINENSE,25621,1648941,CENTRO,,1,12,9,2025
+27449,12/09/2025,Rose,2300,N,IVONE MARIA REINER DE SA,22137220997,48999094645,VIDAL RAMOS 110 APTO 1003 FPOLIS,,"0,8745247148",12,9,2025
+27533,13/09/2025,Rose,6000,N,JEAN MARCOS BRISTOT,61901083934,48991323452,RUA MOURA 319 AP 1105 BARREIROS SJOSE,,1,13,9,2025
+27441,02/09/2025,Rose,7000,N,LILIANE VARGAS GARCIA,80047017953,48999194555,FELIPE SCHMIDT 1011 APTO 302 CENTRO FPOLIS,,1,2,9,2025
+27566,08/09/2025,Rose,5490,N,VILMAR RIBEIRO DE MORAES,15390365020,48996567799,JOAO BERNARDINO DA ROSA 2173 AP 805 PEDRA BCA  PALHOÇA SC,,1,8,9,2025
+27444,06/09/2025,Rose,5700,N,MILENE ASSMANN,75809621953,48991139518,ROD AMARO ANTONIO VIEIFRA 2372 AP 804 ITACORUBI FPOLIS,,1,6,9,2025
+27254,16/09/2025,Rose,25570,S,THAIS,00216494,48984024263,RUA DAS GAIVOTAS 2583 AP 301 INGLESES FPOLIS,,1,16,9,2025
+27265,27/09/2025,Rose,6285,N,MARIA EDUARDA PIACENTINY SILVESTRE,09180880975,489990159505,PROF BENTO AQUINO VIEIRA 55 AP 402 TRINDADE FPOLIS,,1,27,9,2025
+27260,23/09/2025,Rose,2666,N,CONDOMINIO IRIS,09482734000129,48999794782,ARACY VAZ CALADO 433 FPOLIS,,1,23,9,2025
+27579,29/09/2025,Rose,22770,N,FABIO ANTUNES,1254847,4899156829,AFONSO PENA 542 1003 D MYS ESTREITO FPOLIS,,"0,9978089395",29,9,2025
+27576,26/09/2025,Salete,3400,N,MARIA CIDA BIANCHINI,07072400972,48999828706,RUA SAO JOSE 203 AP 301 ESTREITO,,1,26,9,2025
+27264,26/09/2025,Salete,4300,N,BLASI BAHIA ARQUITETOS ASSOC,17281938000120,48996643352,AV PROF OTHO GAMA DESSA 907 SALA 701 CENTRO FPOLIS,,1,26,9,2025
+27544,27/09/2025,Salete,5629,n,SANDRA REGINA  SA FREITAS,25999540125,62981171545,FELIPE SCHMIDT 774 AP 107 CENTYRO FPOLIS,,"0,9892794376",27,9,2025
+27577,27/09/2025,Salete,19000,N,ANDRE PAUL,00467447936,48991196874,ANA MARIA NUNES 275 CASA 03 CORR GRDE FPOLIS,,1,27,9,2025
+27258,20/09/2025,Salete,2100,N,ELIANE MACIEL,00000,48998359471,CONSTANTINO NICOLAU SPYRIDS 4152 AP 104 AGRONOMICA  FPOLIS,,1,20,9,2025
+27541,23/09/2025,Salete,9400,N,AM CONSTRUÇOES,021248741,480000,CAMPINAS SJOSE,,1,23,9,2025
+27531,10/09/2025,Salete,20000,N,RENATA LOPES DE Araujo,05496508657,48996573440,RAIMUNDO CORREA 649 CASA EST FPOLIS SC,,"0,00005",10,9,2025
+27446,10/09/2025,Salete,4170,N,LEANDRO PASSIG MENDES,84572051968,48996618778,PRESIDENTE COUTINHO 279 APTO 802 CEBTRO FPOLIS SC,,1,10,9,2025
+27559,02/09/2025,Salete,1550,N,JORGE MUSSI,02154,6199978751,ESTEVES JR 527 AP 401 CENTRO FPOLIS SC,,1,2,9,2025
+27561,03/09/2025,Salete,2090,N,IGOR PIERIN ,00497331926,11963686501,AV JULIOO DACIO BARRETO 199 AP 409 CARVBOEIRA FPOLIS SC,,1,3,9,2025
+27442,05/09/2025,Salete,23600,N,SANDRA REGINA ALVES SILVA,51236362934,48988272929,AV BUZIOS 1617 CASA JURERE FPOLIS SC,,1,5,9,2025
+27558,02/09/2025,Salete,2097,N,JESSICA PIACETTI,014469396062,48991773674,ROSATO EVANGELISTA 123 CASA ITAGUAÇU FPOLIS,,1,2,9,2025
+27570,15/09/2025,Salete,2580,N,SEUELLEN FELIZARDO KRIEGER,04073221914,48991761822,VERGILIO PANCIANO 48 AP 303 JOAO PAULO FPOLIS SC,,1,15,9,2025
+27535,17/09/2025,Iza,11669,N,HERLOM TRISTAO,90912551968,48991259505,WILSON LARIZ  COQUEIROS  SPOLIS SC,,1,17,9,2025
+27262,14/09/2025,Iza,4840,N,ANTONIO MACHADO,24313947949,48999607458,ALMIRANTE LAMEGO 965 AP 1003 CENTRO FPOLIS,,1,14,9,2025
+27573,19/09/2025,Iza,12400,N,ANA CAROLINA FONSECA CERETTI,10585395900,47991999271,JOAO MEIRELLES 929 AP 23 ABRAAO FPOLIS SC,,1,19,9,2025
+27256,18/09/2025,Iza,3792,N,JOAO ALBERTO CORREA,00474703991,489991310065,ARMINIO TAVARES 176 AP 1003 CENTRO FPOLIS SC,,1,18,9,2025
+27261,23/09/2025,Iza,2038,N,LUIZ DA SILVA,02633920975,48999328076,MARCILIO DIAS 265,,1,23,9,2025
+27574,25/09/2025,Iza,35000,N,DIOGO LUIZ PIZZATO,05039595964,47984097858,MARECHAL HERMES 121 AP 1102 ESTREITO FPOLIS,,"0,9832565457",25,9,2025
+27567,13/09/2025,Iza,11928,N,MARLENE HILLMANN KINHIRIN,42916682953,4899933224,ANTONIO MATOS AREIA 165 APTO 301  ESTREITO FPOLIS,,"1,000251572",13,9,2025
+27532,10/09/2025,Iza,4700,N,TATIANA HANH,00632622075,48991205800,FREI CANECA 240 APTO 701 AGRONOMICA,,1,10,9,2025
+27568,13/09/2025,Iza,4500,N,DANIELA CARONEM,96552581053,48988012551,JORN MANOEL DE MENEZES 35 AP 503 ITACORUBI FPOLIS,,1,13,9,2025
+27560,02/09/2025,Iza,9192,N,FLAVIA DA SILVA,05262961940,026461316341,VERERADOR JACOB PEDRA BCA PALHOÇA SC,,1,2,9,2025
+27563,05/09/2025,Iza,11500,N,HERLOM TRISTAO,90912551968,489962,WILSON LUIZ 110 AP 302  COQUEIROS FPOLIS,,"1,000434972",5,9,2025
+27562,04/09/2025,Iza,1500,N,ALBERTO DE CARVALHO,2654941632416,4899976069,ROD DR ANTONIO LUZ CASA 20,,"1,875",4,9,2025
+27564,01/09/2025,Iza,1500,N,VLADIMIR LOPES,54521052,48221524152,1NSMSKD,,"1,875",1,9,2025
+27565,06/09/2025,Iza,6500,N,HERLOM TRISTAO,90912551968,4822222,WILSON LUZ  COQUEIROS ,,1,6,9,2025
+27523,25/09/2025,Iza,4190,n,ana paula saquetti,05552973909,49988155892,SAO TOMAS DE AQUINO AP 210 TRINDADE SJOSE,,"0,8498985801",25,9,2025
+27534,16/09/2025,Iza,6480,N,SERLE MARIA ROCHA DE MEDEIROS,00525790975,48996111480,AV SALVADOR DI BERNARDI 540 AP 1401 CAMPINAS SJOSE,,1,16,9,2025
+27569,15/069/2025,Iza,840,N,PRISCILA DOS SANTOS,915444010030,48991343434,DR PEDRO SILVA 205 COQUEIROS FPOLIS,,1,15,69,2025
+27571,16/069/2025,Iza,830,N,LILIAN TEREZINHA MARDOLONI,254485,48998581377,PADOVA SOBRINHO 5095,,"1,711340206",16,69,2025
+27266,29/09/2025,Iza,1250,n,ana claudia berger,4541521,49999742112,2615152,,1,29,9,2025
+27281,15/09/2025,Liane,22310,N,ANDERSON SILVA CARVALHO  FREIRE,02380645574,011992150607,MARCILIO DIAS 265 AP 701 A T3 JARDIM ATLANTICO,,"1,024804777",15,9,2025
+27557,02/09/2025,Liane,5000,N,MORGANA NUNES,08079656932,48999441392,OTAVIO DO PATROCINIO 245 AP 702 FLORESTA SJOSE,,1,2,9,2025
+27443,06/09/2025,Liane,18948,N,JAURO COLAÇO,09285741991,48999712663,AV RUBENS DE ARRUDA RAMOS 1198 AP 901 CENTRO FPOLIS SC,,1,6,9,2025
+27438,01/09/2025,Liane,22000,N,SAMIR CLAUDINO BEBER,54539650963,48999828080,AV ATLANTIDA 230 AP 103 BALNEARIO CAMBURIU,,"1,187263896",1,9,2025
+27263,24/09/2025,Salete,15250,N,LUIZ ANTONIO MASSIEL,51810484987,48999721832,PROF HEINZ BRAUSPERGIER 88 AP 308,,1,24,9,2025
+27604,17/10/2025,Liane,15000,N,CARMELITA MARIA DA SILVA,8636781915,48998540639,AV MARECHAL CASTELO BRANCO 255 AP 1002 CAMPINAS SJOSE,,1,17,10,2025
+27602,17/10/2025,Liane,6100,N,FERNANDO LUIZ ALVES,63754568949,48991011665,FERNANDO LIMA 199 AP 902 CENTRO FPOLIS,,1,17,10,2025
+27303,18/10/2025,Liane,5800,N,ALESSANDRA BROERING,91072794934,49991165849,AV FAROUPILHA 350 AP 902 A CAMPINAS SJOSE,,1,18,10,2025
+27283,16/10/2025,Liane,15000,N,ADRIANE MARA BRAZUSSI,84998954920,48996199290,ESTRADA GERAL ENVERNADINHA S/N CASA H 21 GOLF RANCHO QUEIMADO,,1,16,10,2025
+27608,22/10/2025,Liane,11000,N,CLAUDIA,31587412,4899260298,GOV CELSO RAMOS,,"1,000181851",22,10,2025
+27550,09/10/2025,Liane,8720,N,GILBERTO QUEIROZ,06356092904,48999871808,RUA SAO JORGE 2421 AP 403 ,,1,9,10,2025
+27272,07/10/2025,Liane,4400,N,BEATRIZ WALTRIC,61282677934,31618071044,PROF HEINZ BRAUSPERGER 88 APTO 503 JURERE FPOLIS,,1,7,10,2025
+27274,11/10/2025,Liane,8869,N,MARINA HAAK MARTINI,62112805991,48 991671166,JORNALISTA HAROLDO CALADO 175 AP 302 JURERE FPOLIS,,"1,000451213",11,10,2025
+27599,11/10/2025,Liane,14800,N,JOSE CARLOS VIEIRA,34387064900,48999715858,CEZAR AUGUSTO DE SOUZA 52 CASA CARIANOS,,"0,3074226387",11,10,2025
+27291,27/10/2025,Liane,26320,N,TRIBUNAL JUSTIÇA SANTA CATARINA,254164152,1555,ALVARO MULLER DA SILVEIRA 208 CENTRO,,1,27,10,2025
+27611,23/10/2025,Liane,10850,N,CLAUDIA,44841521,4524105210,864163,,1,23,10,2025
+27289,23/10/2025,Liane,3900,N,ALBERTINA BUSS WOLKMANN,28847059968,4833320648,SERV MARIA DA GLORIA NETO 214  CASA CORREGO GRDE,,1,23,10,2025
+27613,25/10/2025,Liane,2000,N,LAERCIO DIas,11290781915,4899721762,RUA HUMAITA 320 AP 1002 CENTRO FPOLIS,,1,25,10,2025
+27308,22/10/2025,Salete,4760,N,",MARCELO ASSUNÇÃO CAMPOS",07539914629,48996241263,CEL PEDRO DE MORRO 1507 AP 306 ESTREITO FPOLIS,,1,22,10,2025
+27307,22/10/2025,Salete,4500,N,VERA LUCIA RODRIGUES,1761580078,51981871727,RUA DOS SALMOES 844 AP 108 JURERE INT,,1,22,10,2025
+27304,20/10/2025,Salete,12900,N,ELISABETE TEREZINHA ALVES,24520551900,48999725242,av jornalista rubens de arruda ramos 2354 ap 101 a centro fpolis,,"0,9998449853",20,10,2025
+27287,18/10/2025,Salete,5160,N,SANDRA DA SILVA ,02157410,41541852,JURERE INT,,1,18,10,2025
+27288,21/10/2025,Salete,3630,N,ADRIANA RODRIGUES PIAZZA,62501674987,489832442506,RUA OLAVO BILAC 78 CANTO AP 101,,1,21,10,2025
+27585,03/10/2025,Salete,1685,N,MARCEL AMARAL,57854,196496,48541052,,1,3,10,2025
+27548,04/10/2025,Salete,1800,N,LUCIO DINIZ,0176477401,48984146538,AV DAS PALMEIRAS 594 CASA DANIELA FPOLIS,,1,4,10,2025
+27589,09/10/2025,Salete,7600,N,GEORGETE ,569852+641,4899999,JURERE,,1,9,10,2025
+27591,09/10/2025,Salete,6000,N,SERGIO I HEIL,02978199920,4899854133,AGORONOMICA,,1,9,10,2025
+27267,01/10/2025,Salete,4250,N,ELAINE BOTH,485,48984726914,DAS LARANJEIRAS 100 CASA PEDRA BC PALHOÇA SC,,1,1,10,2025
+27277 ,13/10/2025,Salete,8000,N,RAUN VASCONSELOS,07144795945,48996634970,FREI CANECA 240 AP 401  AGRONOMICA FPOLIS SC,,1,13,10,2025
+27282,16/10/2025,Salete,22200,N,EDINEIDE DISCHMES,116164196341963,4899584418,JOSE BASILICIO GARCIA CASA ANTONIO CARLOS COND RECANTO DA COLINA BIGUAÇU SC,,1,16,10,2025
+27590,09/10/2025,Salete,2085,N,MARISTELA CABRAL GALLINA,56416416410,4899610572,JURERE,,1,9,10,2025
+27279,14/10/2025,Salete,6900,N,RAFAEL R DE SOUZA,00381343901,48984086515,RUA ANTONIO SCHEREM 737 AP1003 LOBRASSOL SJOSE,,"1,005830904",14,10,2025
+27280,14/10/2025,Salete,11390,N,MAGIDA SANTOS KERINCH,4604473900,48999833039,DONA LEOPOLDINA 40 CASA PONTA DE BAIXO SJOSE,,"3,808090939",14,10,2025
+27302,17/10/2025,Salete,5800,N,TIAGO BUSS,05466362921,48996183525,AGAPITO VILELA 67 AP 909 CANTO FPOLIS SC,,1,17,10,2025
+27301,15/10/2025,Salete,11280,n,ana lucia m da veiga,86379410953,48991042264,RUA SAO JORGE 181 AP 202 CENTRO FPOLIS,,1,15,10,2025
+27310,30/10/2025,Salete,3900,n,DIEGO MINOTTO,05075833969,48999674695,ROD EVANGELITS VARZEA 1019 AP 204 MONTE VERDE FPOLIS,,1,30,10,2025
+27317,31/10/2025,Salete,19500,N,MARCILEMA BRUM,61258466015,48984547521,RUA DA VITORIA REGIA 197 CASA CORREGO GRDE,,1,31,10,2025
+27315,31/10/2025,Salete,23000,N,MARCELO ABBAMANTE,18279353882,48991331530,RUA JARDIM 7005 NUM 123 CASA JARDIM CAMPECHE FPOLIS,,1,31,10,2025
+27318,31/10/2025,Salete,7180,N,ALESSANDRA MIRANDA DOS SANTOS,01676244905,48999825599,AV KILIANO KRIMER 460 AP 304 RIO CAVEIRAS BIGUAÇU,,1,31,10,2025
+27296,30/10/2025,Liane,59400,N,IVETE ZANARDO DA SILVA,75794390930,48999830185,DOM TRAGOLTT WILD 360 AP 401 PRAIA BRAVA FPOLIS,,"0,9932612076",30,10,2025
+27309,30/10/2025,Liane,10710,N,ADRIANE TRAJANO,851677644915,48988063535,LAZARO DE OLIVEIRA SOUZA 953 AP 305 INGLESES FPOLIS,,1,30,10,2025
+27292,28/10/2025,Liane,3570,N,COND ED BENJAMIN CONSTANT,81531154000101,48991191900,VITOR KONDER 54 CENTRO FPOLIS SC,,1,28,10,2025
+27313,31/10/2025,Liane,3600,N,NANCY DA ROSA,25496948134,48999478298,DES PEDRO SILVA 2800 AP 102 COQUEIROS,,1,31,10,2025
+27300,31/10/2025,Liane,5500,N,GILBERTO L DE  QUEIROS,06356092904,48999871808,RUA SAO JORGE 212 AP 403 CENTRO FPOLIS,,1,31,10,2025
+27312,30/10/2025,Iza,6500,N,ROBERT HOFFMANN,2252159575,48999449557,MONTE VERDE,,1,30,10,2025
+27622,29/10/2025,Iza,19000,N,MARIA MARCIA MUSS,02012016820,16988223456,EUCLIDES MACHADO 112 AP 702 CANTO,,"0,9758602979",29,10,2025
+27619,28/10/2025,Iza,5729,N,ROBERTA GODOY,21700860801,48991438398,RUA DOS MAPARAS 75 CASA FPOLIS,,1,28,10,2025
+27623,30/10/2025,Iza,5300,N,MARISA M MUSS,121155555222,4800,EUCLIDES MACHADO,,1,30,10,2025
+27605,20/10/2025,Iza,5000,N,MORGANA MARIA DA SILVA,03572073944,482223113,EUGENIO PORTELa 707 AP 207 BARREIROS SJOSE,,1,20,10,2025
+27286,17/10/2025,Iza,3814,N,LUCIANA FERNANDES RABELLO,79325670175,48991419331,TRINDADE MADRE BENVENUTA 1116 A,,1,17,10,2025
+27311,30/10/2025,Rose,15990,N,SERGIO MARCELO ALVES,61319090915,48999772332,RUA ALMIRANTE ALVIM CENTRO AP 901,,1,30,10,2025
+27618,28/10/2025,Rose,5700,N,SARA M LAZARI,37421328068,48999711432,ARACY VAZ CALADO 433 AP 1204 ESTREITO FPOLIS,,1,28,10,2025
+27314,31/10/2025,Rose,4996,N,DANIEL ROGERIO SCHMIT,41959558900,47996280006,JOAO CARLOS THIESSEN 120 CASA ITUPORANGA SC,,1,31,10,2025
+27621,28/10/2025,Rose,27700,S,DIMAS EMPREENDIMENTOS,52535592000140,4816516310,AFONSO PENA 493  CANTO FPOLIS,,"0,9999639002",28,10,2025
+27305,20/10/2025,Rose,6470,N,IZABEL CRISTINA DE LIMA,72869704968,41996632405,AV DOS LAGOS S/N AP 701 PEDRA BCA PALHOÇA SC,,1,20,10,2025
+27284,17/10/2025,Rose,18600,N,LUIZ ANTONIO B PACHECO,21059225034,48999255673,DAS MOREIAS 16 JURERE FPOLIS SC,,1,17,10,2025
+27595,10/10/2025,Rose,39000,N,IDA,6164941,489326310,BALNEARIO,,"1,00015387",10,10,2025
+27586,04/10/2025,Rose,5100,N,ANGELA MARIA PINHEIRO,65161076968,4896640332,PASTOR WILLIAN SCHISLER FILHO 655 AP 304 E ITACORUBI FPOLIS,,1,4,10,2025
+27269,06/10/2025,Rose,450,N,PRISCILLA,641096410,64106310,964106310,,1,6,10,2025
+27549,06/10/2025,Rose,10600,N,ARISTEU STADLER,29870097987,48999820678,RUA HOEPCKE 179 AP 1206 CENTRO FPOLIS,,1,6,10,2025
+27587,04/10/2025,Rose,5400,N,JULÇIANA F CARDOSO,88837084900,48991048590,JOSE DO VALE PEREIRA 37 AP 402 COQUEIROS FPOLIS,,1,4,10,2025
+27588,08/10/2025,Rose,3700,N,THAMAR S D A FONSECA,16544560987,47999110033,RUA 264 NR 155 AP 601 MEIA PRAIA ITAPEMA,,1,8,10,2025
+27276,13/10/2025,Rose,3100,N,PAULO ZOLDAN,52085678904,48996160447,RUA DA ALEGRIA 140 AP 203 CACHOEIRA FPOLIS,,1,13,10,2025
+27278,14/10/2025,Rose,8474,N,ILAIDE DE LUCCA,345879000982,48999480876,JOAO MEIRELES 1298 ABRAAO FPOLIS,,1,14,10,2025
+27614,25/10/2025,Rose,3600,N,PRSICILLA DOS SANTOS,91844410030,48991343134,COQUEIROS,,1,25,10,2025
+27306,20/10/2025,Iza,10290,N,AGATE VASSELARI,05962012909,48991485700,LAURO LINHARES 42 TRINDADE,,1,20,10,2025
+27606,10/10/2025,Iza,6567,S,GUILHERMEW HENRIQUE MUNHOZ DE MOURA,08663502923,482116510,RUA 1000 NUM 111 SALA 05 CENTRO FPOLIS,,"0,9998477467",10,10,2025
+27596,10/10/2025,Iza,5900,N,JAIME ANTONIO FILHO,07055415926,48990691279, CEDNTRO FPOLIS,,1,10,10,2025
+27584,03/10/2025,Iza,13360,N,CLAUDIA VERONESSE GOMES PASSOS,93596324220,929817098877,DOS LAJMDKHNDF CASA 129 PEDRA BRANCA,,1,3,10,2025
+27547,02/10/2025,Iza,3790,N,DIOGO BIZATTO,05039595964,47984097858,MARECHAL HERMES 121 AP 1102 ESTREITO,,"1,010666667",2,10,2025
+27600,13/10/2025,Iza,21780,N,FERNANDO JOSE ALTHOFF,28929632904,48984292822,AV JORNALISTA RUBENS DE ARRUDA RAMOS 2784  AP 602,,1,13,10,2025
+27275,11/10/2025,Iza,18000,N,RAQUEL RAMOS DE OLIVEIRA,35184909802,48998299534,MILTON ROQUE KRIGNER 178 APC702 TRINDADE,,"1,001001001",11,10,2025
+27601,15/10/2025,Iza,6000,N,MARIA EDUARDA DE LIMA,08798944908,48991525686,JOAO MOTTA SPEZIM 745,,1,15,10,2025
+27615,25/10/2025,Iza,21000,N,VANIA PETERMANN ,68312679987,48999853139,ACELOM EDUARDO DA SILVA 31 CASA CORREGO GRDE,,"0,9546322393",25,10,2025
+27607,21/10/2025,Iza,13000,N,DANIELA CARGNIR,96882581053,48988012581,JORN MANOEL DE MENEZES 35 AP 503 ITACORUBI,,1,21,10,2025
+27620,28/10/2025,Iza,56500,N,VANIA PETERMANN,68312679987,48999853130,ACILOM EDUARDO DA SILVA CORREGO GRDE,,"0,9352756166",28,10,2025
+27298,31/10/2025,Iza,66000,N,CLAUDIA L RIBEIRO,83473742953,48999255253,"RUA JOAO ,MEIRELLES 1213",,1,31,10,2025
+27598,11/10/2025,Rose,21368,N,VIA SOL AGENCIA VIAGENS,04136946000130,48984071217,SERV NAVEGANTES DO MAR 195 CASA INGLESES,,1,11,10,2025

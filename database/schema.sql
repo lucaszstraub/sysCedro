@@ -513,6 +513,14 @@ ALTER TABLE entregas ADD COLUMN IF NOT EXISTS observacoes_kanban TEXT;
 ALTER TABLE entregas ADD COLUMN IF NOT EXISTS descricao_assistencia TEXT;
 ALTER TABLE entregas ADD COLUMN IF NOT EXISTS indice_sequencia INTEGER;
 ALTER TABLE entregas ADD COLUMN IF NOT EXISTS indice_total INTEGER;
+ALTER TABLE entregas ADD COLUMN IF NOT EXISTS periodo_entrega VARCHAR(20) DEFAULT 'matutino';
+ALTER TABLE entregas ADD COLUMN IF NOT EXISTS confirmacao_cliente VARCHAR(20) NOT NULL DEFAULT 'confirmada';
+ALTER TABLE entregas DROP CONSTRAINT IF EXISTS entregas_periodo_entrega_check;
+ALTER TABLE entregas ADD CONSTRAINT entregas_periodo_entrega_check
+  CHECK (periodo_entrega IS NULL OR periodo_entrega IN ('matutino', 'vespertino'));
+ALTER TABLE entregas DROP CONSTRAINT IF EXISTS entregas_confirmacao_cliente_check;
+ALTER TABLE entregas ADD CONSTRAINT entregas_confirmacao_cliente_check
+  CHECK (confirmacao_cliente IN ('pendente', 'confirmada'));
 
 CREATE TABLE IF NOT EXISTS entrega_itens (
   id SERIAL PRIMARY KEY,
@@ -542,6 +550,12 @@ CREATE TABLE IF NOT EXISTS entrega_itens_consignados (
 
 CREATE INDEX IF NOT EXISTS idx_entrega_itens_consignados_entrega
   ON entrega_itens_consignados(entrega_id);
+
+ALTER TABLE entrega_itens_consignados
+  ADD COLUMN IF NOT EXISTS venda_item_id INTEGER REFERENCES venda_itens(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_entrega_itens_consignados_venda_item
+  ON entrega_itens_consignados(venda_item_id) WHERE venda_item_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS orcamentos_planejados (
   id SERIAL PRIMARY KEY,

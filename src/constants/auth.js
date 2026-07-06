@@ -211,6 +211,12 @@ export const MENU_SECTIONS = [
             icon: '✅',
             keywords: 'nota fiscal fornecedor chegada',
           },
+          {
+            to: `${ESTOQUE_BASE}/etiquetas`,
+            label: 'Etiquetas',
+            icon: '🏷️',
+            keywords: 'imprimir etiqueta produto recebido',
+          },
           { to: `${VENDAS_BASE}/entregas`, label: 'Entregas', icon: '🚚', keywords: 'cliente transporte' },
         ],
       },
@@ -285,6 +291,13 @@ export const MENU_SECTIONS = [
             label: 'Incentivos a parceiros',
             icon: '💼',
             permission: PERMISSIONS.PARCEIROS,
+          },
+          {
+            to: `${ESTOQUE_BASE}/etiquetas`,
+            label: 'Etiquetas',
+            icon: '🏷️',
+            permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS, PERMISSIONS.WMS],
+            keywords: 'imprimir etiqueta produto recebido',
           },
         ],
       },
@@ -381,7 +394,7 @@ export const MENU_SECTIONS = [
   {
     id: 'cadastros',
     title: 'Cadastros',
-    hubDescription: 'Produtos, fornecedores e dados de referência',
+    hubDescription: 'Produtos, clientes, fornecedores e dados de referência',
     macroGroup: 'gestao',
     permission: PERMISSIONS.CADASTROS,
     defaultCollapsed: true,
@@ -401,6 +414,7 @@ export const MENU_SECTIONS = [
       {
         subtitle: 'Referências',
         items: [
+          { to: `${ESTOQUE_BASE}/clientes`, label: 'Clientes', icon: '👤', keywords: 'cpf cnpj telefone endereco' },
           { to: `${ESTOQUE_BASE}/fornecedores`, label: 'Fornecedores', icon: '🏭' },
           { to: `${ESTOQUE_BASE}/formas-pagamento`, label: 'Formas de pagamento', icon: '💳' },
           {
@@ -458,6 +472,7 @@ export const ROUTE_PERMISSIONS = [
   { prefix: `${ESTOQUE_BASE}/estoque`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/movimentacoes`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/recebimentos`, permission: PERMISSIONS.WMS },
+  { prefix: `${ESTOQUE_BASE}/etiquetas`, permissions: [PERMISSIONS.WMS, PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS] },
   { prefix: `${VENDAS_BASE}/entregas`, permission: PERMISSIONS.WMS },
   { prefix: `${VENDAS_BASE}/orcamentos-planejados`, permission: PERMISSIONS.PLANEJADOS },
   { prefix: `${VENDAS_BASE}/vendas-planejados`, permission: PERMISSIONS.PLANEJADOS },
@@ -478,6 +493,7 @@ export const ROUTE_PERMISSIONS = [
   { prefix: `${VENDAS_BASE}/pagamentos`, administradorOnly: true },
   { prefix: `${ESTOQUE_BASE}/produtos`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS] },
   { prefix: `${ESTOQUE_BASE}/fornecedores`, permission: PERMISSIONS.CADASTROS },
+  { prefix: `${ESTOQUE_BASE}/clientes`, permission: PERMISSIONS.CADASTROS },
   { prefix: `${ESTOQUE_BASE}/formas-pagamento`, permission: PERMISSIONS.CADASTROS },
   { prefix: `${ESTOQUE_BASE}/centros-custo`, administradorOnly: true },
   { prefix: `${ESTOQUE_BASE}/produtos-planejados`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS] },

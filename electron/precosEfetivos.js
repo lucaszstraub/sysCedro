@@ -40,6 +40,17 @@ function aplicarPrecosEfetivosNosItens(ambientesValidos, totalPago) {
     return;
   }
 
+  // Pagamento acima da lista (ex.: item cancelado sem ajuste de pagamento) não
+  // infla preço efetivo nem base de comissão — mantém preço de lista.
+  if (total > subtotalBruto) {
+    entries.forEach((item) => {
+      const lista = Number(item.preco_unitario_lista ?? item.preco_unitario) || 0;
+      item.preco_unitario_lista = lista;
+      item.preco_unitario = lista;
+    });
+    return;
+  }
+
   let acumulado = 0;
   entries.forEach((item, index) => {
     const qty = item.quantidade;

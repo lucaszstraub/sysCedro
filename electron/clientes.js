@@ -1,4 +1,5 @@
 const { getPool } = require('./database');
+const { validarClienteCadastro } = require('./clienteValidacao');
 
 async function listClientes(busca = '') {
   const db = getPool();
@@ -19,6 +20,7 @@ async function getCliente(id) {
 }
 
 async function createCliente(data) {
+  validarClienteCadastro(data);
   const db = getPool();
   const result = await db.query(`
     INSERT INTO clientes (nome, cpf_cnpj, telefone, email, endereco, cidade, estado, cep, observacoes)
@@ -39,6 +41,7 @@ async function createCliente(data) {
 }
 
 async function updateCliente(id, data) {
+  validarClienteCadastro(data);
   const db = getPool();
   const result = await db.query(`
     UPDATE clientes SET

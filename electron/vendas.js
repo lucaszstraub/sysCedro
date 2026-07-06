@@ -1,4 +1,5 @@
 const { getPool } = require('./database');
+const { assertClienteParaVenda } = require('./clienteValidacao');
 const { getSession } = require('./auth');
 const {
   buildFiltroVendedorSql,
@@ -233,6 +234,7 @@ async function salvarVenda(data, id = null) {
     }
 
     if (!data.cliente_id) throw new Error('Selecione um cliente para a venda.');
+    await assertClienteParaVenda(client, data.cliente_id);
     const numeroPedido = normalizarNumeroPedido(data.numero_pedido);
     await assertNumeroPedidoUnico(client, numeroPedido, id);
     if (!data.ambientes || data.ambientes.length === 0) {
@@ -400,6 +402,7 @@ async function salvarVenda(data, id = null) {
     );
 
     await client.query('COMMIT');
+    await sincronizarComissoesVenda(venda.id);
     return getVenda(venda.id);
   } catch (err) {
     await client.query('ROLLBACK');

@@ -3,6 +3,18 @@ const { normalizarStatusItem } = require('./vendaItemStatus');
 
 const TIPO_LIBERACAO = new Set(['parcial', 'completa']);
 const TIPO_EXPEDICAO = new Set(['entrega', 'assistencia']);
+const PERIODO_ENTREGA = new Set(['matutino', 'vespertino']);
+const CONFIRMACAO_CLIENTE = new Set(['pendente', 'confirmada']);
+
+function toDateIso(val) {
+  if (!val) return null;
+  if (val instanceof Date) return val.toISOString().slice(0, 10);
+  return String(val).slice(0, 10);
+}
+
+function resolverPeriodoEntrega(periodo) {
+  return PERIODO_ENTREGA.has(periodo) ? periodo : 'matutino';
+}
 
 function hojeIsoDate() {
   const d = new Date();
@@ -139,12 +151,62 @@ function calcularVolumesTotais(itens = [], quantidadesMap = null, consignados = 
   return total;
 }
 
+async function obterAmbientePadraoVenda(client, vendaId) {
+  const amb = await client.query(
+    'SELECT id FROM venda_ambientes WHERE venda_id = $1 ORDER BY ordem, id LIMIT 1',
+    [vendaId]
+  );
+  if (amb.rowCount > 0) return amb.rows[0].id;
+
+  const ins = await client.query(`
+    INSERT INTO venda_ambientes (venda_id, nome, ordem)
+    VALUES ($1, 'Geral', 0)
+    RETURNING id
+  `, [vendaId]);
+  return ins.rows[0].id;
+}
+
+async function obterEntregaMasterId(client, vendaId) {
+  const result = await client.query(
+    'SELECT id FROM entregas WHERE venda_id = $1 AND numero = 1 LIMIT 1',
+    [vendaId]
+  );
+  return result.rows[0]?.id || null;
+}
+
+async function sincronizarEntregaMasterItens(client, vendaId, vendaItemIds = null) {
+  const params = [vendaId];
+  let filtroItem = '';
+  if (vendaItemIds?.length) {
+    params.push(vendaItemIds);
+    filtroItem = 'AND vi.id = ANY($2::int[])';
+  }
+
+  await client.query(`
+    UPDATE entrega_itens ei
+    SET quantidade_entregue = vi.quantidade_entregue
+    FROM venda_itens vi, entregas e
+    WHERE ei.venda_item_id = vi.id
+      AND ei.entrega_id = e.id
+      AND vi.venda_id = $1
+      AND e.venda_id = $1
+      AND e.numero = 1
+      ${filtroItem}
+  `, params);
+}
+
+async function atualizarStatusEntregaMaster(client, vendaId) {
+  const masterId = await obterEntregaMasterId(client, vendaId);
+  if (masterId) await atualizarStatusEntrega(client, masterId);
+}
+
 async function listarItensConsignados(client, entregaId) {
   const result = await client.query(`
     SELECT
       c.id,
       c.entrega_id,
       c.produto_id,
+      c.venda_item_id,
       c.descricao,
       c.quantidade,
       c.volumes_por_unidade,
@@ -161,27 +223,182 @@ async function listarItensConsignados(client, entregaId) {
   return result.rows;
 }
 
-async function salvarItensConsignados(client, entregaId, itens = []) {
-  await client.query('DELETE FROM entrega_itens_consignados WHERE entrega_id = $1', [entregaId]);
+async function salvarItensConsignados(client, entrega, itens = [], options = {}) {
+  const entregaId = typeof entrega === 'object' ? entrega.id : entrega;
+  const vendaId = typeof entrega === 'object' ? entrega.venda_id : null;
+  const marcarEntregue = options.marcarEntregue === true;
+
+  if (!vendaId) {
+    await client.query('DELETE FROM entrega_itens_consignados WHERE entrega_id = $1', [entregaId]);
+    for (const item of itens) {
+      const descricao = String(item.descricao || '').trim();
+      const quantidade = Number(item.quantidade) || 0;
+      if (!descricao || quantidade <= 0) continue;
+      await client.query(`
+        INSERT INTO entrega_itens_consignados (
+          entrega_id, produto_id, descricao, quantidade, volumes_por_unidade, observacoes
+        )
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [
+        entregaId,
+        item.produto_id ? Number(item.produto_id) : null,
+        descricao,
+        quantidade,
+        volumesPorUnidadeItem(item),
+        item.observacoes?.trim() || null,
+      ]);
+    }
+    return;
+  }
+
+  const ambienteId = await obterAmbientePadraoVenda(client, vendaId);
+  const masterEntregaId = await obterEntregaMasterId(client, vendaId);
+  const idsPersistidos = [];
+  const vendaItemIdsMaterializados = [];
 
   for (const item of itens) {
     const descricao = String(item.descricao || '').trim();
     const quantidade = Number(item.quantidade) || 0;
     if (!descricao || quantidade <= 0) continue;
 
-    await client.query(`
-      INSERT INTO entrega_itens_consignados (
-        entrega_id, produto_id, descricao, quantidade, volumes_por_unidade, observacoes
-      )
-      VALUES ($1, $2, $3, $4, $5, $6)
-    `, [
-      entregaId,
-      item.produto_id ? Number(item.produto_id) : null,
-      descricao,
-      quantidade,
-      volumesPorUnidadeItem(item),
-      item.observacoes?.trim() || null,
-    ]);
+    let vendaItemId = item.venda_item_id ? Number(item.venda_item_id) : null;
+
+    if (item.id) {
+      const existente = await client.query(
+        'SELECT venda_item_id FROM entrega_itens_consignados WHERE id = $1 AND entrega_id = $2',
+        [item.id, entregaId]
+      );
+      if (existente.rowCount > 0 && existente.rows[0].venda_item_id) {
+        vendaItemId = existente.rows[0].venda_item_id;
+      }
+    }
+
+    const qtdEntregue = marcarEntregue ? quantidade : 0;
+
+    if (vendaItemId) {
+      await client.query(`
+        UPDATE venda_itens SET
+          descricao = $2,
+          quantidade = $3,
+          produto_id = COALESCE($4, produto_id),
+          quantidade_entregue = CASE WHEN $5 THEN $3 ELSE quantidade_entregue END,
+          status = 'consignado'
+        WHERE id = $1 AND venda_id = $6
+      `, [
+        vendaItemId,
+        descricao.slice(0, 300),
+        quantidade,
+        item.produto_id ? Number(item.produto_id) : null,
+        marcarEntregue,
+        vendaId,
+      ]);
+    } else {
+      const inserted = await client.query(`
+        INSERT INTO venda_itens (
+          venda_id, ambiente_id, produto_id, descricao, quantidade,
+          quantidade_estoque, quantidade_encomenda, quantidade_entregue,
+          preco_unitario_lista, preco_unitario, subtotal, ordem, status
+        )
+        VALUES ($1, $2, $3, $4, $5, 0, 0, $6, 0, 0, 0, 0, 'consignado')
+        RETURNING id
+      `, [
+        vendaId,
+        ambienteId,
+        item.produto_id ? Number(item.produto_id) : null,
+        descricao.slice(0, 300),
+        quantidade,
+        qtdEntregue,
+      ]);
+      vendaItemId = inserted.rows[0].id;
+    }
+
+    vendaItemIdsMaterializados.push(vendaItemId);
+
+    if (masterEntregaId) {
+      await client.query(`
+        INSERT INTO entrega_itens (entrega_id, venda_item_id, quantidade, quantidade_entregue)
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (entrega_id, venda_item_id) DO UPDATE SET
+          quantidade = GREATEST(entrega_itens.quantidade, EXCLUDED.quantidade),
+          quantidade_entregue = GREATEST(entrega_itens.quantidade_entregue, EXCLUDED.quantidade_entregue)
+      `, [masterEntregaId, vendaItemId, quantidade, qtdEntregue]);
+    }
+
+    let consignadoId = item.id ? Number(item.id) : null;
+    if (consignadoId) {
+      const updated = await client.query(`
+        UPDATE entrega_itens_consignados SET
+          produto_id = $2,
+          venda_item_id = $3,
+          descricao = $4,
+          quantidade = $5,
+          volumes_por_unidade = $6,
+          observacoes = $7,
+          atualizado_em = NOW()
+        WHERE id = $1 AND entrega_id = $8
+        RETURNING id
+      `, [
+        consignadoId,
+        item.produto_id ? Number(item.produto_id) : null,
+        vendaItemId,
+        descricao,
+        quantidade,
+        volumesPorUnidadeItem(item),
+        item.observacoes?.trim() || null,
+        entregaId,
+      ]);
+      if (updated.rowCount === 0) consignadoId = null;
+    }
+
+    if (!consignadoId) {
+      const insertedConsignado = await client.query(`
+        INSERT INTO entrega_itens_consignados (
+          entrega_id, produto_id, venda_item_id, descricao, quantidade, volumes_por_unidade, observacoes
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id
+      `, [
+        entregaId,
+        item.produto_id ? Number(item.produto_id) : null,
+        vendaItemId,
+        descricao,
+        quantidade,
+        volumesPorUnidadeItem(item),
+        item.observacoes?.trim() || null,
+      ]);
+      consignadoId = insertedConsignado.rows[0].id;
+    }
+
+    idsPersistidos.push(consignadoId);
+  }
+
+  const removidos = await client.query(`
+    SELECT id, venda_item_id
+    FROM entrega_itens_consignados
+    WHERE entrega_id = $1
+      ${idsPersistidos.length ? 'AND id <> ALL($2::int[])' : ''}
+  `, idsPersistidos.length ? [entregaId, idsPersistidos] : [entregaId]);
+
+  for (const row of removidos.rows) {
+    if (row.venda_item_id && !marcarEntregue) {
+      await client.query(`
+        DELETE FROM venda_itens
+        WHERE id = $1
+          AND venda_id = $2
+          AND status = 'consignado'
+          AND quantidade_entregue = 0
+      `, [row.venda_item_id, vendaId]);
+    }
+  }
+
+  await client.query(`
+    DELETE FROM entrega_itens_consignados
+    WHERE entrega_id = $1
+      ${idsPersistidos.length ? 'AND id <> ALL($2::int[])' : ''}
+  `, idsPersistidos.length ? [entregaId, idsPersistidos] : [entregaId]);
+
+  if (vendaItemIdsMaterializados.length) {
+    await sincronizarEntregaMasterItens(client, vendaId, vendaItemIdsMaterializados);
   }
 }
 
@@ -221,26 +438,37 @@ async function calcularDisponibilidadeItem(client, vendaItem) {
     };
   }
 
+  const reserva = await obterReservaAtiva(client, vendaItem.id);
+  if (reserva && pendente > 0) {
+    const disponivelReserva = Math.max(0, Math.min(Number(reserva.quantidade), pendente));
+    return {
+      total,
+      entregue,
+      pendente,
+      disponivel: disponivelReserva,
+      disponivel_estoque: disponivelReserva,
+      disponivel_encomenda: 0,
+      pronto: disponivelReserva >= pendente && pendente > 0,
+    };
+  }
+
   const qtdEstoque = Number(vendaItem.quantidade_estoque) || 0;
   const qtdEncomenda = Number(vendaItem.quantidade_encomenda) || 0;
 
   let disponivelEstoque = 0;
   if (qtdEstoque > 0 && pendente > 0) {
-    const reserva = await obterReservaAtiva(client, vendaItem.id);
-    if (reserva) {
-      const jaEntregueEstoque = Math.min(entregue, qtdEstoque);
-      disponivelEstoque = Math.max(
-        0,
-        Math.min(Number(reserva.quantidade), qtdEstoque - jaEntregueEstoque, pendente)
-      );
-    }
+    const jaEntregueEstoque = Math.min(entregue, qtdEstoque);
+    disponivelEstoque = Math.max(0, qtdEstoque - jaEntregueEstoque);
   }
 
   let disponivelEncomenda = 0;
   if (qtdEncomenda > 0 && pendente > 0) {
     const recebido = await obterQuantidadeRecebidaEncomenda(client, vendaItem.id);
     const jaEntregueEncomenda = Math.max(0, entregue - qtdEstoque);
-    disponivelEncomenda = Math.max(0, Math.min(recebido - jaEntregueEncomenda, qtdEncomenda - jaEntregueEncomenda, pendente - disponivelEstoque));
+    disponivelEncomenda = Math.max(
+      0,
+      Math.min(recebido - jaEntregueEncomenda, qtdEncomenda - jaEntregueEncomenda, pendente - disponivelEstoque)
+    );
   }
 
   const disponivel = Math.min(pendente, disponivelEstoque + disponivelEncomenda);
@@ -257,6 +485,12 @@ async function calcularDisponibilidadeItem(client, vendaItem) {
 }
 
 async function montarItensEntrega(client, entregaId) {
+  const entregaMeta = await client.query(
+    'SELECT numero FROM entregas WHERE id = $1',
+    [entregaId]
+  );
+  const entregaNumero = entregaMeta.rows[0]?.numero ?? 1;
+
   const result = await client.query(`
     SELECT
       ei.id,
@@ -282,17 +516,27 @@ async function montarItensEntrega(client, entregaId) {
 
   const itens = [];
   for (const row of result.rows) {
+    const entregueVenda = Number(row.quantidade_entregue_venda) || 0;
+    const entregueExpedicao = Number(row.quantidade_entregue) || 0;
+    const isMaster = entregaNumero === 1;
+
     const disp = await calcularDisponibilidadeItem(client, {
       id: row.venda_item_id,
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
-      quantidade_entregue: row.quantidade_entregue_venda,
+      quantidade_entregue: entregueVenda,
       status: row.item_status,
     });
-    const pendenteEntrega = Number(row.quantidade) - Number(row.quantidade_entregue);
+
+    const pendenteEntrega = isMaster
+      ? Math.max(0, Number(row.quantidade_venda) - entregueVenda)
+      : Math.max(0, Number(row.quantidade) - entregueExpedicao);
+    const quantidadeEntregueExibicao = isMaster ? entregueVenda : entregueExpedicao;
+
     itens.push({
       ...row,
+      quantidade_entregue: quantidadeEntregueExibicao,
       pendente_entrega: pendenteEntrega,
       disponivel_agora: Math.min(disp.disponivel, pendenteEntrega),
       item_pronto: disp.disponivel >= pendenteEntrega && pendenteEntrega > 0,
@@ -527,64 +771,168 @@ async function reduzirEstoqueFisico(client, produtoId, quantidade, motivo, refer
   }
 }
 
-async function baixarItemEntrega(client, entrega, entregaItem, vendaItem, quantidade) {
+async function reduzirReservaAtiva(client, vendaItemId, quantidade) {
+  const reserva = await obterReservaAtiva(client, vendaItemId);
+  if (!reserva) return false;
+
+  const novaQtd = Number(reserva.quantidade) - quantidade;
+  if (novaQtd <= 0) {
+    await client.query(`
+      UPDATE estoque_reservas SET status = 'baixada', quantidade = 0, atualizado_em = NOW()
+      WHERE id = $1
+    `, [reserva.id]);
+  } else {
+    await client.query(`
+      UPDATE estoque_reservas SET quantidade = $2, atualizado_em = NOW()
+      WHERE id = $1
+    `, [reserva.id, novaQtd]);
+  }
+  return true;
+}
+
+async function validarBaixaItemEntrega(client, vendaItem, quantidade) {
   const qtdEstoque = Number(vendaItem.quantidade_estoque) || 0;
-  const qtdEncomenda = Number(vendaItem.quantidade_encomenda) || 0;
   const entregueVenda = Number(vendaItem.quantidade_entregue) || 0;
-  let restante = quantidade;
+  const pendenteVenda = Math.max(0, Number(vendaItem.quantidade) - entregueVenda);
 
-  const jaEntregueEstoque = Math.min(entregueVenda, qtdEstoque);
-  const estoquePendente = Math.max(0, qtdEstoque - jaEntregueEstoque);
-  const fromStock = Math.min(restante, estoquePendente);
-
-  if (fromStock > 0) {
-    const reserva = await obterReservaAtiva(client, vendaItem.id);
-    if (!reserva) throw new Error(`Reserva de estoque não encontrada para "${vendaItem.descricao}".`);
-    await reduzirEstoqueFisico(
-      client,
-      vendaItem.produto_id,
-      fromStock,
-      `Entrega pedido ${entrega.numero} — venda`,
-      entrega.id
-    );
-    const novaQtdReserva = Number(reserva.quantidade) - fromStock;
-    if (novaQtdReserva <= 0) {
-      await client.query(`
-        UPDATE estoque_reservas SET status = 'baixada', quantidade = 0, atualizado_em = NOW()
-        WHERE id = $1
-      `, [reserva.id]);
-    } else {
-      await client.query(`
-        UPDATE estoque_reservas SET quantidade = $2, atualizado_em = NOW()
-        WHERE id = $1
-      `, [reserva.id, novaQtdReserva]);
-    }
-    restante -= fromStock;
+  if (quantidade > pendenteVenda) {
+    throw new Error(`Quantidade inválida para "${vendaItem.descricao}".`);
   }
 
-  if (restante > 0) {
-    if (!vendaItem.produto_id) {
-      throw new Error(`Item "${vendaItem.descricao}" não possui produto vinculado para baixa de estoque.`);
+  const reserva = await obterReservaAtiva(client, vendaItem.id);
+  if (reserva) {
+    if (quantidade > Number(reserva.quantidade)) {
+      throw new Error(
+        `Estoque reservado insuficiente para "${vendaItem.descricao}" (${reserva.quantidade} disponível).`
+      );
     }
+    return;
+  }
+
+  const qtdEncomenda = Number(vendaItem.quantidade_encomenda) || 0;
+  const jaEntregueEstoque = Math.min(entregueVenda, qtdEstoque);
+  const estoquePendente = Math.max(0, qtdEstoque - jaEntregueEstoque);
+  const fromStock = Math.min(quantidade, estoquePendente);
+  const fromEncomenda = quantidade - fromStock;
+
+  if (fromEncomenda > 0) {
     const recebido = await obterQuantidadeRecebidaEncomenda(client, vendaItem.id);
     const jaEntregueEncomenda = Math.max(0, entregueVenda - qtdEstoque);
     const encomendaDisponivel = Math.max(0, recebido - jaEntregueEncomenda);
-    if (restante > encomendaDisponivel) {
+    if (fromEncomenda > encomendaDisponivel) {
       throw new Error(`Quantidade indisponível para entrega do item "${vendaItem.descricao}".`);
     }
-    await reduzirEstoqueFisico(
-      client,
-      vendaItem.produto_id,
-      restante,
-      `Entrega pedido ${entrega.numero} — encomenda recebida`,
-      entrega.id
-    );
-    restante = 0;
+  }
+}
+
+async function baixarItemEntrega(client, entrega, entregaItem, vendaItem, quantidade) {
+  if (quantidade <= 0) return;
+  if (!vendaItem.produto_id) {
+    throw new Error(`Item "${vendaItem.descricao}" não possui produto vinculado para baixa de estoque.`);
+  }
+
+  await validarBaixaItemEntrega(client, vendaItem, quantidade);
+
+  await reduzirEstoqueFisico(
+    client,
+    vendaItem.produto_id,
+    quantidade,
+    `Entrega expedição ${entrega.numero}`,
+    entrega.id
+  );
+
+  await reduzirReservaAtiva(client, vendaItem.id, quantidade);
+}
+
+async function obterResumoExpedicoes(client, vendaId) {
+  const result = await client.query(`
+    SELECT
+      COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE status = 'agendada')::int AS agendadas,
+      COUNT(*) FILTER (WHERE status IN ('entregue', 'parcial'))::int AS concluidas,
+      MIN(data_prevista) FILTER (WHERE status = 'agendada') AS proxima_data,
+      (
+        SELECT periodo_entrega
+        FROM entregas e2
+        WHERE e2.venda_id = $1
+          AND e2.numero > 1
+          AND e2.status = 'agendada'
+        ORDER BY e2.data_prevista ASC NULLS LAST, e2.id ASC
+        LIMIT 1
+      ) AS proximo_periodo,
+      COUNT(*) FILTER (
+        WHERE status = 'agendada' AND confirmacao_cliente = 'pendente'
+      )::int AS aguardando_confirmacao
+    FROM entregas
+    WHERE venda_id = $1 AND numero > 1
+  `, [vendaId]);
+
+  return result.rows[0] || {
+    total: 0,
+    agendadas: 0,
+    concluidas: 0,
+    proxima_data: null,
+    proximo_periodo: null,
+    aguardando_confirmacao: 0,
+  };
+}
+
+async function sincronizarReservasEncomendaRecebida(client) {
+  const items = await client.query(`
+    SELECT
+      vi.id,
+      vi.venda_id,
+      vi.produto_id,
+      vi.quantidade_estoque,
+      vi.quantidade_entregue,
+      COALESCE(SUM(efi.quantidade_recebida), 0)::int AS recebido
+    FROM venda_itens vi
+    JOIN encomenda_fornecedor_itens efi
+      ON efi.venda_item_id = vi.id AND efi.status != 'cancelado'
+    WHERE vi.status = 'efetivo' AND vi.quantidade_encomenda > 0
+    GROUP BY vi.id
+    HAVING COALESCE(SUM(efi.quantidade_recebida), 0) > 0
+  `);
+
+  for (const row of items.rows) {
+    const entregue = Number(row.quantidade_entregue) || 0;
+    const qtdEstoque = Number(row.quantidade_estoque) || 0;
+    const recebido = Number(row.recebido) || 0;
+    const jaEntregueEstoque = Math.min(entregue, qtdEstoque);
+    const jaEntregueEncomenda = Math.max(0, entregue - qtdEstoque);
+    const reservaDesejada = Math.max(0, qtdEstoque - jaEntregueEstoque)
+      + Math.max(0, recebido - jaEntregueEncomenda);
+    if (reservaDesejada <= 0) continue;
+
+    const reserva = await obterReservaAtiva(client, row.id);
+    if (!reserva) {
+      await client.query(`
+        INSERT INTO estoque_reservas (venda_id, venda_item_id, produto_id, quantidade, status)
+        VALUES ($1, $2, $3, $4, 'ativa')
+      `, [row.venda_id, row.id, row.produto_id, reservaDesejada]);
+    } else if (Number(reserva.quantidade) < reservaDesejada) {
+      await client.query(`
+        UPDATE estoque_reservas SET quantidade = $2, atualizado_em = NOW()
+        WHERE id = $1
+      `, [reserva.id, reservaDesejada]);
+    }
   }
 }
 
 async function backfillEntregasExistentes() {
   const db = getPool();
+  const client = await db.connect();
+  try {
+    await client.query('BEGIN');
+    await sincronizarReservasEncomendaRecebida(client);
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error('Erro ao sincronizar reservas de encomenda:', err.message);
+  } finally {
+    client.release();
+  }
+
   const vendasSemEntrega = await db.query(`
     SELECT v.id
     FROM vendas v
@@ -716,10 +1064,11 @@ async function agendarExpedicao(vendaId, data = {}) {
       INSERT INTO entregas (
         venda_id, numero, tipo_liberacao, status, tipo,
         endereco_entrega, cidade_entrega, estado_entrega, cep_entrega,
-        data_prevista, observacoes, observacoes_kanban,
+        data_prevista, periodo_entrega, confirmacao_cliente,
+        observacoes, observacoes_kanban,
         flag_urgencia, flag_assistencia_tecnica, descricao_assistencia
       )
-      VALUES ($1, $2, $3, 'agendada', $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+      VALUES ($1, $2, $3, 'agendada', $4, $5, $6, $7, $8, $9, $10, 'pendente', $11, $12, $13, $14, $15)
       RETURNING *
     `, [
       vendaId,
@@ -731,6 +1080,7 @@ async function agendarExpedicao(vendaId, data = {}) {
       venda.rows[0].estado,
       venda.rows[0].cep,
       dataPrevista,
+      resolverPeriodoEntrega(data.periodo_entrega),
       data.observacoes || null,
       data.observacoes_kanban || null,
       Boolean(data.flag_urgencia),
@@ -751,7 +1101,7 @@ async function agendarExpedicao(vendaId, data = {}) {
     }
 
     if (data.itens_consignados) {
-      await salvarItensConsignados(client, entregaId, data.itens_consignados);
+      await salvarItensConsignados(client, entregaInsert.rows[0], data.itens_consignados);
     }
 
     const resumoNovo = await calcularResumoEntrega(client, entregaInsert.rows[0]);
@@ -819,22 +1169,34 @@ async function atualizarEntregaKanban(id, data = {}) {
     }
 
     if (data.itens_consignados) {
-      await salvarItensConsignados(client, id, data.itens_consignados);
+      await salvarItensConsignados(client, entrega, data.itens_consignados);
     }
+
+    const mudouData = data.data_prevista != null
+      && toDateIso(data.data_prevista) !== toDateIso(entrega.data_prevista);
+    const mudouPeriodo = data.periodo_entrega != null
+      && resolverPeriodoEntrega(data.periodo_entrega) !== entrega.periodo_entrega;
+    const confirmacaoCliente = CONFIRMACAO_CLIENTE.has(data.confirmacao_cliente)
+      ? data.confirmacao_cliente
+      : (mudouData || mudouPeriodo ? 'pendente' : null);
 
     await client.query(`
       UPDATE entregas SET
         data_prevista = COALESCE($2, data_prevista),
-        observacoes = COALESCE($3, observacoes),
-        observacoes_kanban = COALESCE($4, observacoes_kanban),
-        flag_urgencia = COALESCE($5, flag_urgencia),
-        flag_assistencia_tecnica = COALESCE($6, flag_assistencia_tecnica),
-        descricao_assistencia = COALESCE($7, descricao_assistencia),
+        periodo_entrega = COALESCE($3, periodo_entrega),
+        confirmacao_cliente = COALESCE($4, confirmacao_cliente),
+        observacoes = COALESCE($5, observacoes),
+        observacoes_kanban = COALESCE($6, observacoes_kanban),
+        flag_urgencia = COALESCE($7, flag_urgencia),
+        flag_assistencia_tecnica = COALESCE($8, flag_assistencia_tecnica),
+        descricao_assistencia = COALESCE($9, descricao_assistencia),
         atualizado_em = NOW()
       WHERE id = $1
     `, [
       id,
       data.data_prevista || null,
+      data.periodo_entrega != null ? resolverPeriodoEntrega(data.periodo_entrega) : null,
+      confirmacaoCliente,
       data.observacoes != null ? data.observacoes : null,
       data.observacoes_kanban != null ? data.observacoes_kanban : null,
       data.flag_urgencia != null ? Boolean(data.flag_urgencia) : null,
@@ -851,6 +1213,23 @@ async function atualizarEntregaKanban(id, data = {}) {
   } finally {
     client.release();
   }
+}
+
+async function confirmarAgendamentoCliente(id) {
+  const db = getPool();
+  const result = await db.query(`
+    UPDATE entregas SET
+      confirmacao_cliente = 'confirmada',
+      atualizado_em = NOW()
+    WHERE id = $1
+      AND status = 'agendada'
+      AND numero > 1
+    RETURNING id
+  `, [id]);
+  if (result.rowCount === 0) {
+    throw new Error('Entrega agendada não encontrada ou já concluída.');
+  }
+  return getEntrega(id);
 }
 
 async function listEntregas(filtro = 'todos', busca = '') {
@@ -880,10 +1259,12 @@ async function listEntregas(filtro = 'todos', busca = '') {
     const client = db;
     const resumo = await calcularResumoEntrega(client, row);
     if (filtro !== 'todos' && resumo.situacao !== filtro) continue;
+    const expedicoes = await obterResumoExpedicoes(client, row.venda_id);
     lista.push({
       ...row,
       ...resumo,
       situacao: resumo.situacao,
+      expedicoes,
     });
   }
   return lista;
@@ -929,8 +1310,11 @@ async function atualizarEntrega(id, data) {
   try {
     await client.query('BEGIN');
 
+    const entregaAtual = await client.query('SELECT * FROM entregas WHERE id = $1', [id]);
+    if (entregaAtual.rowCount === 0) throw new Error('Entrega não encontrada.');
+
     if (data.itens_consignados) {
-      await salvarItensConsignados(client, id, data.itens_consignados);
+      await salvarItensConsignados(client, entregaAtual.rows[0], data.itens_consignados);
     }
 
     let quantidadeVolumes = data.quantidade_volumes != null
@@ -938,8 +1322,6 @@ async function atualizarEntrega(id, data) {
       : null;
 
     if (data.itens != null || data.itens_consignados != null) {
-      const entregaAtual = await client.query('SELECT * FROM entregas WHERE id = $1', [id]);
-      if (entregaAtual.rowCount === 0) throw new Error('Entrega não encontrada.');
       const resumo = await calcularResumoEntrega(client, entregaAtual.rows[0]);
       const quantidadesMap = data.itens != null ? mapQuantidadesEntrega(data.itens) : null;
       const volumes = calcularVolumesTotais(resumo.itens, quantidadesMap, resumo.itens_consignados);
@@ -1002,17 +1384,18 @@ async function registrarEntrega(id, data) {
       throw new Error('Esta entrega não pode ser registrada no momento.');
     }
 
+    const isAssistencia = entrega.tipo === 'assistencia';
     const resumo = await calcularResumoEntrega(client, entrega);
     const itensPayload = data.itens || [];
     const temConsignados = (data.itens_consignados || []).some((i) => Number(i.quantidade) > 0);
+
     if (itensPayload.length === 0 && !temConsignados && !isAssistencia) {
       throw new Error('Informe os itens a entregar ou produtos consignados.');
     }
 
     const mapItens = new Map(resumo.itens.map((i) => [i.id, i]));
     let totalEntregar = 0;
-
-    const isAssistencia = entrega.tipo === 'assistencia';
+    const vendaItemIdsAtualizados = [];
 
     for (const linha of itensPayload) {
       const qtd = Number(linha.quantidade) || 0;
@@ -1028,12 +1411,12 @@ async function registrarEntrega(id, data) {
       totalEntregar += qtd;
     }
 
-    if (totalEntregar <= 0 && !(data.itens_consignados || []).some((i) => Number(i.quantidade) > 0) && !isAssistencia) {
+    if (totalEntregar <= 0 && !temConsignados && !isAssistencia) {
       throw new Error('Informe ao menos uma quantidade para entregar ou um produto consignado.');
     }
 
     if (data.itens_consignados) {
-      await salvarItensConsignados(client, id, data.itens_consignados);
+      await salvarItensConsignados(client, entrega, data.itens_consignados, { marcarEntregue: true });
     }
 
     const resumoAtualizado = await calcularResumoEntrega(client, entrega);
@@ -1067,6 +1450,20 @@ async function registrarEntrega(id, data) {
         SET atualizado_em = NOW()
         WHERE id = $1
       `, [id]);
+      await client.query('COMMIT');
+      return getEntrega(id);
+    }
+
+    if (totalEntregar <= 0 && temConsignados) {
+      await client.query(`
+        UPDATE entregas
+        SET data_realizada = NOW(), atualizado_em = NOW()
+        WHERE id = $1
+      `, [id]);
+      await atualizarStatusEntrega(client, id);
+      await sincronizarEntregaMasterItens(client, entrega.venda_id);
+      await atualizarStatusEntregaMaster(client, entrega.venda_id);
+      await recalcularIndicesEntrega(client, entrega.venda_id);
       await client.query('COMMIT');
       return getEntrega(id);
     }
@@ -1109,7 +1506,11 @@ async function registrarEntrega(id, data) {
         SET quantidade_entregue = quantidade_entregue + $2
         WHERE id = $1
       `, [vendaItem.id, qtd]);
+
+      vendaItemIdsAtualizados.push(vendaItem.id);
     }
+
+    await sincronizarEntregaMasterItens(client, entrega.venda_id, vendaItemIdsAtualizados);
 
     await client.query(`
       UPDATE entregas
@@ -1118,6 +1519,7 @@ async function registrarEntrega(id, data) {
     `, [id]);
 
     await atualizarStatusEntrega(client, id);
+    await atualizarStatusEntregaMaster(client, entrega.venda_id);
     await recalcularIndicesEntrega(client, entrega.venda_id);
     await client.query('COMMIT');
     return getEntrega(id);
@@ -1155,6 +1557,7 @@ module.exports = {
   agendarExpedicao,
   criarAssistenciaEntrega,
   atualizarEntregaKanban,
+  confirmarAgendamentoCliente,
   getEntrega,
   atualizarEntrega,
   registrarEntrega,

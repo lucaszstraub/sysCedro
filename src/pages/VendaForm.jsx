@@ -13,6 +13,7 @@ import { buildVendaSnapshot } from '../utils/vendaSnapshot';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
 import ClienteModal from '../components/ClienteModal';
+import ClienteDadosResumo from '../components/ClienteDadosResumo';
 import ConfirmarSaidaModal from '../components/ConfirmarSaidaModal';
 import NumericInput from '../components/NumericInput';
 import ProdutoModal from '../components/ProdutoModal';
@@ -23,6 +24,7 @@ import { VENDEDOR_CLASSIFICACAO_MOVEIS_SOLTOS } from '../constants/vendedor';
 import { loadVendedoresPorClassificacao } from '../utils/loadVendedores';
 import { useAuth } from '../context/AuthContext';
 import { isVendedorRestrito, getVendedorIdUsuario } from '../utils/vendedorRestrito';
+import { clienteProntoParaVenda, mensagemClienteIncompletoVenda } from '../utils/clienteDados';
 import ProdutoThumb from '../components/ProdutoThumb';
 import { calcularSubtotalItensEfetivos, STATUS_ITEM_VENDA_OPTIONS } from '../constants/vendaItemStatus';
 
@@ -118,6 +120,7 @@ export default function VendaForm() {
   const [ambientes, setAmbientes] = useState([emptyAmbiente()]);
 
   const [showClienteModal, setShowClienteModal] = useState(false);
+  const [clienteModalCliente, setClienteModalCliente] = useState(null);
   const [showSelecionarCliente, setShowSelecionarCliente] = useState(false);
   const [showSelecionarOrcamento, setShowSelecionarOrcamento] = useState(false);
   const [showProdutoModal, setShowProdutoModal] = useState(false);
@@ -149,6 +152,23 @@ export default function VendaForm() {
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+
+  useEffect(() => {
+    if (!clienteId) {
+      setClienteSelecionado(null);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const cliente = await api.getCliente(Number(clienteId));
+        if (!cancelled) setClienteSelecionado(cliente);
+      } catch {
+        /* mantém seleção parcial se a consulta falhar */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [clienteId]);
 
   const hydrateFromVenda = (venda) => {
     setNumero(venda.numero || '');
@@ -436,12 +456,20 @@ export default function VendaForm() {
     setError('');
   };
 
+  const abrirClienteModal = (cliente = null) => {
+    setClienteModalCliente(cliente);
+    setShowClienteModal(true);
+  };
+
   const handleSaveCliente = async (data) => {
-    const cliente = await api.createCliente(data);
+    const cliente = clienteModalCliente
+      ? await api.updateCliente(clienteModalCliente.id, data)
+      : await api.createCliente(data);
     setClienteSelecionado(cliente);
     setClienteId(String(cliente.id));
     setShowClienteModal(false);
-    showSuccess('Cliente cadastrado e selecionado.');
+    setClienteModalCliente(null);
+    showSuccess(clienteModalCliente ? 'Cliente atualizado.' : 'Cliente cadastrado e selecionado.');
   };
 
   const handleSelectCliente = (cliente) => {
@@ -528,6 +556,12 @@ export default function VendaForm() {
     setSaving(true);
     setError('');
     try {
+      if (!clienteId) {
+        throw new Error('Selecione um cliente para a venda.');
+      }
+      if (!clienteProntoParaVenda(clienteSelecionado)) {
+        throw new Error(mensagemClienteIncompletoVenda(clienteSelecionado));
+      }
       const saved = await api.saveVenda(buildPayload(), null);
       hydrateFromVenda(saved);
       setBaselineSnapshot(snapshotFromVenda(saved));
@@ -680,7 +714,7 @@ export default function VendaForm() {
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSelecionarCliente(true)}>
                       Alterar cliente
                     </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                       + Novo cliente
                     </button>
                   </div>
@@ -690,10 +724,17 @@ export default function VendaForm() {
                   <button type="button" className="btn btn-primary" onClick={() => setShowSelecionarCliente(true)}>
                     Selecionar cliente
                   </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                     + Novo cliente
                   </button>
                 </div>
+              )}
+              {clienteSelecionado && (
+                <ClienteDadosResumo
+                  cliente={clienteSelecionado}
+                  variant="venda"
+                  onEditar={() => abrirClienteModal(clienteSelecionado)}
+                />
               )}
             </div>
             <div className="form-group">
@@ -1068,14 +1109,16 @@ export default function VendaForm() {
           onSelect={handleSelectCliente}
           onNovoCliente={() => {
             setShowSelecionarCliente(false);
-            setShowClienteModal(true);
+            abrirClienteModal();
           }}
         />
       )}
 
       {showClienteModal && (
         <ClienteModal
-          onClose={() => setShowClienteModal(false)}
+          cliente={clienteModalCliente}
+          context="venda"
+          onClose={() => { setShowClienteModal(false); setClienteModalCliente(null); }}
           onSave={handleSaveCliente}
         />
       )}

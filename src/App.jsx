@@ -20,8 +20,10 @@ import EncomendasFornecedor from './pages/EncomendasFornecedor';
 import EncomendaFornecedorForm from './pages/EncomendaFornecedorForm';
 import Arquivo from './pages/Arquivo';
 import Recebimentos from './pages/Recebimentos';
+import Etiquetas from './pages/Etiquetas';
 import Entregas from './pages/Entregas';
 import Fornecedores from './pages/Fornecedores';
+import Clientes from './pages/Clientes';
 import FormasPagamento from './pages/FormasPagamento';
 import ProdutosPlanejados from './pages/ProdutosPlanejados';
 import VisaoVendas from './pages/VisaoVendas';
@@ -121,6 +123,7 @@ function AppLayout() {
           <Route path={`${ESTOQUE_BASE}/painel`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Dashboard /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/produtos`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS]}><Produtos /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/fornecedores`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><Fornecedores /></ProtectedRoute>} />
+          <Route path={`${ESTOQUE_BASE}/clientes`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><Clientes /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/formas-pagamento`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><FormasPagamento /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/centros-custo`} element={<ProtectedRoute administrador><CentrosCusto /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/produtos-planejados`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS]}><ProdutosPlanejados /></ProtectedRoute>} />
@@ -133,6 +136,7 @@ function AppLayout() {
           <Route path={`${ESTOQUE_BASE}/encomendas/:id`} element={<ProtectedRoute permission={PERMISSIONS.GERENCIAL}><EncomendaFornecedorForm /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/arquivo`} element={<ProtectedRoute administrador><Arquivo /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/recebimentos`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Recebimentos /></ProtectedRoute>} />
+          <Route path={`${ESTOQUE_BASE}/etiquetas`} element={<ProtectedRoute permissions={[PERMISSIONS.WMS, PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS]}><Etiquetas /></ProtectedRoute>} />
 
           <Route path={`${VENDAS_BASE}/orcamentos`} element={<ProtectedRoute permission={PERMISSIONS.VENDAS}><Orcamentos /></ProtectedRoute>} />
           <Route path={`${VENDAS_BASE}/orcamentos/novo`} element={<ProtectedRoute permission={PERMISSIONS.VENDAS}><OrcamentoForm /></ProtectedRoute>} />

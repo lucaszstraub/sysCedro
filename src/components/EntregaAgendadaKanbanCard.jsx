@@ -1,4 +1,10 @@
+import { useState } from 'react';
 import { formatCurrency, formatDate } from '../utils/format';
+import {
+  CONFIRMACAO_CLIENTE_LABEL,
+  labelPeriodoEntrega,
+} from '../constants/entregas';
+import { abrirWhatsAppAgendamento } from '../utils/entregaAgendamento';
 
 export default function EntregaAgendadaKanbanCard({
   entrega,
@@ -6,13 +12,30 @@ export default function EntregaAgendadaKanbanCard({
   onConcluir,
   onImprimir,
   onObservacoes,
+  onConfirmarCliente,
 }) {
+  const [menuAberto, setMenuAberto] = useState(false);
   const isAssistencia = entrega.tipo === 'assistencia' || entrega.flag_assistencia_tecnica;
   const concluida = entrega.status !== 'agendada';
+  const aguardandoConfirmacao = entrega.confirmacao_cliente === 'pendente';
+
+  const handleWhatsApp = async () => {
+    setMenuAberto(false);
+    try {
+      await abrirWhatsAppAgendamento(
+        entrega.cliente_telefone,
+        entrega.cliente_nome,
+        entrega.data_prevista,
+        entrega.periodo_entrega || 'matutino'
+      );
+    } catch (err) {
+      window.alert(err.message);
+    }
+  };
 
   return (
     <article
-      className={`kanban-card entrega-kanban-card${isAssistencia ? ' kanban-card-assistencia' : ''}${entrega.flag_urgencia ? ' entrega-kanban-card--urgente' : ''}`}
+      className={`kanban-card entrega-kanban-card entrega-kanban-card--static${isAssistencia ? ' kanban-card-assistencia' : ''}${entrega.flag_urgencia ? ' entrega-kanban-card--urgente' : ''}`}
     >
       <div className="kanban-card-header">
         <strong>{entrega.numero_pedido || entrega.venda_numero}</strong>
@@ -33,6 +56,16 @@ export default function EntregaAgendadaKanbanCard({
         {entrega.tem_a_receber && (
           <span className="badge badge-a-receber">Saldo a cobrar</span>
         )}
+        {!concluida && aguardandoConfirmacao && (
+          <span className="badge badge-confirmacao-pendente">
+            {CONFIRMACAO_CLIENTE_LABEL.pendente}
+          </span>
+        )}
+        {!concluida && !aguardandoConfirmacao && (
+          <span className="badge badge-confirmacao-ok">
+            {CONFIRMACAO_CLIENTE_LABEL.confirmada}
+          </span>
+        )}
       </div>
 
       {isAssistencia && entrega.descricao_assistencia && (
@@ -47,7 +80,9 @@ export default function EntregaAgendadaKanbanCard({
         </span>
         {entrega.data_prevista && (
           <span className="entrega-kanban-data">
-            Agendada para {formatDate(entrega.data_prevista)}
+            {formatDate(entrega.data_prevista)}
+            {' · '}
+            {labelPeriodoEntrega(entrega.periodo_entrega || 'matutino')}
           </span>
         )}
         {entrega.tem_a_receber && (
@@ -61,23 +96,51 @@ export default function EntregaAgendadaKanbanCard({
         </p>
       )}
 
-      <div className="kanban-card-actions">
-        <button type="button" className="btn btn-secondary btn-sm" onClick={() => onImprimir(entrega)}>
-          Ticket
-        </button>
+      <div className="kanban-card-actions entrega-kanban-actions">
         {!concluida && (
           <>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={() => onEditar(entrega)}>
-              Editar
-            </button>
             <button type="button" className="btn btn-primary btn-sm" onClick={() => onConcluir(entrega)}>
-              Concluir
+              Registrar entrega
+            </button>
+            {aguardandoConfirmacao && onConfirmarCliente && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => onConfirmarCliente(entrega)}
+              >
+                Cliente confirmou
+              </button>
+            )}
+            <button type="button" className="btn btn-secondary btn-sm" onClick={() => onEditar(entrega)}>
+              {aguardandoConfirmacao ? 'Alterar data' : 'Editar'}
             </button>
           </>
         )}
-        <button type="button" className="btn btn-link btn-sm" onClick={() => onObservacoes(entrega)}>
-          Observações
-        </button>
+        <div className="entrega-kanban-menu">
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => setMenuAberto((v) => !v)}
+            aria-expanded={menuAberto}
+          >
+            Mais ações
+          </button>
+          {menuAberto && (
+            <div className="entrega-kanban-menu-panel">
+              {!concluida && entrega.cliente_telefone && (
+                <button type="button" className="btn btn-link btn-sm" onClick={handleWhatsApp}>
+                  WhatsApp
+                </button>
+              )}
+              <button type="button" className="btn btn-link btn-sm" onClick={() => { setMenuAberto(false); onImprimir(entrega); }}>
+                Ticket PDF
+              </button>
+              <button type="button" className="btn btn-link btn-sm" onClick={() => { setMenuAberto(false); onObservacoes(entrega); }}>
+                Observações
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </article>
   );

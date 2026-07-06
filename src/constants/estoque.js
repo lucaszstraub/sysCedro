@@ -6,8 +6,9 @@ export function isLocalizacaoNaoAlocados(localizacao) {
 
 export function labelTipoMovimentacao(mov) {
   if (mov.referencia_tipo === 'alocacao') return 'Alocação';
-  if (mov.referencia_tipo === 'encomenda_recebimento') return 'Recebimento';
+  if (mov.referencia_tipo === 'encomenda_recebimento') return 'Recebimento encomenda';
   if (mov.referencia_tipo === 'encomenda_estorno') return 'Estorno receb.';
+  if (mov.referencia_tipo === 'entrega') return 'Saída por entrega';
   const tipos = {
     entrada: 'Entrada',
     saida: 'Saída',

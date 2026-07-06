@@ -3,9 +3,20 @@ function round2(n) {
 }
 
 function mesReferenciaFromDate(dateValue) {
-  const d = new Date(dateValue);
+  if (!dateValue) return null;
+  const raw = String(dateValue);
+  const iso = raw.includes('T') ? raw : `${raw}T12:00:00`;
+  const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`;
+  return `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-01`;
+}
+
+async function mesReferenciaFromVenda(client, vendaId) {
+  const result = await client.query(
+    'SELECT date_trunc(\'month\', criado_em)::date AS mes FROM vendas WHERE id = $1',
+    [vendaId]
+  );
+  return result.rows[0]?.mes || null;
 }
 
 function formatCurrencyBr(valor) {
@@ -71,6 +82,26 @@ async function registrarAjusteComissao(client, data) {
     return null;
   }
 
+  const dup = await client.query(`
+    SELECT id FROM comissao_ajustes
+    WHERE venda_item_id IS NOT DISTINCT FROM $1
+      AND perfil_comissao = $2
+      AND tipo = $3
+      AND ABS(diferenca - $4) < 0.01
+      AND valor_anterior IS NOT DISTINCT FROM $5
+      AND ABS(valor_novo - $6) < 0.01
+    ORDER BY id DESC
+    LIMIT 1
+  `, [
+    data.venda_item_id || null,
+    data.perfil_comissao,
+    data.tipo,
+    diferenca,
+    valorAnterior,
+    valorNovo,
+  ]);
+  if (dup.rowCount > 0) return dup.rows[0].id;
+
   let descricao = data.descricao;
   if (!descricao) {
     if (data.tipo === 'inclusao') descricao = buildDescricaoInclusao(data);
@@ -106,5 +137,6 @@ async function registrarAjusteComissao(client, data) {
 
 module.exports = {
   mesReferenciaFromDate,
+  mesReferenciaFromVenda,
   registrarAjusteComissao,
 };

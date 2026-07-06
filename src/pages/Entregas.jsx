@@ -4,9 +4,14 @@ import { api } from '../api';
 import {
   ENTREGA_FILTRO_OPTIONS,
   ENTREGA_KANBAN_COLUNAS,
+  ENTREGA_KANBAN_FILTROS,
+  SITUACAO_ENTREGA_HINT,
   SITUACAO_ENTREGA_LABEL,
   TIPO_LIBERACAO_OPTIONS,
   badgeClassSituacaoEntrega,
+  formatarResumoExpedicoes,
+  labelPeriodoEntrega,
+  podeAgendarEntrega,
   resolverColunaEntregaKanban,
 } from '../constants/entregas';
 import { useFeedback } from '../context/FeedbackContext';
@@ -63,13 +68,24 @@ function EntregaObservacoesModal({ entrega, onClose, onSave }) {
   );
 }
 
+function filtrarKanban(entregas, filtro) {
+  if (filtro === 'pendente') {
+    return entregas.filter((e) => e.status === 'agendada' && e.confirmacao_cliente === 'pendente');
+  }
+  if (filtro === 'urgencia') return entregas.filter((e) => e.flag_urgencia);
+  if (filtro === 'assistencia') {
+    return entregas.filter((e) => e.tipo === 'assistencia' || e.flag_assistencia_tecnica);
+  }
+  return entregas;
+}
+
 export default function Entregas() {
   const [aba, setAba] = useState('disponibilidade');
   const [entregas, setEntregas] = useState([]);
   const [agendadas, setAgendadas] = useState([]);
   const [busca, setBusca] = useState('');
-  const [buscaKanban, setBuscaKanban] = useState('');
   const [filtro, setFiltro] = useState('todos');
+  const [filtroKanban, setFiltroKanban] = useState('todos');
   const [loading, setLoading] = useState(true);
   const [loadingKanban, setLoadingKanban] = useState(true);
   const [error, setError] = useState('');
@@ -102,7 +118,7 @@ export default function Entregas() {
     }
   };
 
-  const loadKanban = async (term = buscaKanban) => {
+  const loadKanban = async (term = busca) => {
     setLoadingKanban(true);
     setError('');
     try {
@@ -123,11 +139,7 @@ export default function Entregas() {
   const handleSearch = (e) => {
     e.preventDefault();
     loadDisponibilidade(busca, filtro);
-  };
-
-  const handleSearchKanban = (e) => {
-    e.preventDefault();
-    loadKanban(buscaKanban);
+    loadKanban(busca);
   };
 
   const handleFiltroChange = (novoFiltro) => {
@@ -149,18 +161,41 @@ export default function Entregas() {
     await abrirEntrega(entrega.id, mode);
   };
 
+  const irParaExpedicoes = (termo = '') => {
+    if (termo) setBusca(termo);
+    setAba('agendadas');
+    loadKanban(termo || busca);
+  };
+
   const handleAgendar = async (data) => {
     await api.agendarExpedicao(entregaAtiva.venda_id, data);
+    const pedido = entregaAtiva.numero_pedido || entregaAtiva.venda_numero;
     setEntregaAtiva(null);
-    showSuccess('Entrega agendada com sucesso!');
+    showSuccess(`Expedição agendada para o pedido ${pedido}. Confirme com o cliente na aba Expedições.`);
     await load();
+    setAba('agendadas');
   };
 
   const handleEditarAgendada = async (data) => {
     await api.updateEntregaKanban(entregaAtiva.id, data);
     setEntregaAtiva(null);
-    showSuccess('Agendamento atualizado.');
+    showSuccess('Expedição atualizada.');
     await load();
+  };
+
+  const handleConfirmarAgendamentoCliente = async (entregaRef = entregaAtiva) => {
+    const id = entregaRef?.id;
+    if (!id) return;
+    try {
+      await api.confirmarAgendamentoCliente(id);
+      if (entregaAtiva?.id === id) {
+        setEntregaAtiva(await api.getEntrega(id));
+      }
+      showSuccess('Cliente confirmou a data da expedição.');
+      await loadKanban();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handlePreparar = async (data) => {
@@ -171,7 +206,7 @@ export default function Entregas() {
   const handleRegistrar = async (data) => {
     await api.registrarEntrega(entregaAtiva.id, data);
     setEntregaAtiva(null);
-    showSuccess('Entrega concluída com sucesso!');
+    showSuccess('Entrega registrada. O estoque foi atualizado.');
     await load();
   };
 
@@ -199,43 +234,120 @@ export default function Entregas() {
     await loadKanban();
   };
 
+  const agendadasFiltradas = useMemo(
+    () => filtrarKanban(agendadas, filtroKanban),
+    [agendadas, filtroKanban]
+  );
+
   const porColunaKanban = useMemo(() => {
     const map = Object.fromEntries(ENTREGA_KANBAN_COLUNAS.map((c) => [c.id, []]));
-    agendadas.forEach((e) => {
+    agendadasFiltradas.forEach((e) => {
       const col = resolverColunaEntregaKanban(e);
       if (map[col]) map[col].push(e);
     });
     return map;
-  }, [agendadas]);
+  }, [agendadasFiltradas]);
 
   const stats = statsResumo;
+  const expedicoesNaFila = agendadas.filter((e) => e.status === 'agendada').length;
+  const aguardandoCliente = agendadas.filter(
+    (e) => e.status === 'agendada' && e.confirmacao_cliente === 'pendente'
+  ).length;
+
+  const renderAcaoPedido = (e) => {
+    if (e.situacao === 'entregue') {
+      return (
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => irParaExpedicoes(e.numero_pedido || e.venda_numero)}
+        >
+          Ver expedições
+        </button>
+      );
+    }
+    if (!podeAgendarEntrega(e)) {
+      return (
+        <button type="button" className="btn btn-secondary btn-sm" disabled title={SITUACAO_ENTREGA_HINT.indisponivel}>
+          Aguardando estoque
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        className="btn btn-primary btn-sm"
+        onClick={() => abrirEntrega(e.id, 'agendar')}
+      >
+        Agendar expedição
+      </button>
+    );
+  };
 
   return (
     <>
       <header className="page-header">
         <h2>Entregas</h2>
-        <p>Disponibilidade dos pedidos e expedições agendadas</p>
+        <p>Gerencie a disponibilidade dos pedidos e as expedições agendadas</p>
       </header>
 
       {error && <PageAlert onDismiss={() => setError('')}>{error}</PageAlert>}
 
-      <div className="entregas-tabs">
+      <div className="entregas-fluxo-guia card">
+        <div className="entregas-fluxo-passos">
+          <div className="entregas-fluxo-passo">
+            <span className="entregas-fluxo-num">1</span>
+            <div>
+              <strong>Pedidos</strong>
+              <p>Verifique quais itens estão disponíveis em estoque ou já recebidos da encomenda.</p>
+            </div>
+          </div>
+          <div className="entregas-fluxo-passo">
+            <span className="entregas-fluxo-num">2</span>
+            <div>
+              <strong>Expedição</strong>
+              <p>Agende data e turno, confirme com o cliente e registre a entrega física.</p>
+            </div>
+          </div>
+          <div className="entregas-fluxo-passo">
+            <span className="entregas-fluxo-num">3</span>
+            <div>
+              <strong>Estoque</strong>
+              <p>Ao concluir a entrega, o sistema baixa automaticamente o estoque reservado.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="entregas-tabs" role="tablist" aria-label="Seções de entregas">
         <button
           type="button"
+          role="tab"
+          aria-selected={aba === 'disponibilidade'}
           className={`entregas-tab${aba === 'disponibilidade' ? ' is-active' : ''}`}
           onClick={() => setAba('disponibilidade')}
         >
-          Disponibilidade
+          <span className="entregas-tab-label">Pedidos</span>
+          <span className="entregas-tab-desc">Disponibilidade</span>
+          {stats.disponivel > 0 && (
+            <span className="entregas-tab-badge">{stats.disponivel}</span>
+          )}
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={aba === 'agendadas'}
           className={`entregas-tab${aba === 'agendadas' ? ' is-active' : ''}`}
           onClick={() => setAba('agendadas')}
         >
-          Entregas agendadas
-          {agendadas.filter((e) => e.status === 'agendada').length > 0 && (
-            <span className="entregas-tab-badge">
-              {agendadas.filter((e) => e.status === 'agendada').length}
+          <span className="entregas-tab-label">Expedições</span>
+          <span className="entregas-tab-desc">Agendadas e entregues</span>
+          {expedicoesNaFila > 0 && (
+            <span className="entregas-tab-badge">{expedicoesNaFila}</span>
+          )}
+          {aguardandoCliente > 0 && (
+            <span className="entregas-tab-badge entregas-tab-badge--alert" title="Aguardando confirmação do cliente">
+              {aguardandoCliente}
             </span>
           )}
         </button>
@@ -244,19 +356,41 @@ export default function Entregas() {
       {aba === 'disponibilidade' && (
         <>
           <div className="stats-grid alocacao-stats">
-            <div className={`stat-card ${stats.disponivel > 0 ? 'stat-card-priority' : ''}`}>
-              <div className="label">Disponíveis para entrega</div>
+            <button
+              type="button"
+              className={`stat-card stat-card-clickable ${stats.disponivel > 0 ? 'stat-card-priority' : ''}${filtro === 'disponivel' ? ' is-active' : ''}`}
+              onClick={() => handleFiltroChange('disponivel')}
+            >
+              <div className="label">Prontos para agendar</div>
               <div className="value">{stats.disponivel}</div>
-            </div>
-            <div className="stat-card">
-              <div className="label">Entrega parcial</div>
+              <div className="hint-text">Pedidos com itens liberados</div>
+            </button>
+            <button
+              type="button"
+              className={`stat-card stat-card-clickable${filtro === 'parcial' ? ' is-active' : ''}`}
+              onClick={() => handleFiltroChange('parcial')}
+            >
+              <div className="label">Em andamento</div>
               <div className="value">{stats.parcial}</div>
-            </div>
-            <div className="stat-card">
-              <div className="label">Ainda indisponíveis</div>
+              <div className="hint-text">Entrega parcial já iniciada</div>
+            </button>
+            <button
+              type="button"
+              className={`stat-card stat-card-clickable${filtro === 'indisponivel' ? ' is-active' : ''}`}
+              onClick={() => handleFiltroChange('indisponivel')}
+            >
+              <div className="label">Aguardando estoque</div>
               <div className="value">{stats.indisponivel}</div>
-            </div>
+              <div className="hint-text">Encomenda ou reserva pendente</div>
+            </button>
           </div>
+
+          {stats.disponivel > 0 && filtro === 'todos' && (
+            <div className="alert alert-info entregas-alerta-prioridade">
+              <strong>{stats.disponivel} pedido{stats.disponivel > 1 ? 's' : ''} pronto{stats.disponivel > 1 ? 's' : ''} para agendar.</strong>
+              {' '}Após agendar, acompanhe na aba <button type="button" className="btn btn-link btn-sm" onClick={() => setAba('agendadas')}>Expedições</button>.
+            </div>
+          )}
 
           <div className="toolbar">
             <form onSubmit={handleSearch} className="toolbar-filters">
@@ -270,7 +404,7 @@ export default function Entregas() {
                 className="filter-select"
                 value={filtro}
                 onChange={(e) => handleFiltroChange(e.target.value)}
-                aria-label="Filtrar entregas"
+                aria-label="Filtrar pedidos"
               >
                 {ENTREGA_FILTRO_OPTIONS.map((o) => (
                   <option key={o.value} value={o.value}>{o.label}</option>
@@ -283,12 +417,12 @@ export default function Entregas() {
           <div className="card">
             <div className="card-body" style={{ padding: 0 }}>
               {loading ? (
-                <div className="loading">Carregando entregas...</div>
+                <div className="loading">Carregando pedidos...</div>
               ) : entregas.length === 0 ? (
                 <div className="empty-state">
                   {busca.trim() || filtro !== 'todos'
-                    ? 'Nenhuma entrega encontrada para esta busca.'
-                    : 'Nenhuma entrega cadastrada. As entregas são criadas automaticamente ao salvar uma venda.'}
+                    ? 'Nenhum pedido encontrado para esta busca.'
+                    : 'Nenhum pedido com entrega. Os registros são criados automaticamente ao confirmar uma venda.'}
                 </div>
               ) : (
                 <table>
@@ -297,10 +431,10 @@ export default function Entregas() {
                       <th>Situação</th>
                       <th>Pedido</th>
                       <th>Cliente</th>
-                      <th>Venda</th>
-                      <th>Tipo</th>
-                      <th>Progresso</th>
-                      <th>Disponível agora</th>
+                      <th>Liberação</th>
+                      <th title="Unidades já entregues / total de unidades do pedido">Itens entregues</th>
+                      <th title="Unidades disponíveis para agendar agora">Unid. disponíveis</th>
+                      <th>Expedições</th>
                       <th>Última entrega</th>
                       <th />
                     </tr>
@@ -309,29 +443,34 @@ export default function Entregas() {
                     {entregas.map((e) => (
                       <tr key={e.id}>
                         <td>
-                          <span className={`badge ${badgeClassSituacaoEntrega(e.situacao)}`}>
+                          <span
+                            className={`badge ${badgeClassSituacaoEntrega(e.situacao)}`}
+                            title={SITUACAO_ENTREGA_HINT[e.situacao]}
+                          >
                             {SITUACAO_ENTREGA_LABEL[e.situacao] || e.situacao}
                           </span>
                         </td>
                         <td><strong>{e.numero_pedido || '—'}</strong></td>
                         <td>{e.cliente_nome}</td>
-                        <td>{e.venda_numero}</td>
-                        <td>
-                          {TIPO_LIBERACAO_OPTIONS.find((t) => t.value === e.tipo_liberacao)?.label.split(' — ')[0]
-                            || e.tipo_liberacao}
+                        <td title={TIPO_LIBERACAO_OPTIONS.find((t) => t.value === e.tipo_liberacao)?.label}>
+                          {e.tipo_liberacao === 'completa' ? 'Completa' : 'Parcial'}
                         </td>
                         <td>{e.total_entregue}/{e.total_itens}</td>
-                        <td>{e.total_disponivel}</td>
-                        <td>{e.data_realizada ? formatDateTime(e.data_realizada) : '—'}</td>
                         <td>
-                          <button
-                            type="button"
-                            className="btn btn-primary btn-sm"
-                            onClick={() => abrirEntrega(e.id, 'agendar')}
-                          >
-                            Agendar entrega
-                          </button>
+                          <strong className={e.total_disponivel > 0 ? 'text-success' : ''}>
+                            {e.total_disponivel}
+                          </strong>
                         </td>
+                        <td className="entregas-col-expedicoes">
+                          {formatarResumoExpedicoes(e.expedicoes, formatDate)}
+                          {e.expedicoes?.proxima_data && e.expedicoes?.proximo_periodo && (
+                            <span className="hint-text">
+                              {labelPeriodoEntrega(e.expedicoes.proximo_periodo)}
+                            </span>
+                          )}
+                        </td>
+                        <td>{e.data_realizada ? formatDateTime(e.data_realizada) : '—'}</td>
+                        <td>{renderAcaoPedido(e)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -345,13 +484,25 @@ export default function Entregas() {
       {aba === 'agendadas' && (
         <>
           <div className="toolbar">
-            <form onSubmit={handleSearchKanban} className="toolbar-filters">
+            <form onSubmit={handleSearch} className="toolbar-filters">
               <input
                 className="search-input"
-                placeholder="Buscar no kanban..."
-                value={buscaKanban}
-                onChange={(e) => setBuscaKanban(e.target.value)}
+                placeholder="Buscar expedição, pedido ou cliente..."
+                value={busca}
+                onChange={(e) => setBusca(e.target.value)}
               />
+              <div className="entregas-kanban-filtros" role="group" aria-label="Filtrar expedições">
+                {ENTREGA_KANBAN_FILTROS.map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    className={`btn btn-sm ${filtroKanban === opt.value ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => setFiltroKanban(opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
             </form>
             <button
               type="button"
@@ -362,19 +513,29 @@ export default function Entregas() {
             </button>
           </div>
 
+          {aguardandoCliente > 0 && filtroKanban === 'todos' && (
+            <div className="alert alert-warning entregas-alerta-prioridade">
+              <strong>{aguardandoCliente} expedição(ões) aguardando confirmação do cliente.</strong>
+              {' '}Envie a mensagem pelo WhatsApp e marque como confirmada após a resposta.
+            </div>
+          )}
+
           {loadingKanban ? (
-            <div className="loading">Carregando entregas agendadas...</div>
+            <div className="loading">Carregando expedições...</div>
           ) : (
             <div className="kanban-board kanban-board-2">
               {ENTREGA_KANBAN_COLUNAS.map((coluna) => (
-                <section key={coluna.id} className="kanban-column">
+                <section
+                  key={coluna.id}
+                  className={`kanban-column${coluna.highlight ? ' kanban-column-highlight' : ''}${coluna.muted ? ' kanban-column-muted' : ''}`}
+                >
                   <header className="kanban-column-header">
                     <h3>{coluna.title}</h3>
                     <span className="kanban-column-count">{porColunaKanban[coluna.id]?.length || 0}</span>
                   </header>
                   <div className="kanban-column-body">
                     {(porColunaKanban[coluna.id] || []).length === 0 ? (
-                      <p className="kanban-column-empty">Nenhum card nesta coluna.</p>
+                      <p className="kanban-column-empty">Nenhuma expedição nesta coluna.</p>
                     ) : (
                       porColunaKanban[coluna.id].map((entrega) => (
                         <EntregaAgendadaKanbanCard
@@ -384,6 +545,7 @@ export default function Entregas() {
                           onConcluir={(e) => abrirAgendada(e, 'concluir')}
                           onImprimir={handlePrint}
                           onObservacoes={setObservacoesEntrega}
+                          onConfirmarCliente={handleConfirmarAgendamentoCliente}
                         />
                       ))
                     )}
@@ -405,6 +567,9 @@ export default function Entregas() {
           onConfirm={modalMode === 'editar' ? handleEditarAgendada : handleRegistrar}
           onPrepare={handlePreparar}
           onPrint={() => handlePrint()}
+          onConfirmarCliente={
+            modalMode === 'editar' ? () => handleConfirmarAgendamentoCliente(entregaAtiva) : undefined
+          }
         />
       )}
 

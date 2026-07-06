@@ -177,8 +177,6 @@ async function zerarItemNaoEfetivo(client, itemId, status, motivo = null) {
     SET status = 'cancelada', atualizado_em = NOW()
     WHERE venda_item_id = $1 AND status = 'ativa'
   `, [itemId]);
-
-  await client.query('DELETE FROM venda_comissoes WHERE venda_item_id = $1', [itemId]);
 }
 
 async function converterConsignadoParaEfetivo(client, vendaId, item) {

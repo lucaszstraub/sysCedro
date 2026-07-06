@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const { initDatabase } = require('./database');
 const services = require('./services');
@@ -11,6 +11,7 @@ const vendaEdicao = require('./vendaEdicao');
 const vendasPlanejados = require('./vendasPlanejados');
 const encomendas = require('./encomendas');
 const entregas = require('./entregas');
+const etiquetas = require('./etiquetas');
 const vendedores = require('./vendedores');
 const fornecedores = require('./fornecedores');
 const parceiros = require('./parceiros');
@@ -37,6 +38,7 @@ const { gerarPdfVenda } = require('./pdfVenda');
 const { gerarPdfAlteracaoVenda } = require('./pdfAlteracaoVenda');
 const { gerarPdfEncomendaFornecedor } = require('./pdfEncomendaFornecedor');
 const { gerarPdfEntrega } = require('./pdfEntrega');
+const { gerarPdfEtiquetaProduto, gerarPdfFolhasEtiquetas } = require('./pdfEtiquetaProduto');
 const { initImages } = require('./images');
 
 const isDev = !app.isPackaged;
@@ -162,6 +164,39 @@ function registerHandlers() {
     'produtos:update': (_, id, data) => services.updateProduto(id, data),
     'produtos:delete': (_, id) => services.deleteProduto(id),
     'produtos:foto': (_, id) => services.getProdutoFoto(id),
+    'produtos:etiqueta': async (_, data) => {
+      const produto = await services.getProduto(data.produto_id);
+      if (!produto) throw new Error('Produto não encontrado.');
+      const sku = data.sku || produto.sku;
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Salvar etiqueta do produto',
+        defaultPath: `Etiqueta-${sku}.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+      if (canceled || !filePath) return { cancelled: true };
+      await gerarPdfEtiquetaProduto(filePath, {
+        sku,
+        nome: data.nome || produto.nome,
+        tamanho: data.tamanho || null,
+        acabamento: data.acabamento || null,
+        preco_venda: data.preco_venda != null ? Number(data.preco_venda) : Number(produto.preco_venda),
+        copias: data.copias != null ? Number(data.copias) : undefined,
+      });
+      return { cancelled: false, filePath };
+    },
+    'etiquetas:imprimir': async (_, data) => {
+      const etiquetas = data?.etiquetas;
+      if (!etiquetas?.length) throw new Error('Nenhuma etiqueta na seleção.');
+      const total = etiquetas.length;
+      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+        title: 'Salvar folhas de etiquetas',
+        defaultPath: `Etiquetas-${total}.pdf`,
+        filters: [{ name: 'PDF', extensions: ['pdf'] }],
+      });
+      if (canceled || !filePath) return { cancelled: true };
+      await gerarPdfFolhasEtiquetas(filePath, etiquetas);
+      return { cancelled: false, filePath };
+    },
     'estoque:list': (_, busca) => services.listEstoque(busca),
     'estoque:pendenciasAlocacao': (_, busca) => services.listPendenciasAlocacao(busca),
     'estoque:alocar': (_, data) => services.alocarProduto(data),
@@ -271,6 +306,7 @@ function registerHandlers() {
     'entregas:get': (_, id) => entregas.getEntrega(id),
     'entregas:update': (_, id, data) => entregas.atualizarEntrega(id, data),
     'entregas:updateKanban': (_, id, data) => entregas.atualizarEntregaKanban(id, data),
+    'entregas:confirmarAgendamento': (_, id) => entregas.confirmarAgendamentoCliente(id),
     'entregas:agendar': (_, vendaId, data) => entregas.agendarExpedicao(vendaId, data),
     'entregas:assistencia': (_, data) => entregas.criarAssistenciaEntrega(data),
     'entregas:registrar': (_, id, data) => entregas.registrarEntrega(id, data),
@@ -296,6 +332,7 @@ function registerHandlers() {
     'encomendas:pendentesRecebimento': (_, busca) => encomendas.listItensPendentesRecebimento(busca),
     'encomendas:controleRecebimento': (_, filtro, busca) => encomendas.listItensControleRecebimento(filtro, busca),
     'encomendas:historicoRecebimentos': (_, busca) => encomendas.listHistoricoRecebimentos(busca),
+    'etiquetas:recebimentos': (_, busca) => etiquetas.listRecebimentosParaEtiquetas(busca),
     'encomendas:estornarRecebimento': (_, id) => encomendas.estornarRecebimento(id),
     'encomendas:receber': (_, data) => encomendas.receberEncomendaItem(data),
     'encomendas:disponibilidade': (_, produtoId) => encomendas.getDisponibilidadeProduto(produtoId),
@@ -339,6 +376,12 @@ function registerHandlers() {
     'comissaoPlanejados:sync': (_, ano) => comissaoPlanejados.sincronizarComissoesPlanejados(ano),
     'comissaoPlanejados:pagamento': (_, data) => comissaoPlanejados.salvarPagamentoComissaoPlanejado(data),
     'comissaoPlanejados:pagamentoDelete': (_, id) => comissaoPlanejados.excluirPagamentoComissaoPlanejado(id),
+    'system:openExternal': (_, url) => {
+      if (typeof url !== 'string' || !/^https?:\/\//i.test(url)) {
+        throw new Error('URL inválida.');
+      }
+      return shell.openExternal(url);
+    },
   };
 
   Object.entries(handlers).forEach(([channel, handler]) => {

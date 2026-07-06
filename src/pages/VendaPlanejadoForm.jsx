@@ -24,6 +24,7 @@ import { mapAmbientesFromPlanejado } from '../utils/orcamentoPlanejadoSnapshot';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
 import ClienteModal from '../components/ClienteModal';
+import ClienteDadosResumo from '../components/ClienteDadosResumo';
 import ConfirmarSaidaModal from '../components/ConfirmarSaidaModal';
 import NumericInput from '../components/NumericInput';
 import OrcamentoPlanejadoItemForm from '../components/OrcamentoPlanejadoItemForm';
@@ -33,6 +34,7 @@ import { VENDEDOR_CLASSIFICACAO_PLANEJADOS } from '../constants/vendedor';
 import { loadVendedoresPorClassificacao } from '../utils/loadVendedores';
 import { useAuth } from '../context/AuthContext';
 import { isVendedorRestrito, getVendedorIdUsuario } from '../utils/vendedorRestrito';
+import { clienteProntoParaVenda, mensagemClienteIncompletoVenda } from '../utils/clienteDados';
 
 const listPath = '/ferramentas-venda/vendas-planejados';
 
@@ -100,6 +102,7 @@ export default function VendaPlanejadoForm() {
   const [produtosPlanejados, setProdutosPlanejados] = useState([]);
 
   const [showClienteModal, setShowClienteModal] = useState(false);
+  const [clienteModalCliente, setClienteModalCliente] = useState(null);
   const [showSelecionarCliente, setShowSelecionarCliente] = useState(false);
   const [showSelecionarOrcamento, setShowSelecionarOrcamento] = useState(false);
   const [baselineSnapshot, setBaselineSnapshot] = useState(null);
@@ -146,6 +149,23 @@ export default function VendaPlanejadoForm() {
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+
+  useEffect(() => {
+    if (!clienteId) {
+      setClienteSelecionado(null);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const cliente = await api.getCliente(Number(clienteId));
+        if (!cancelled) setClienteSelecionado(cliente);
+      } catch {
+        /* mantém seleção parcial se a consulta falhar */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [clienteId]);
 
   useEffect(() => {
     api.onAppCloseRequest(() => {
@@ -431,6 +451,22 @@ export default function VendaPlanejadoForm() {
     }
   };
 
+  const abrirClienteModal = (cliente = null) => {
+    setClienteModalCliente(cliente);
+    setShowClienteModal(true);
+  };
+
+  const handleSaveCliente = async (data) => {
+    const cliente = clienteModalCliente
+      ? await api.updateCliente(clienteModalCliente.id, data)
+      : await api.createCliente(data);
+    setClienteSelecionado(cliente);
+    setClienteId(String(cliente.id));
+    setShowClienteModal(false);
+    setClienteModalCliente(null);
+    showSuccess(clienteModalCliente ? 'Cliente atualizado.' : 'Cliente cadastrado e selecionado.');
+  };
+
   const buildPayload = () => ({
     cliente_id: Number(clienteId),
     vendedor_id: vendedorId ? Number(vendedorId) : null,
@@ -459,6 +495,12 @@ export default function VendaPlanejadoForm() {
     setSaving(true);
     setError('');
     try {
+      if (!clienteId) {
+        throw new Error('Selecione um cliente para a venda.');
+      }
+      if (!clienteProntoParaVenda(clienteSelecionado)) {
+        throw new Error(mensagemClienteIncompletoVenda(clienteSelecionado));
+      }
       const saved = await api.saveVendaPlanejado(buildPayload(), isNew ? null : Number(id));
       hydrateFromVenda(saved);
       setBaselineSnapshot(snapshotFromVendaPlanejado(saved));
@@ -601,7 +643,7 @@ export default function VendaPlanejadoForm() {
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSelecionarCliente(true)}>
                       Alterar cliente
                     </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                       + Novo cliente
                     </button>
                   </div>
@@ -611,10 +653,17 @@ export default function VendaPlanejadoForm() {
                   <button type="button" className="btn btn-primary" onClick={() => setShowSelecionarCliente(true)}>
                     Selecionar cliente
                   </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                     + Novo cliente
                   </button>
                 </div>
+              )}
+              {clienteSelecionado && (
+                <ClienteDadosResumo
+                  cliente={clienteSelecionado}
+                  variant="venda"
+                  onEditar={() => abrirClienteModal(clienteSelecionado)}
+                />
               )}
             </div>
 
@@ -961,14 +1010,10 @@ export default function VendaPlanejadoForm() {
       )}
       {showClienteModal && (
         <ClienteModal
-          onClose={() => setShowClienteModal(false)}
-          onSave={async (data) => {
-            const cliente = await api.createCliente(data);
-            setClienteSelecionado(cliente);
-            setClienteId(String(cliente.id));
-            setShowClienteModal(false);
-            showSuccess('Cliente cadastrado e selecionado.');
-          }}
+          cliente={clienteModalCliente}
+          context="venda"
+          onClose={() => { setShowClienteModal(false); setClienteModalCliente(null); }}
+          onSave={handleSaveCliente}
         />
       )}
       {exitPrompt && (

@@ -15,6 +15,7 @@ import { buildOrcamentoSnapshot, snapshotFromOrcamento, mapAmbientesFromOrcament
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
 import ClienteModal from '../components/ClienteModal';
+import ClienteDadosResumo from '../components/ClienteDadosResumo';
 import ConfirmarSaidaModal from '../components/ConfirmarSaidaModal';
 import NumericInput from '../components/NumericInput';
 import ProdutoModal from '../components/ProdutoModal';
@@ -62,6 +63,7 @@ export default function OrcamentoForm() {
   const [ambientes, setAmbientes] = useState([emptyAmbiente()]);
 
   const [showClienteModal, setShowClienteModal] = useState(false);
+  const [clienteModalCliente, setClienteModalCliente] = useState(null);
   const [showSelecionarCliente, setShowSelecionarCliente] = useState(false);
   const [showProdutoModal, setShowProdutoModal] = useState(false);
   const [showSelecionarProduto, setShowSelecionarProduto] = useState(false);
@@ -98,6 +100,23 @@ export default function OrcamentoForm() {
   useEffect(() => {
     isDirtyRef.current = isDirty;
   }, [isDirty]);
+
+  useEffect(() => {
+    if (!clienteId) {
+      setClienteSelecionado(null);
+      return undefined;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const cliente = await api.getCliente(Number(clienteId));
+        if (!cancelled) setClienteSelecionado(cliente);
+      } catch {
+        /* mantém seleção parcial se a consulta falhar */
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [clienteId]);
 
   useEffect(() => {
     api.onAppCloseRequest(() => {
@@ -255,12 +274,20 @@ export default function OrcamentoForm() {
     setError('');
   };
 
+  const abrirClienteModal = (cliente = null) => {
+    setClienteModalCliente(cliente);
+    setShowClienteModal(true);
+  };
+
   const handleSaveCliente = async (data) => {
-    const cliente = await api.createCliente(data);
+    const cliente = clienteModalCliente
+      ? await api.updateCliente(clienteModalCliente.id, data)
+      : await api.createCliente(data);
     setClienteSelecionado(cliente);
     setClienteId(String(cliente.id));
     setShowClienteModal(false);
-    showSuccess('Cliente cadastrado e selecionado.');
+    setClienteModalCliente(null);
+    showSuccess(clienteModalCliente ? 'Cliente atualizado.' : 'Cliente cadastrado e selecionado.');
   };
 
   const handleSelectCliente = (cliente) => {
@@ -444,7 +471,7 @@ export default function OrcamentoForm() {
                     <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowSelecionarCliente(true)}>
                       Alterar cliente
                     </button>
-                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                       + Novo cliente
                     </button>
                   </div>
@@ -454,10 +481,17 @@ export default function OrcamentoForm() {
                   <button type="button" className="btn btn-primary" onClick={() => setShowSelecionarCliente(true)}>
                     Selecionar cliente
                   </button>
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => setShowClienteModal(true)}>
+                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => abrirClienteModal()}>
                     + Novo cliente
                   </button>
                 </div>
+              )}
+              {clienteSelecionado && (
+                <ClienteDadosResumo
+                  cliente={clienteSelecionado}
+                  variant="orcamento"
+                  onEditar={() => abrirClienteModal(clienteSelecionado)}
+                />
               )}
             </div>
             <div className="form-group">
@@ -716,14 +750,16 @@ export default function OrcamentoForm() {
           onSelect={handleSelectCliente}
           onNovoCliente={() => {
             setShowSelecionarCliente(false);
-            setShowClienteModal(true);
+            abrirClienteModal();
           }}
         />
       )}
 
       {showClienteModal && (
         <ClienteModal
-          onClose={() => setShowClienteModal(false)}
+          cliente={clienteModalCliente}
+          context="orcamento"
+          onClose={() => { setShowClienteModal(false); setClienteModalCliente(null); }}
           onSave={handleSaveCliente}
         />
       )}

@@ -2,7 +2,9 @@ import { InlineAlert } from './PageAlert';
 import { useEffect, useMemo, useState } from 'react';
 import NumericInput from './NumericInput';
 import SelecionarProdutoModal from './SelecionarProdutoModal';
-import { toInputDate } from '../utils/format';
+import { PERIODO_ENTREGA_OPTIONS, MODE_ENTREGA_LABEL, labelPeriodoEntrega } from '../constants/entregas';
+import { abrirWhatsAppAgendamento } from '../utils/entregaAgendamento';
+import { formatDate, toInputDate } from '../utils/format';
 
 function hojeIso() {
   return toInputDate(new Date());
@@ -34,12 +36,19 @@ function mapConsignadosIniciais(itens = []) {
   return itens.map((item) => ({
     key: `consignado-${item.id}`,
     id: item.id,
+    venda_item_id: item.venda_item_id || null,
     produto_id: item.produto_id || null,
     descricao: item.descricao || '',
     quantidade: item.quantidade || 1,
     volumes_por_unidade: volumesPorUnidade(item.volumes_por_unidade),
     produto_sku: item.produto_sku || null,
   }));
+}
+
+function saldoItemPedido(item) {
+  const pedido = Number(item.quantidade_venda ?? item.quantidade) || 0;
+  const entregue = Number(item.quantidade_entregue_venda ?? item.quantidade_entregue) || 0;
+  return Math.max(0, pedido - entregue);
 }
 
 export default function RegistrarEntregaModal({
@@ -50,12 +59,14 @@ export default function RegistrarEntregaModal({
   onAgendar,
   onPrepare,
   onPrint,
+  onConfirmarCliente,
 }) {
   const [observacoes, setObservacoes] = useState(entrega.observacoes || '');
   const [observacoesKanban, setObservacoesKanban] = useState(entrega.observacoes_kanban || '');
   const [dataPrevista, setDataPrevista] = useState(
     () => toInputDate(entrega.data_prevista) || hojeIso()
   );
+  const [periodoEntrega, setPeriodoEntrega] = useState(entrega.periodo_entrega || 'matutino');
   const [flagUrgencia, setFlagUrgencia] = useState(Boolean(entrega.flag_urgencia));
   const [quantidades, setQuantidades] = useState({});
   const [consignados, setConsignados] = useState(() => mapConsignadosIniciais(entrega.itens_consignados));
@@ -81,6 +92,7 @@ export default function RegistrarEntregaModal({
     setObservacoes(entrega.observacoes || '');
     setObservacoesKanban(entrega.observacoes_kanban || '');
     setDataPrevista(toInputDate(entrega.data_prevista) || hojeIso());
+    setPeriodoEntrega(entrega.periodo_entrega || 'matutino');
     setFlagUrgencia(Boolean(entrega.flag_urgencia));
   }, [entrega]);
 
@@ -102,6 +114,7 @@ export default function RegistrarEntregaModal({
     observacoes,
     observacoes_kanban: observacoesKanban.trim() || null,
     data_prevista: dataPrevista,
+    periodo_entrega: periodoEntrega,
     flag_urgencia: flagUrgencia,
     itens: Object.entries(quantidades)
       .map(([entrega_item_id, quantidade]) => ({
@@ -113,6 +126,7 @@ export default function RegistrarEntregaModal({
       .filter((item) => item.descricao?.trim() && Number(item.quantidade) > 0)
       .map((item) => ({
         id: item.id,
+        venda_item_id: item.venda_item_id || null,
         produto_id: item.produto_id || null,
         descricao: item.descricao.trim(),
         quantidade: Number(item.quantidade) || 0,
@@ -200,43 +214,89 @@ export default function RegistrarEntregaModal({
     }
   };
 
-  const tituloModal = mode === 'concluir'
-    ? `Concluir entrega — Pedido ${entrega.numero_pedido}`
-    : mode === 'editar'
-      ? `Editar agendamento — Pedido ${entrega.numero_pedido}`
-      : `Agendar entrega — Pedido ${entrega.numero_pedido}`;
+  const handleWhatsApp = async () => {
+    setError('');
+    try {
+      await abrirWhatsAppAgendamento(
+        entrega.cliente_telefone,
+        entrega.cliente_nome,
+        dataPrevista,
+        periodoEntrega
+      );
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleConfirmarCliente = async () => {
+    if (!onConfirmarCliente) return;
+    setSaving(true);
+    setError('');
+    try {
+      await onConfirmarCliente();
+      setSaving(false);
+    } catch (err) {
+      setError(err.message);
+      setSaving(false);
+    }
+  };
+
+  const aguardandoConfirmacao = entrega.confirmacao_cliente === 'pendente';
+  const podeWhatsApp = mode !== 'concluir' && Boolean(entrega.cliente_telefone);
+  const labels = MODE_ENTREGA_LABEL[mode] || MODE_ENTREGA_LABEL.agendar;
+  const tituloModal = `${labels.titulo} — ${entrega.numero_pedido || entrega.venda_numero}`;
+  const isConcluir = mode === 'concluir';
 
   return (
     <>
       <div className="modal-overlay" onClick={onClose}>
         <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
           <div className="modal-header">
-            <h3>{tituloModal}</h3>
+            <div>
+              <h3>{tituloModal}</h3>
+              {isConcluir && (
+                <p className="picker-subtitle">Confirme as quantidades entregues. O estoque será baixado automaticamente.</p>
+              )}
+            </div>
             <button type="button" className="modal-close" onClick={onClose}>&times;</button>
           </div>
-          <form onSubmit={mode === 'concluir' ? handleSubmit : handleAgendar}>
+          <form onSubmit={isConcluir ? handleSubmit : handleAgendar}>
             <div className="modal-body">
               {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
 
-              <p className="hint-text" style={{ marginBottom: '0.75rem' }}>
-                Cliente: <strong>{entrega.cliente_nome}</strong>
-                {' · '}Venda {entrega.venda_numero}
-                {' · '}
-                {entrega.tipo_liberacao === 'completa'
-                  ? 'Entrega completa (todos os produtos)'
-                  : 'Entrega parcial (liberar por disponibilidade)'}
-              </p>
+              {isConcluir ? (
+                <div className="entrega-modal-resumo card-inset">
+                  <p><strong>Cliente:</strong> {entrega.cliente_nome}</p>
+                  <p>
+                    <strong>Agendamento:</strong>{' '}
+                    {formatDate(dataPrevista)} · {labelPeriodoEntrega(periodoEntrega)}
+                  </p>
+                  <p className="hint-text" style={{ margin: 0 }}>
+                    Informe abaixo o que está sendo entregue nesta expedição.
+                  </p>
+                </div>
+              ) : (
+                <p className="hint-text" style={{ marginBottom: '0.75rem' }}>
+                  Cliente: <strong>{entrega.cliente_nome}</strong>
+                  {' · '}Venda {entrega.venda_numero}
+                  {' · '}
+                  {entrega.tipo_liberacao === 'completa'
+                    ? 'Liberação completa'
+                    : 'Liberação parcial'}
+                </p>
+              )}
 
-              {entrega.venda_observacoes && (
+              {entrega.venda_observacoes && !isConcluir && (
                 <div className="alert alert-info" style={{ marginBottom: '0.75rem' }}>
                   <strong>Observações do pedido</strong>
                   <p style={{ margin: '0.35rem 0 0', whiteSpace: 'pre-wrap' }}>{entrega.venda_observacoes}</p>
                 </div>
               )}
 
+              {!isConcluir && (
               <div className="form-grid" style={{ marginBottom: '1rem' }}>
                 <div className="form-group">
-                  <label htmlFor="data-prevista-entrega">Agendar entrega</label>
+                  <label htmlFor="data-prevista-entrega">{labels.dataLabel}</label>
                   <input
                     id="data-prevista-entrega"
                     type="date"
@@ -246,6 +306,21 @@ export default function RegistrarEntregaModal({
                     disabled={mode === 'concluir'}
                   />
                   <span className="hint-text">Data prevista para a expedição.</span>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="periodo-entrega">Período da entrega</label>
+                  <select
+                    id="periodo-entrega"
+                    value={periodoEntrega}
+                    onChange={(e) => setPeriodoEntrega(e.target.value)}
+                    required
+                    disabled={mode === 'concluir'}
+                  >
+                    {PERIODO_ENTREGA_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <span className="hint-text">Turno previsto para a entrega.</span>
                 </div>
                 <div className="form-group">
                   <label>Quantidade de itens</label>
@@ -267,30 +342,77 @@ export default function RegistrarEntregaModal({
                   </label>
                 </div>
                 <div className="form-group full-width">
+                  <label>Observações da expedição</label>
+                  <textarea rows={2} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
+                </div>
+                {mode === 'editar' && (
+                  <div className="form-group full-width">
+                    <label>Observações do card (kanban)</label>
+                    <textarea
+                      rows={2}
+                      value={observacoesKanban}
+                      onChange={(e) => setObservacoesKanban(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+              )}
+
+              {isConcluir && (
+                <div className="form-group full-width" style={{ marginBottom: '1rem' }}>
                   <label>Observações da entrega</label>
                   <textarea rows={2} value={observacoes} onChange={(e) => setObservacoes(e.target.value)} />
                 </div>
-                <div className="form-group full-width">
-                  <label>Observações do card (kanban)</label>
-                  <textarea
-                    rows={2}
-                    value={observacoesKanban}
-                    onChange={(e) => setObservacoesKanban(e.target.value)}
-                    disabled={mode === 'concluir'}
-                  />
+              )}
+
+              {mode !== 'concluir' && (
+                <div className="entrega-agendamento-acoes" style={{ marginBottom: '1rem' }}>
+                  {aguardandoConfirmacao && mode === 'editar' && (
+                    <p className="hint-text entrega-agendamento-hint">
+                      Pré-agendamento aguardando confirmação do cliente. Envie a mensagem no WhatsApp
+                      e, após a resposta, confirme ou altere a data/turno abaixo.
+                    </p>
+                  )}
+                  <div className="entrega-agendamento-botoes">
+                    {podeWhatsApp && (
+                      <button
+                        type="button"
+                        className="btn btn-whatsapp btn-sm"
+                        onClick={handleWhatsApp}
+                        disabled={saving}
+                      >
+                        WhatsApp — confirmar data
+                      </button>
+                    )}
+                    {mode === 'editar' && aguardandoConfirmacao && onConfirmarCliente && (
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={handleConfirmarCliente}
+                        disabled={saving}
+                      >
+                        Cliente confirmou agendamento
+                      </button>
+                    )}
+                  </div>
+                  {!entrega.cliente_telefone && (
+                    <p className="hint-text text-warning" style={{ marginTop: '0.5rem' }}>
+                      Cadastre o telefone do cliente para enviar mensagem pelo WhatsApp.
+                    </p>
+                  )}
                 </div>
-              </div>
+              )}
 
               <table>
                 <thead>
                   <tr>
                     <th>Produto</th>
-                    <th>Pedido</th>
-                    <th>Entregue</th>
-                    <th>Disponível</th>
-                    <th>Vol./un.</th>
-                    <th>Entregar agora</th>
-                    <th>Volumes</th>
+                    {!isConcluir && <th>Pedido</th>}
+                    {!isConcluir && <th>Entregue</th>}
+                    <th title="Unidades liberadas em estoque ou encomenda recebida">Disponível</th>
+                    {!isConcluir && <th title="Quantidade do pedido menos o já entregue">Saldo</th>}
+                    <th>{isConcluir ? 'Qtd. a entregar' : 'Entregar agora'}</th>
+                    {!isConcluir && <th>Volumes</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -315,14 +437,14 @@ export default function RegistrarEntregaModal({
                             </>
                           )}
                         </td>
-                        <td>{item.quantidade}</td>
-                        <td>{item.quantidade_entregue}</td>
+                        {!isConcluir && <td>{item.quantidade}</td>}
+                        {!isConcluir && <td>{item.quantidade_entregue}</td>}
                         <td>
                           <span className={item.disponivel_agora > 0 ? 'text-success' : ''}>
                             {isConsignado ? item.pendente_entrega : item.disponivel_agora}
                           </span>
                         </td>
-                        <td>{volumesPorUnidade(item.volumes_por_unidade)}</td>
+                        {!isConcluir && <td>{saldoItemPedido(item)}</td>}
                         <td>
                           <NumericInput
                             min="0"
@@ -334,16 +456,17 @@ export default function RegistrarEntregaModal({
                             disabled={!podeEntregar}
                           />
                         </td>
-                        <td>{volumesLinha}</td>
+                        {!isConcluir && <td>{volumesLinha}</td>}
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
 
-              <div className="colaborador-beneficios-section" style={{ marginTop: '1.25rem' }}>
-                <div className="colaborador-beneficios-header">
-                  <h4>Produtos consignados nesta entrega</h4>
+              {!isConcluir && (
+              <div className="entrega-consignados-section" style={{ marginTop: '1.25rem' }}>
+                <div className="entrega-consignados-header">
+                  <h4>Produtos consignados nesta expedição</h4>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
                       type="button"
@@ -423,6 +546,7 @@ export default function RegistrarEntregaModal({
                   </div>
                 )}
               </div>
+              )}
             </div>
             <div className="modal-footer">
               {onPrint && (
@@ -431,15 +555,9 @@ export default function RegistrarEntregaModal({
                 </button>
               )}
               <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>Cancelar</button>
-              {mode === 'concluir' ? (
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Registrando...' : 'Confirmar entrega'}
-                </button>
-              ) : (
-                <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'Salvando...' : mode === 'editar' ? 'Salvar alterações' : 'Agendar entrega'}
-                </button>
-              )}
+              <button type="submit" className="btn btn-primary" disabled={saving}>
+                {saving ? 'Salvando...' : labels.submit}
+              </button>
             </div>
           </form>
         </div>

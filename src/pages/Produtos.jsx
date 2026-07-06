@@ -6,6 +6,7 @@ import { PERMISSIONS } from '../constants/auth';
 import PageAlert from '../components/PageAlert';
 import { formatCurrency, formatDimensions } from '../utils/format';
 import ProdutoModal from '../components/ProdutoModal';
+import EtiquetaProdutoModal from '../components/EtiquetaProdutoModal';
 import ProdutoThumb from '../components/ProdutoThumb';
 
 export default function Produtos() {
@@ -16,6 +17,7 @@ export default function Produtos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
+  const [etiquetaProduto, setEtiquetaProduto] = useState(null);
   const [editing, setEditing] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const { confirm, success: showSuccess } = useFeedback();
@@ -160,6 +162,14 @@ export default function Produtos() {
                       <button type="button" className="btn btn-secondary btn-sm" onClick={() => { setEditing(p); setModalOpen(true); }}>
                         Editar
                       </button>
+                      {' '}
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => setEtiquetaProduto(p)}
+                      >
+                        Etiqueta
+                      </button>
                       {podeDesativar && (
                         <>
                           {' '}
@@ -189,6 +199,13 @@ export default function Produtos() {
           fornecedores={fornecedores}
           onClose={() => { setModalOpen(false); setEditing(null); }}
           onSave={handleSave}
+        />
+      )}
+
+      {etiquetaProduto && (
+        <EtiquetaProdutoModal
+          produto={etiquetaProduto}
+          onClose={() => setEtiquetaProduto(null)}
         />
       )}
     </>

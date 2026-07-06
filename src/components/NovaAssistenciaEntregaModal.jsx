@@ -1,6 +1,7 @@
 import { InlineAlert } from './PageAlert';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
+import { PERIODO_ENTREGA_OPTIONS } from '../constants/entregas';
 import { formatDate, toInputDate } from '../utils/format';
 
 function hojeIso() {
@@ -12,6 +13,7 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
   const [vendaId, setVendaId] = useState('');
   const [descricao, setDescricao] = useState('');
   const [dataPrevista, setDataPrevista] = useState(hojeIso);
+  const [periodoEntrega, setPeriodoEntrega] = useState('matutino');
   const [observacoesKanban, setObservacoesKanban] = useState('');
   const [flagUrgencia, setFlagUrgencia] = useState(false);
   const [busca, setBusca] = useState('');
@@ -52,6 +54,7 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
         venda_id: Number(vendaId),
         descricao_assistencia: descricao.trim(),
         data_prevista: dataPrevista,
+        periodo_entrega: periodoEntrega,
         observacoes_kanban: observacoesKanban.trim() || null,
         flag_urgencia: flagUrgencia,
         itens: [],
@@ -133,6 +136,19 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
                     onChange={(e) => setDataPrevista(e.target.value)}
                     required
                   />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="periodo-assistencia">Período</label>
+                  <select
+                    id="periodo-assistencia"
+                    value={periodoEntrega}
+                    onChange={(e) => setPeriodoEntrega(e.target.value)}
+                    required
+                  >
+                    {PERIODO_ENTREGA_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label className="checkbox-label">

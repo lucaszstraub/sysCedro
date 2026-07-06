@@ -88,6 +88,19 @@ export const api = {
   updateProduto: (id, data) => callApi(window.api.updateProduto, id, data),
   deleteProduto: (id) => callApi(window.api.deleteProduto, id),
   getProdutoFoto: (id) => callApi(window.api.getProdutoFoto, id),
+  gerarPdfEtiquetaProduto: async (data) => {
+    const result = await window.api.gerarPdfEtiquetaProduto(data);
+    if (!result.success) throw new Error(result.error || 'Erro ao gerar etiqueta');
+    if (result.data?.cancelled) return { cancelled: true };
+    return result.data;
+  },
+  listRecebimentosParaEtiquetas: (busca) => callApi(window.api.listRecebimentosParaEtiquetas, busca),
+  gerarPdfFolhasEtiquetas: async (data) => {
+    const result = await window.api.gerarPdfFolhasEtiquetas(data);
+    if (!result.success) throw new Error(result.error || 'Erro ao gerar folhas de etiquetas');
+    if (result.data?.cancelled) return { cancelled: true };
+    return result.data;
+  },
   listEstoque: (busca) => callApi(window.api.listEstoque, busca),
   listPendenciasAlocacao: (busca) => callApi(window.api.listPendenciasAlocacao, busca),
   alocarProduto: (data) => callApi(window.api.alocarProduto, data),
@@ -162,6 +175,7 @@ export const api = {
   getEntrega: (id) => callApi(window.api.getEntrega, id),
   updateEntrega: (id, data) => callApi(window.api.updateEntrega, id, data),
   updateEntregaKanban: (id, data) => callApi(window.api.updateEntregaKanban, id, data),
+  confirmarAgendamentoCliente: (id) => callApi(window.api.confirmarAgendamentoCliente, id),
   agendarExpedicao: (vendaId, data) => callApi(window.api.agendarExpedicao, vendaId, data),
   criarAssistenciaEntrega: (data) => callApi(window.api.criarAssistenciaEntrega, data),
   registrarEntrega: (id, data) => callApi(window.api.registrarEntrega, id, data),
