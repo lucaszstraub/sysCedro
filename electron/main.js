@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const { initDatabase } = require('./database');
 const services = require('./services');
@@ -39,6 +39,7 @@ const { gerarPdfAlteracaoVenda } = require('./pdfAlteracaoVenda');
 const { gerarPdfEncomendaFornecedor } = require('./pdfEncomendaFornecedor');
 const { gerarPdfEntrega } = require('./pdfEntrega');
 const { gerarPdfEtiquetaProduto, gerarPdfFolhasEtiquetas } = require('./pdfEtiquetaProduto');
+const { salvarEAbrirPdf } = require('./pdfExport');
 const { initImages } = require('./images');
 
 const isDev = !app.isPackaged;
@@ -168,34 +169,26 @@ function registerHandlers() {
       const produto = await services.getProduto(data.produto_id);
       if (!produto) throw new Error('Produto não encontrado.');
       const sku = data.sku || produto.sku;
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar etiqueta do produto',
         defaultPath: `Etiqueta-${sku}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfEtiquetaProduto(filePath, {
+      }, (filePath) => gerarPdfEtiquetaProduto(filePath, {
         sku,
         nome: data.nome || produto.nome,
         tamanho: data.tamanho || null,
         acabamento: data.acabamento || null,
         preco_venda: data.preco_venda != null ? Number(data.preco_venda) : Number(produto.preco_venda),
         copias: data.copias != null ? Number(data.copias) : undefined,
-      });
-      return { cancelled: false, filePath };
+      }));
     },
     'etiquetas:imprimir': async (_, data) => {
       const etiquetas = data?.etiquetas;
       if (!etiquetas?.length) throw new Error('Nenhuma etiqueta na seleção.');
       const total = etiquetas.length;
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar folhas de etiquetas',
         defaultPath: `Etiquetas-${total}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfFolhasEtiquetas(filePath, etiquetas);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfFolhasEtiquetas(filePath, etiquetas));
     },
     'estoque:list': (_, busca) => services.listEstoque(busca),
     'estoque:pendenciasAlocacao': (_, busca) => services.listPendenciasAlocacao(busca),
@@ -216,14 +209,10 @@ function registerHandlers() {
     'orcamentos:pdf': async (_, id) => {
       const data = await orcamentos.getOrcamento(id);
       if (!data) throw new Error('Orçamento não encontrado.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar orçamento em PDF',
         defaultPath: `Orcamento-${data.numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfOrcamento(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfOrcamento(filePath, id));
     },
     'orcamentosPlanejados:list': (_, busca) => orcamentosPlanejados.listOrcamentosPlanejados(busca),
     'orcamentosPlanejados:get': (_, id) => orcamentosPlanejados.getOrcamentoPlanejado(id),
@@ -233,14 +222,10 @@ function registerHandlers() {
     'orcamentosPlanejados:pdf': async (_, id) => {
       const data = await orcamentosPlanejados.getOrcamentoPlanejado(id);
       if (!data) throw new Error('Orçamento planejado não encontrado.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar orçamento planejado em PDF',
         defaultPath: `Orcamento-Planejado-${data.numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfOrcamentoPlanejado(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfOrcamentoPlanejado(filePath, id));
     },
     'vendasPlanejados:list': (_, busca) => vendasPlanejados.listVendasPlanejados(busca),
     'vendasPlanejados:get': (_, id) => vendasPlanejados.getVendaPlanejado(id),
@@ -250,14 +235,10 @@ function registerHandlers() {
     'vendasPlanejados:pdf': async (_, id) => {
       const data = await vendasPlanejados.getVendaPlanejado(id);
       if (!data) throw new Error('Venda planejada não encontrada.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido planejado em PDF',
         defaultPath: `Venda-Planejada-${data.numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfVendaPlanejado(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfVendaPlanejado(filePath, id));
     },
     'acompanhamentoPedidosPlanejados:list': (_, busca) => acompanhamentoPedidosPlanejados.listAcompanhamentoPedidos(busca),
     'acompanhamentoPedidosPlanejados:moverKanban': (_, id, data) => acompanhamentoPedidosPlanejados.moverAcompanhamentoKanban(id, data),
@@ -280,26 +261,18 @@ function registerHandlers() {
     'vendas:pdf': async (_, id) => {
       const data = await vendas.getVenda(id);
       if (!data) throw new Error('Venda não encontrada.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido de venda em PDF',
         defaultPath: `Venda-${data.numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfVenda(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfVenda(filePath, id));
     },
     'vendas:pdf-alteracao': async (_, id) => {
       const data = await vendas.getVenda(id);
       if (!data) throw new Error('Venda não encontrada.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar comprovante de alteração',
         defaultPath: `Alteracao-${data.numero_pedido || data.numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfAlteracaoVenda(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfAlteracaoVenda(filePath, id));
     },
     'entregas:list': (_, filtro, busca) => entregas.listEntregas(filtro, busca),
     'entregas:listAgendadas': (_, busca) => entregas.listEntregasAgendadas(busca),
@@ -313,14 +286,10 @@ function registerHandlers() {
     'entregas:pdf': async (_, id) => {
       const data = await entregas.getEntrega(id);
       if (!data) throw new Error('Entrega não encontrada.');
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar ticket de entrega em PDF',
         defaultPath: `Entrega-${data.numero_pedido || data.venda_numero}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfEntrega(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfEntrega(filePath, id));
     },
     'encomendas:list': (_, busca) => encomendas.listEncomendasFornecedor(busca),
     'encomendas:get': (_, id) => encomendas.getEncomendaFornecedor(id),
@@ -344,14 +313,10 @@ function registerHandlers() {
         .trim()
         .replace(/\s+/g, '-')
         .slice(0, 40);
-      const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
+      return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido ao fornecedor em PDF',
         defaultPath: `Encomenda-${data.numero}-${fornecedorSlug}.pdf`,
-        filters: [{ name: 'PDF', extensions: ['pdf'] }],
-      });
-      if (canceled || !filePath) return { cancelled: true };
-      await gerarPdfEncomendaFornecedor(filePath, id);
-      return { cancelled: false, filePath };
+      }, (filePath) => gerarPdfEncomendaFornecedor(filePath, id));
     },
     'vendedores:list': (_, busca, classificacao) => vendedores.listVendedores(busca, classificacao),
     'vendedores:get': (_, id) => vendedores.getVendedor(id),
