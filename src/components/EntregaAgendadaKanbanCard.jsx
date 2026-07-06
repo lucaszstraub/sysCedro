@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { formatCurrency, formatDate } from '../utils/format';
 import {
   CONFIRMACAO_CLIENTE_LABEL,
   labelPeriodoEntrega,
 } from '../constants/entregas';
 import { abrirWhatsAppAgendamento } from '../utils/entregaAgendamento';
+import { useFloatingMenu } from '../hooks/useFloatingMenu';
 
 export default function EntregaAgendadaKanbanCard({
   entrega,
@@ -15,6 +17,17 @@ export default function EntregaAgendadaKanbanCard({
   onConfirmarCliente,
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
+  const {
+    triggerRef,
+    panelRef,
+    panelStyle,
+    markOpenedViaPointer,
+  } = useFloatingMenu({
+    open: menuAberto,
+    onClose: () => setMenuAberto(false),
+    closeOnOutsideClick: false,
+  });
+
   const isAssistencia = entrega.tipo === 'assistencia' || entrega.flag_assistencia_tecnica;
   const concluida = entrega.status !== 'agendada';
   const aguardandoConfirmacao = entrega.confirmacao_cliente === 'pendente';
@@ -31,6 +44,11 @@ export default function EntregaAgendadaKanbanCard({
     } catch (err) {
       window.alert(err.message);
     }
+  };
+
+  const toggleMenu = () => {
+    markOpenedViaPointer();
+    setMenuAberto((v) => !v);
   };
 
   return (
@@ -118,27 +136,46 @@ export default function EntregaAgendadaKanbanCard({
         )}
         <div className="entrega-kanban-menu">
           <button
+            ref={triggerRef}
             type="button"
             className="btn btn-secondary btn-sm"
-            onClick={() => setMenuAberto((v) => !v)}
+            onClick={toggleMenu}
             aria-expanded={menuAberto}
+            aria-haspopup="menu"
           >
             Mais ações
           </button>
-          {menuAberto && (
-            <div className="entrega-kanban-menu-panel">
+          {menuAberto && panelStyle && createPortal(
+            <div
+              ref={panelRef}
+              className="entrega-kanban-menu-panel entrega-kanban-menu-panel--floating"
+              style={panelStyle}
+              role="menu"
+              onMouseDown={(e) => e.stopPropagation()}
+            >
               {!concluida && entrega.cliente_telefone && (
-                <button type="button" className="btn btn-link btn-sm" onClick={handleWhatsApp}>
+                <button type="button" className="btn btn-link btn-sm" role="menuitem" onClick={handleWhatsApp}>
                   WhatsApp
                 </button>
               )}
-              <button type="button" className="btn btn-link btn-sm" onClick={() => { setMenuAberto(false); onImprimir(entrega); }}>
+              <button
+                type="button"
+                className="btn btn-link btn-sm"
+                role="menuitem"
+                onClick={() => { setMenuAberto(false); onImprimir(entrega); }}
+              >
                 Ticket PDF
               </button>
-              <button type="button" className="btn btn-link btn-sm" onClick={() => { setMenuAberto(false); onObservacoes(entrega); }}>
+              <button
+                type="button"
+                className="btn btn-link btn-sm"
+                role="menuitem"
+                onClick={() => { setMenuAberto(false); onObservacoes(entrega); }}
+              >
                 Observações
               </button>
-            </div>
+            </div>,
+            document.body
           )}
         </div>
       </div>

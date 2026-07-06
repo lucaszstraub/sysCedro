@@ -177,7 +177,10 @@ function registerHandlers() {
         nome: data.nome || produto.nome,
         tamanho: data.tamanho || null,
         acabamento: data.acabamento || null,
-        preco_venda: data.preco_venda != null ? Number(data.preco_venda) : Number(produto.preco_venda),
+        valor_prazo: data.valor_prazo != null
+          ? Number(data.valor_prazo)
+          : Number(data.preco_venda ?? produto.preco_venda),
+        desconto_pct: data.desconto_pct,
         copias: data.copias != null ? Number(data.copias) : undefined,
       }));
     },

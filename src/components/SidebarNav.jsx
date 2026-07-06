@@ -82,9 +82,9 @@ export default function SidebarNav({ sections, onNavigate }) {
     });
   }, [location.pathname, sections, isSearching]);
 
-  const toggleSection = (sectionId) => {
+  const toggleSection = (sectionId, currentlyOpen) => {
     setExpanded((prev) => {
-      const next = { ...prev, [sectionId]: !prev[sectionId] };
+      const next = { ...prev, [sectionId]: !currentlyOpen };
       saveExpandedState(next);
       return next;
     });
@@ -169,7 +169,7 @@ export default function SidebarNav({ sections, onNavigate }) {
                   <button
                     type="button"
                     className="nav-section-toggle"
-                    onClick={() => toggleSection(section.id)}
+                    onClick={() => toggleSection(section.id, open)}
                     aria-expanded={open}
                   >
                     <span className="nav-section-title">{section.title}</span>
@@ -179,7 +179,7 @@ export default function SidebarNav({ sections, onNavigate }) {
                   <div className="nav-section-title nav-section-title-static">{section.title}</div>
                 )}
 
-                {open && section.groups.map((group, gi) => (
+                {section.groups.map((group, gi) => (
                   <div key={gi} className="nav-group">
                     {group.subtitle && (
                       <div className="nav-group-subtitle">{group.subtitle}</div>

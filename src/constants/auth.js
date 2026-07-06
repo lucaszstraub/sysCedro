@@ -83,35 +83,35 @@ export const MENU_MACRO_GROUPS = [
     id: 'operacao',
     title: 'Operação',
     description: 'Estoque, recebimentos e entregas',
-    accent: '#5c7a52',
+    accent: '#059669',
     sectionIds: ['logistica'],
   },
   {
     id: 'vendas',
     title: 'Vendas',
     description: 'Comercial, pedidos e análise',
-    accent: '#9a6b3c',
+    accent: '#D97706',
     sectionIds: ['vendas-soltos', 'planejados', 'vendas-gestao'],
   },
   {
     id: 'gestao',
     title: 'Gestão',
     description: 'Compras, financeiro e cadastros',
-    accent: '#553c9a',
+    accent: '#7C3AED',
     sectionIds: ['compras', 'financeiro', 'administracao', 'cadastros'],
   },
 ];
 
 export const SECTION_ACCENTS = {
-  inicio: '#c9a86c',
-  logistica: '#5c7a52',
-  'vendas-soltos': '#9a6b3c',
-  planejados: '#7d5a3c',
-  'vendas-gestao': '#2b6cb0',
-  compras: '#8b6914',
-  financeiro: '#2f855a',
-  administracao: '#553c9a',
-  cadastros: '#4a5568',
+  inicio: '#D97706',
+  logistica: '#059669',
+  'vendas-soltos': '#D97706',
+  planejados: '#EA580C',
+  'vendas-gestao': '#2563EB',
+  compras: '#CA8A04',
+  financeiro: '#16A34A',
+  administracao: '#7C3AED',
+  cadastros: '#64748B',
 };
 
 export function userHasPermission(user, permission) {

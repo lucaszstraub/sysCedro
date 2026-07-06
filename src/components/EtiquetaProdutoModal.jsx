@@ -1,35 +1,42 @@
 import { InlineAlert } from './PageAlert';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { useFeedback } from '../context/FeedbackContext';
 import BrandLogo from './BrandLogo';
-import { dadosEtiquetaFromProduto, LABELS_PER_PAGE } from '../utils/etiquetaProduto';
+import {
+  calcularPrecosEtiqueta,
+  dadosEtiquetaFromProduto,
+  DIMENSAO_EXPOSTA_ETIQUETA,
+  LABELS_PER_PAGE,
+  partesPrazoEtiqueta,
+} from '../utils/etiquetaProduto';
 import { formatCurrency } from '../utils/format';
 
-export function EtiquetaPreviewUnit({ form, precoExibicao, compact = false }) {
+export function EtiquetaPreviewUnit({ form, compact = false }) {
+  const precos = useMemo(
+    () => calcularPrecosEtiqueta(form.valor_prazo ?? form.preco_venda, form.desconto_pct),
+    [form.valor_prazo, form.preco_venda, form.desconto_pct]
+  );
+  const prazo = partesPrazoEtiqueta(precos.valor_prazo, precos.parcela_1mais9);
+
   return (
     <div className={`etiqueta-preview-inner${compact ? ' etiqueta-preview-inner--compact' : ''}`}>
       <div className="etiqueta-preview-logo">
         <BrandLogo variant="dark" />
       </div>
-      <span className="etiqueta-preview-sku">{form.sku || 'SKU'}</span>
-      <hr className="etiqueta-preview-rule" />
       <h4 className="etiqueta-preview-nome">{form.nome || 'Nome do produto'}</h4>
-      {form.tamanho && (
-        <div className="etiqueta-preview-spec">
-          <span className="etiqueta-preview-spec-label">Tamanho</span>
-          <span>{form.tamanho}</span>
+      <p className="etiqueta-preview-linha">{form.tamanho || DIMENSAO_EXPOSTA_ETIQUETA}</p>
+      {form.acabamento && <p className="etiqueta-preview-linha">{form.acabamento}</p>}
+      <div className="etiqueta-preview-precos">
+        <div className="etiqueta-preview-vista">
+          <span className="etiqueta-preview-vista-label">À vista</span>
+          <strong className="etiqueta-preview-vista-valor">{formatCurrency(precos.valor_vista)}</strong>
         </div>
-      )}
-      {form.acabamento && (
-        <div className="etiqueta-preview-spec">
-          <span className="etiqueta-preview-spec-label">Acabamento</span>
-          <span>{form.acabamento}</span>
+        <div className="etiqueta-preview-prazo">
+          <span className="etiqueta-preview-prazo-label">{prazo.label}</span>
+          <strong className="etiqueta-preview-prazo-valor">{prazo.valor}</strong>
+          <span className="etiqueta-preview-prazo-descritivo">{prazo.descritivo}</span>
         </div>
-      )}
-      <div className="etiqueta-preview-preco">
-        <span className="etiqueta-preview-preco-label">Investimento</span>
-        <strong>{precoExibicao}</strong>
       </div>
     </div>
   );
@@ -50,6 +57,11 @@ export default function EtiquetaProdutoModal({
   const { runWithFeedback } = useFeedback();
   const isAddMode = mode === 'add';
 
+  const precos = useMemo(
+    () => calcularPrecosEtiqueta(form.valor_prazo, form.desconto_pct),
+    [form.valor_prazo, form.desconto_pct]
+  );
+
   useEffect(() => {
     setForm(dadosEtiquetaFromProduto(produto));
     setQuantidade(defaultQuantidade);
@@ -62,10 +74,21 @@ export default function EtiquetaProdutoModal({
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const payloadEtiqueta = () => ({
+    produto_id: produto.id,
+    sku: form.sku,
+    nome: form.nome.trim(),
+    tamanho: form.tamanho?.trim() || DIMENSAO_EXPOSTA_ETIQUETA,
+    acabamento: form.acabamento?.trim() || '',
+    valor_prazo: precos.valor_prazo,
+    desconto_pct: precos.desconto_pct,
+    valor_vista: precos.valor_vista,
+    parcela_1mais9: precos.parcela_1mais9,
+  });
+
   const validarForm = () => {
-    const preco = Number(form.preco_venda);
-    if (Number.isNaN(preco) || preco < 0) {
-      throw new Error('Informe um preço de venda válido.');
+    if (Number.isNaN(precos.valor_prazo) || precos.valor_prazo < 0) {
+      throw new Error('Informe um valor à prazo válido.');
     }
     if (!form.nome?.trim()) {
       throw new Error('Informe o nome na etiqueta.');
@@ -74,23 +97,15 @@ export default function EtiquetaProdutoModal({
     if (isAddMode && qty < 1) {
       throw new Error('Informe a quantidade de etiquetas.');
     }
-    return { preco, qty };
+    return { qty };
   };
 
   const handleAdd = (e) => {
     e.preventDefault();
     setError('');
     try {
-      const { preco, qty } = validarForm();
-      onAdd?.({
-        produto_id: produto.id,
-        sku: form.sku,
-        nome: form.nome.trim(),
-        tamanho: form.tamanho?.trim() || '',
-        acabamento: form.acabamento?.trim() || '',
-        preco_venda: preco,
-        quantidade: qty,
-      });
+      const { qty } = validarForm();
+      onAdd?.({ ...payloadEtiqueta(), quantidade: qty });
       onClose();
     } catch (err) {
       setError(err.message);
@@ -102,16 +117,11 @@ export default function EtiquetaProdutoModal({
     setPrinting(true);
     setError('');
     try {
-      const { preco, qty } = validarForm();
+      const { qty } = validarForm();
 
       const result = await runWithFeedback(
         () => api.gerarPdfEtiquetaProduto({
-          produto_id: produto.id,
-          sku: form.sku,
-          nome: form.nome.trim(),
-          tamanho: form.tamanho?.trim() || null,
-          acabamento: form.acabamento?.trim() || null,
-          preco_venda: preco,
+          ...payloadEtiqueta(),
           copias: qty,
         }),
         {
@@ -129,7 +139,6 @@ export default function EtiquetaProdutoModal({
     }
   };
 
-  const precoExibicao = formatCurrency(Number(form.preco_venda) || 0);
   const copiasNum = Math.min(Math.max(Number(copias) || LABELS_PER_PAGE, 1), LABELS_PER_PAGE);
 
   return (
@@ -141,7 +150,7 @@ export default function EtiquetaProdutoModal({
             <p className="picker-subtitle">
               {isAddMode
                 ? 'Ajuste os dados e escolha quantas cópias entram na seleção de impressão'
-                : 'Folha A4 com até 6 etiquetas — aprox. 9,3 × 9 cm cada, com logo Cedro'}
+                : 'Folha A4 com até 6 etiquetas — logo, nome, medidas e valores à vista / parcelado'}
             </p>
           </div>
           <button type="button" className="modal-close" onClick={onClose}>&times;</button>
@@ -158,7 +167,7 @@ export default function EtiquetaProdutoModal({
                 </p>
                 {isAddMode ? (
                   <div className="etiqueta-preview-frame etiqueta-preview-frame--single">
-                    <EtiquetaPreviewUnit form={form} precoExibicao={precoExibicao} />
+                    <EtiquetaPreviewUnit form={form} />
                   </div>
                 ) : (
                   <>
@@ -171,7 +180,7 @@ export default function EtiquetaProdutoModal({
                           >
                             {i < copiasNum && (
                               <div className="etiqueta-preview-frame">
-                                <EtiquetaPreviewUnit form={form} precoExibicao={precoExibicao} compact />
+                                <EtiquetaPreviewUnit form={form} compact />
                               </div>
                             )}
                           </div>
@@ -191,7 +200,7 @@ export default function EtiquetaProdutoModal({
                   <input id="etiqueta-sku" name="sku" value={form.sku} readOnly disabled />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="etiqueta-nome">Nome *</label>
+                  <label htmlFor="etiqueta-nome">Nome do produto *</label>
                   <input
                     id="etiqueta-nome"
                     name="nome"
@@ -201,17 +210,20 @@ export default function EtiquetaProdutoModal({
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="etiqueta-tamanho">Tamanho</label>
+                  <label htmlFor="etiqueta-tamanho">Dimensão (L × P × A)</label>
                   <input
                     id="etiqueta-tamanho"
                     name="tamanho"
                     value={form.tamanho}
                     onChange={handleChange}
-                    placeholder="Ex: 120 × 80 × 45 cm"
+                    placeholder={DIMENSAO_EXPOSTA_ETIQUETA}
                   />
+                  <span className="hint-text">
+                    Importada do cadastro quando houver medidas; caso contrário, usa &quot;{DIMENSAO_EXPOSTA_ETIQUETA}&quot;.
+                  </span>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="etiqueta-acabamento">Acabamento</label>
+                  <label htmlFor="etiqueta-acabamento">Cor / acabamento</label>
                   <input
                     id="etiqueta-acabamento"
                     name="acabamento"
@@ -221,18 +233,39 @@ export default function EtiquetaProdutoModal({
                   />
                 </div>
                 <div className="form-group">
-                  <label htmlFor="etiqueta-preco">Preço de venda (R$) *</label>
+                  <label htmlFor="etiqueta-valor-prazo">Valor à prazo (R$) *</label>
                   <input
-                    id="etiqueta-preco"
-                    name="preco_venda"
+                    id="etiqueta-valor-prazo"
+                    name="valor_prazo"
                     type="number"
                     min="0"
                     step="0.01"
-                    value={form.preco_venda}
+                    value={form.valor_prazo}
                     onChange={handleChange}
                     required
                   />
-                  <span className="hint-text">Importado do cadastro — pode ser ajustado só para esta impressão.</span>
+                  <span className="hint-text">Preço de referência para parcelamento (1+9x).</span>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="etiqueta-desconto">Desconto à vista (%)</label>
+                  <input
+                    id="etiqueta-desconto"
+                    name="desconto_pct"
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    value={form.desconto_pct}
+                    onChange={handleChange}
+                  />
+                  <span className="hint-text">Padrão 8% — editável para calcular o valor à vista.</span>
+                </div>
+                <div className="form-group">
+                  <label>Valor à vista (calculado)</label>
+                  <input value={formatCurrency(precos.valor_vista)} readOnly disabled />
+                  <span className="hint-text">
+                    Parcela: {formatCurrency(precos.parcela_1mais9)} em 1+9x
+                  </span>
                 </div>
                 <div className="form-group">
                   <label htmlFor="etiqueta-quantidade">

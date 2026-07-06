@@ -9,8 +9,91 @@ import {
   LABELS_PER_PAGE,
   mesclarNaSelecao,
   totalEtiquetasSelecao,
+  calcularPrecosEtiqueta,
 } from '../utils/etiquetaProduto';
 import { formatCurrency, formatDate } from '../utils/format';
+
+function EtiquetaSelecaoBar({
+  selecao,
+  onAtualizarQuantidade,
+  onRemover,
+  onLimpar,
+  onImprimir,
+  onVerDetalhes,
+  imprimindo,
+}) {
+  const total = totalEtiquetasSelecao(selecao);
+  const folhas = folhasNecessarias(total);
+
+  if (!selecao.length) return null;
+
+  return (
+    <section className="card etiquetas-selecao-bar">
+      <div className="etiquetas-selecao-bar-header">
+        <div>
+          <strong>Seleção atual</strong>
+          <span className="hint-text etiquetas-selecao-bar-meta">
+            {total} etiqueta{total !== 1 ? 's' : ''} · {folhas} folha{folhas !== 1 ? 's' : ''} A4
+          </span>
+        </div>
+        <div className="etiquetas-selecao-acoes">
+          <button type="button" className="btn btn-link btn-sm" onClick={onVerDetalhes}>
+            Ver detalhes
+          </button>
+          <button type="button" className="btn btn-secondary btn-sm" onClick={onLimpar}>
+            Limpar
+          </button>
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            onClick={onImprimir}
+            disabled={imprimindo}
+          >
+            {imprimindo ? 'Gerando PDF...' : 'Gerar impressão'}
+          </button>
+        </div>
+      </div>
+      <ul className="etiquetas-selecao-chips">
+        {selecao.map((item) => (
+          <li key={item.key} className="etiquetas-selecao-chip">
+            <span className="etiquetas-selecao-chip-label" title={item.nome}>
+              <strong>{item.sku}</strong>
+              <span>{item.nome}</span>
+            </span>
+            <div className="etiquetas-qty-control etiquetas-qty-control--compact">
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => onAtualizarQuantidade(item.key, item.quantidade - 1)}
+                disabled={item.quantidade <= 1}
+                aria-label="Diminuir quantidade"
+              >
+                −
+              </button>
+              <span>{item.quantidade}</span>
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => onAtualizarQuantidade(item.key, item.quantidade + 1)}
+                aria-label="Aumentar quantidade"
+              >
+                +
+              </button>
+            </div>
+            <button
+              type="button"
+              className="etiquetas-selecao-chip-remove"
+              onClick={() => onRemover(item.key)}
+              aria-label={`Remover ${item.sku}`}
+            >
+              ×
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
 
 function EtiquetaSelecaoPanel({
   selecao,
@@ -62,7 +145,7 @@ function EtiquetaSelecaoPanel({
               <tr>
                 <th>SKU</th>
                 <th>Produto</th>
-                <th>Preço</th>
+                  <th>À vista</th>
                 <th>Qtd</th>
                 <th />
               </tr>
@@ -72,7 +155,7 @@ function EtiquetaSelecaoPanel({
                 <tr key={item.key}>
                   <td><strong>{item.sku}</strong></td>
                   <td>{item.nome}</td>
-                  <td>{formatCurrency(item.preco_venda)}</td>
+                  <td>{formatCurrency(calcularPrecosEtiqueta(item.valor_prazo, item.desconto_pct).valor_vista)}</td>
                   <td>
                     <div className="etiquetas-qty-control">
                       <button
@@ -119,11 +202,7 @@ function EtiquetaSelecaoPanel({
                 >
                   {primeiraFolha[i] && (
                     <div className="etiqueta-preview-frame">
-                      <EtiquetaPreviewUnit
-                        form={primeiraFolha[i]}
-                        precoExibicao={formatCurrency(primeiraFolha[i].preco_venda)}
-                        compact
-                      />
+                      <EtiquetaPreviewUnit form={primeiraFolha[i]} compact />
                     </div>
                   )}
                 </div>
@@ -155,7 +234,7 @@ export default function Etiquetas() {
   const [modalQuantidade, setModalQuantidade] = useState(1);
   const [abrindoId, setAbrindoId] = useState(null);
   const [imprimindo, setImprimindo] = useState(false);
-  const { runWithFeedback } = useFeedback();
+  const { runWithFeedback, success: showSuccess } = useFeedback();
 
   const totalSelecao = totalEtiquetasSelecao(selecao);
 
@@ -207,7 +286,7 @@ export default function Etiquetas() {
 
   const handleAdicionar = (item) => {
     setSelecao((prev) => mesclarNaSelecao(prev, item));
-    setAba('selecao');
+    showSuccess(`${item.sku} adicionado à seleção.`);
   };
 
   const atualizarQuantidade = (key, quantidade) => {
@@ -289,6 +368,16 @@ export default function Etiquetas() {
         </section>
       ) : (
         <>
+          <EtiquetaSelecaoBar
+            selecao={selecao}
+            onAtualizarQuantidade={atualizarQuantidade}
+            onRemover={removerItem}
+            onLimpar={limparSelecao}
+            onImprimir={gerarImpressao}
+            onVerDetalhes={() => setAba('selecao')}
+            imprimindo={imprimindo}
+          />
+
           <section className="card etiquetas-section">
             <div className="card-header">Catálogo de produtos</div>
             <div className="card-body">

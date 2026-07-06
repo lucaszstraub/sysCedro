@@ -778,7 +778,7 @@ async function reduzirReservaAtiva(client, vendaItemId, quantidade) {
   const novaQtd = Number(reserva.quantidade) - quantidade;
   if (novaQtd <= 0) {
     await client.query(`
-      UPDATE estoque_reservas SET status = 'baixada', quantidade = 0, atualizado_em = NOW()
+      UPDATE estoque_reservas SET status = 'baixada', atualizado_em = NOW()
       WHERE id = $1
     `, [reserva.id]);
   } else {

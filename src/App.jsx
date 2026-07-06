@@ -78,16 +78,19 @@ function AppLayout() {
   return (
     <div className={`app-layout${sidebarOpen ? ' sidebar-open' : ''}`}>
       {sidebarOpen && (
-        <button
-          type="button"
-          className="sidebar-backdrop"
-          aria-label="Fechar menu"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="sidebar-backdrop" aria-hidden="true" />
       )}
       <aside className="sidebar">
         <div className="sidebar-brand">
           <BrandLogo variant="white" />
+          <button
+            type="button"
+            className="sidebar-close-btn"
+            aria-label="Fechar menu"
+            onClick={() => setSidebarOpen(false)}
+          >
+            ×
+          </button>
         </div>
         <nav className="sidebar-nav-wrap">
           <SidebarNav sections={menuSections} onNavigate={() => setSidebarOpen(false)} />

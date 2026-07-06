@@ -15,17 +15,38 @@ const LABELS_PER_PAGE = COLS * ROWS;
 const LABEL_WIDTH = (A4_WIDTH - PAGE_MARGIN * 2 - GUTTER * (COLS - 1)) / COLS;
 const LABEL_HEIGHT = (A4_HEIGHT - PAGE_MARGIN * 2 - GUTTER * (ROWS - 1)) / ROWS;
 
-function drawDivider(doc, y, pad, width, color = BRAND.colors.gold) {
-  const x1 = pad + 6;
-  const x2 = width - pad - 6;
-  doc.save();
-  doc.lineWidth(0.5).strokeColor(color);
-  doc.moveTo(x1, y).lineTo(x2, y).stroke();
-  doc.restore();
+const DESCONTO_PADRAO = 8;
+const DIMENSAO_EXPOSTA = 'Peça Exposta';
+
+function round2(n) {
+  return Math.round(n * 100) / 100;
 }
 
-function drawEtiquetaContent(doc, data, width, height) {
-  const pad = Math.max(10, width * 0.042);
+function calcularPrecos(valorPrazo, descontoPct = DESCONTO_PADRAO) {
+  const prazo = Math.max(Number(valorPrazo) || 0, 0);
+  const desconto = Math.min(Math.max(Number(descontoPct) ?? DESCONTO_PADRAO, 0), 100);
+  return {
+    valor_prazo: prazo,
+    desconto_pct: desconto,
+    valor_vista: round2(prazo * (1 - desconto / 100)),
+    parcela_1mais9: round2(prazo / 10),
+  };
+}
+
+function normalizarEtiqueta(data) {
+  const precos = calcularPrecos(data?.valor_prazo ?? data?.preco_venda, data?.desconto_pct);
+  return {
+    sku: data?.sku || '',
+    nome: String(data?.nome || '—').trim(),
+    tamanho: data?.tamanho?.trim() || DIMENSAO_EXPOSTA,
+    acabamento: data?.acabamento ? String(data.acabamento).trim() : '',
+    ...precos,
+  };
+}
+
+function drawEtiquetaContent(doc, rawData, width, height) {
+  const data = normalizarEtiqueta(rawData);
+  const pad = Math.max(8, width * 0.05);
   const innerW = width - pad * 2;
   const scale = width / (50 * MM);
 
@@ -34,80 +55,98 @@ function drawEtiquetaContent(doc, data, width, height) {
   doc.restore();
 
   doc.save();
-  doc.lineWidth(0.8).strokeColor(BRAND.colors.gold);
-  doc.roundedRect(pad * 0.55, pad * 0.55, width - pad * 1.1, height - pad * 1.1, 4 * scale).stroke();
-  doc.lineWidth(0.25).strokeColor(BRAND.colors.sand);
-  doc.roundedRect(pad, pad, width - pad * 2, height - pad * 2, 2.5 * scale).stroke();
+  doc.lineWidth(0.6).strokeColor(BRAND.colors.gold);
+  doc.roundedRect(pad * 0.5, pad * 0.5, width - pad, height - pad, 3 * scale).stroke();
   doc.restore();
 
-  let y = pad + 8 * scale;
+  let y = pad + 4 * scale;
 
   const logoPath = getLogoPath('dark') || getLogoPath('gold');
-  const logoW = Math.min(innerW * 0.72, 78 * scale);
+  const logoW = Math.min(innerW * 0.32, 34 * scale);
+  const logoAreaH = 13 * scale;
   if (logoPath && fs.existsSync(logoPath)) {
-    doc.image(logoPath, (width - logoW) / 2, y, { width: logoW });
-    y += logoW * 0.42 + 6 * scale;
+    doc.image(logoPath, (width - logoW) / 2, y + 1 * scale, { width: logoW });
+    y += logoAreaH + 8 * scale;
   } else {
-    doc.font('Helvetica-Bold').fontSize(7 * scale).fillColor(BRAND.colors.espresso);
-    doc.text('CEDRO MÓVEIS & AMBIENTES', pad, y, { width: innerW, align: 'center' });
-    y += 12 * scale;
+    doc.font('Helvetica-Bold').fontSize(5 * scale).fillColor(BRAND.colors.espresso);
+    doc.text('CEDRO MÓVEIS', pad, y, { width: innerW, align: 'center' });
+    y += logoAreaH + 6 * scale;
   }
 
-  doc.font('Helvetica-Bold').fontSize(7.5 * scale).fillColor(BRAND.colors.gold);
-  doc.text(String(data.sku || '').toUpperCase(), pad, y, {
-    width: innerW,
-    align: 'center',
-    characterSpacing: 1.4,
-  });
-  y += 13 * scale;
+  y += 2 * scale;
 
-  drawDivider(doc, y, pad, width);
-  y += 10 * scale;
-
-  doc.font('Helvetica-Bold').fontSize(11.5 * scale).fillColor(BRAND.colors.espresso);
-  const nomeH = doc.heightOfString(data.nome || '—', {
-    width: innerW - 10,
+  doc.font('Helvetica-Bold').fontSize(8.8 * scale).fillColor(BRAND.colors.espresso);
+  const nomeH = doc.heightOfString(data.nome, {
+    width: innerW - 4,
     align: 'center',
-    lineGap: 1,
+    lineGap: 0.5,
   });
-  doc.text(data.nome || '—', pad + 5, y, {
-    width: innerW - 10,
+  doc.text(data.nome, pad + 2, y, {
+    width: innerW - 4,
     align: 'center',
-    lineGap: 1,
+    lineGap: 0.5,
   });
-  y += nomeH + 10 * scale;
+  y += nomeH + 5 * scale;
 
-  const drawSpec = (label, value) => {
-    if (!value) return;
-    doc.font('Helvetica-Bold').fontSize(5.8 * scale).fillColor(BRAND.colors.gold);
-    doc.text(label, pad + 4, y, { width: innerW - 8, align: 'center', characterSpacing: 0.8 });
-    y += 8 * scale;
-    doc.font('Helvetica').fontSize(8 * scale).fillColor(BRAND.colors.charcoal);
-    const h = doc.heightOfString(value, { width: innerW - 14, align: 'center', lineGap: 0.5 });
-    doc.text(value, pad + 7, y, { width: innerW - 14, align: 'center', lineGap: 0.5 });
-    y += h + 8 * scale;
+  const drawLinha = (texto, fontSize = 7 * scale) => {
+    if (!texto) return;
+    doc.font('Helvetica').fontSize(fontSize).fillColor(BRAND.colors.charcoal);
+    const h = doc.heightOfString(texto, { width: innerW - 6, align: 'center', lineGap: 0.3 });
+    doc.text(texto, pad + 3, y, { width: innerW - 6, align: 'center', lineGap: 0.3 });
+    y += h + 3 * scale;
   };
 
-  drawSpec('TAMANHO', data.tamanho);
-  drawSpec('ACABAMENTO', data.acabamento);
+  drawLinha(data.tamanho);
+  drawLinha(data.acabamento);
 
-  const priceBoxH = 40 * scale;
-  const priceY = height - pad - priceBoxH - 4 * scale;
+  const footerH = 48 * scale;
+  const footerY = height - pad - footerH;
+  const footerX = pad + 1;
+  const footerW = innerW - 2;
+
   doc.save();
-  doc.fillColor(BRAND.colors.espresso);
-  doc.roundedRect(pad + 2, priceY, innerW - 4, priceBoxH, 3 * scale).fill();
+  doc.lineWidth(0.5).strokeColor(BRAND.colors.gold);
+  doc.fillColor('#faf7f3');
+  doc.roundedRect(footerX, footerY, footerW, footerH, 2.5 * scale).fillAndStroke();
   doc.restore();
 
-  doc.font('Helvetica').fontSize(5.8 * scale).fillColor(BRAND.colors.gold);
-  doc.text('INVESTIMENTO', pad + 2, priceY + 8 * scale, {
-    width: innerW - 4,
+  const vistaH = 24 * scale;
+  doc.font('Helvetica').fontSize(5 * scale).fillColor(BRAND.colors.gold);
+  doc.text('À VISTA', footerX, footerY + 4 * scale, {
+    width: footerW,
     align: 'center',
-    characterSpacing: 1,
+    characterSpacing: 0.8,
   });
 
-  doc.font('Helvetica-Bold').fontSize(16 * scale).fillColor(BRAND.colors.white);
-  doc.text(formatCurrency(data.preco_venda), pad + 2, priceY + 20 * scale, {
-    width: innerW - 4,
+  doc.font('Helvetica-Bold').fontSize(11.5 * scale).fillColor(BRAND.colors.espresso);
+  doc.text(formatCurrency(data.valor_vista), footerX, footerY + 10 * scale, {
+    width: footerW,
+    align: 'center',
+  });
+
+  const divY = footerY + vistaH;
+  doc.save();
+  doc.strokeColor(BRAND.colors.sand).lineWidth(0.4);
+  doc.moveTo(footerX + 8 * scale, divY).lineTo(footerX + footerW - 8 * scale, divY).stroke();
+  doc.restore();
+
+  const prazoY = divY + 3 * scale;
+  doc.font('Helvetica').fontSize(4.8 * scale).fillColor('#8a755f');
+  doc.text('À PRAZO', footerX, prazoY, {
+    width: footerW,
+    align: 'center',
+    characterSpacing: 0.6,
+  });
+
+  doc.font('Helvetica-Bold').fontSize(8 * scale).fillColor(BRAND.colors.charcoal);
+  doc.text(formatCurrency(data.valor_prazo), footerX, prazoY + 6 * scale, {
+    width: footerW,
+    align: 'center',
+  });
+
+  doc.font('Helvetica').fontSize(5 * scale).fillColor('#6b5c52');
+  doc.text(`1+9x de ${formatCurrency(data.parcela_1mais9)}`, footerX, prazoY + 16 * scale, {
+    width: footerW,
     align: 'center',
   });
 }
@@ -150,7 +189,6 @@ async function gerarPdfFolhasEtiquetas(filePath, etiquetas) {
 
   list.forEach((item, index) => {
     if (!item?.nome?.trim()) throw new Error(`Etiqueta ${index + 1}: informe o nome do produto.`);
-    if (!item?.sku) throw new Error(`Etiqueta ${index + 1}: SKU não encontrado.`);
   });
 
   const totalPages = Math.ceil(list.length / LABELS_PER_PAGE);
@@ -194,16 +232,10 @@ async function gerarPdfFolhasEtiquetas(filePath, etiquetas) {
 
 async function gerarPdfEtiquetaProduto(filePath, data) {
   if (!data?.nome) throw new Error('Informe o nome do produto na etiqueta.');
-  if (!data?.sku) throw new Error('SKU do produto não encontrado.');
 
   const copias = Math.min(Math.max(Number(data.copias) || LABELS_PER_PAGE, 1), LABELS_PER_PAGE);
-  const etiquetas = Array.from({ length: copias }, () => ({
-    sku: data.sku,
-    nome: data.nome,
-    tamanho: data.tamanho || null,
-    acabamento: data.acabamento || null,
-    preco_venda: data.preco_venda,
-  }));
+  const etiqueta = normalizarEtiqueta(data);
+  const etiquetas = Array.from({ length: copias }, () => ({ ...etiqueta }));
 
   return gerarPdfFolhasEtiquetas(filePath, etiquetas);
 }
