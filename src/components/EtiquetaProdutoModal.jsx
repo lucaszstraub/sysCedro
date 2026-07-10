@@ -2,13 +2,13 @@ import { InlineAlert } from './PageAlert';
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import { useFeedback } from '../context/FeedbackContext';
-import BrandLogo from './BrandLogo';
 import {
   calcularPrecosEtiqueta,
   dadosEtiquetaFromProduto,
+  descricaoTamanhoEtiquetaTermica,
   DIMENSAO_EXPOSTA_ETIQUETA,
-  LABELS_PER_PAGE,
-  partesPrazoEtiqueta,
+  THERMAL_LABEL_HEIGHT_MM,
+  THERMAL_LABEL_WIDTH_MM,
 } from '../utils/etiquetaProduto';
 import { formatCurrency } from '../utils/format';
 
@@ -17,25 +17,29 @@ export function EtiquetaPreviewUnit({ form, compact = false }) {
     () => calcularPrecosEtiqueta(form.valor_prazo ?? form.preco_venda, form.desconto_pct),
     [form.valor_prazo, form.preco_venda, form.desconto_pct]
   );
-  const prazo = partesPrazoEtiqueta(precos.valor_prazo, precos.parcela_1mais9);
 
   return (
-    <div className={`etiqueta-preview-inner${compact ? ' etiqueta-preview-inner--compact' : ''}`}>
-      <div className="etiqueta-preview-logo">
-        <BrandLogo variant="dark" />
-      </div>
-      <h4 className="etiqueta-preview-nome">{form.nome || 'Nome do produto'}</h4>
-      <p className="etiqueta-preview-linha">{form.tamanho || DIMENSAO_EXPOSTA_ETIQUETA}</p>
-      {form.acabamento && <p className="etiqueta-preview-linha">{form.acabamento}</p>}
-      <div className="etiqueta-preview-precos">
-        <div className="etiqueta-preview-vista">
-          <span className="etiqueta-preview-vista-label">À vista</span>
-          <strong className="etiqueta-preview-vista-valor">{formatCurrency(precos.valor_vista)}</strong>
-        </div>
-        <div className="etiqueta-preview-prazo">
-          <span className="etiqueta-preview-prazo-label">{prazo.label}</span>
-          <strong className="etiqueta-preview-prazo-valor">{prazo.valor}</strong>
-          <span className="etiqueta-preview-prazo-descritivo">{prazo.descritivo}</span>
+    <div
+      className={[
+        'etiqueta-preview-inner',
+        'etiqueta-preview-inner--termica',
+        compact ? 'etiqueta-preview-inner--compact' : '',
+      ].filter(Boolean).join(' ')}
+      style={{ aspectRatio: `${THERMAL_LABEL_WIDTH_MM} / ${THERMAL_LABEL_HEIGHT_MM}` }}
+    >
+      <div className="etiqueta-termica-body">
+        <h4 className="etiqueta-termica-nome">{form.nome || 'Nome do produto'}</h4>
+        {form.sku && <p className="etiqueta-termica-sku">{form.sku}</p>}
+        <p className="etiqueta-termica-linha">{form.tamanho || DIMENSAO_EXPOSTA_ETIQUETA}</p>
+        {form.acabamento && <p className="etiqueta-termica-linha etiqueta-termica-acabamento">{form.acabamento}</p>}
+        <hr className="etiqueta-termica-rule" aria-hidden="true" />
+        <div className="etiqueta-termica-precos">
+          <strong className="etiqueta-termica-vista">{formatCurrency(precos.valor_vista)}</strong>
+          <span className="etiqueta-termica-vista-label">à vista</span>
+          <span className="etiqueta-termica-prazo">{formatCurrency(precos.valor_prazo)}</span>
+          <span className="etiqueta-termica-parcela">
+            1+9x de {formatCurrency(precos.parcela_1mais9)}
+          </span>
         </div>
       </div>
     </div>
@@ -51,7 +55,7 @@ export default function EtiquetaProdutoModal({
 }) {
   const [form, setForm] = useState(() => dadosEtiquetaFromProduto(produto));
   const [quantidade, setQuantidade] = useState(defaultQuantidade);
-  const [copias, setCopias] = useState(LABELS_PER_PAGE);
+  const [copias, setCopias] = useState(1);
   const [printing, setPrinting] = useState(false);
   const [error, setError] = useState('');
   const { runWithFeedback } = useFeedback();
@@ -65,7 +69,7 @@ export default function EtiquetaProdutoModal({
   useEffect(() => {
     setForm(dadosEtiquetaFromProduto(produto));
     setQuantidade(defaultQuantidade);
-    setCopias(LABELS_PER_PAGE);
+    setCopias(1);
     setError('');
   }, [produto, defaultQuantidade]);
 
@@ -125,9 +129,9 @@ export default function EtiquetaProdutoModal({
           copias: qty,
         }),
         {
-          loading: 'Gerando folha de etiquetas...',
-          success: 'Folha A4 gerada com sucesso.',
-          error: 'Não foi possível gerar a etiqueta.',
+          loading: 'Gerando arquivo para impressora térmica...',
+          success: 'Arquivo gerado. Envie para a impressora de etiquetas.',
+          error: 'Não foi possível gerar o arquivo de impressão.',
         }
       );
       setPrinting(false);
@@ -139,7 +143,7 @@ export default function EtiquetaProdutoModal({
     }
   };
 
-  const copiasNum = Math.min(Math.max(Number(copias) || LABELS_PER_PAGE, 1), LABELS_PER_PAGE);
+  const tamanhoEtiqueta = descricaoTamanhoEtiquetaTermica();
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -149,8 +153,8 @@ export default function EtiquetaProdutoModal({
             <h3>{isAddMode ? 'Adicionar etiqueta' : 'Etiqueta do produto'}</h3>
             <p className="picker-subtitle">
               {isAddMode
-                ? 'Ajuste os dados e escolha quantas cópias entram na seleção de impressão'
-                : 'Folha A4 com até 6 etiquetas — logo, nome, medidas e valores à vista / parcelado'}
+                ? 'Dados do adesivo térmico que será colado na etiqueta física do móvel'
+                : `Impressão térmica ${tamanhoEtiqueta} — somente nome, medidas e preços`}
             </p>
           </div>
           <button type="button" className="modal-close" onClick={onClose}>&times;</button>
@@ -163,35 +167,14 @@ export default function EtiquetaProdutoModal({
             <div className="etiqueta-modal-grid">
               <div className="etiqueta-preview-wrap">
                 <p className="hint-text etiqueta-preview-label">
-                  {isAddMode ? 'Pré-visualização' : 'Pré-visualização da folha A4'}
+                  Pré-visualização do adesivo ({tamanhoEtiqueta})
                 </p>
-                {isAddMode ? (
-                  <div className="etiqueta-preview-frame etiqueta-preview-frame--single">
-                    <EtiquetaPreviewUnit form={form} />
-                  </div>
-                ) : (
-                  <>
-                    <article className="etiqueta-sheet-preview" aria-hidden="true">
-                      <div className="etiqueta-sheet-grid">
-                        {Array.from({ length: LABELS_PER_PAGE }, (_, i) => (
-                          <div
-                            key={i}
-                            className={`etiqueta-sheet-cell${i < copiasNum ? '' : ' etiqueta-sheet-cell--vazia'}`}
-                          >
-                            {i < copiasNum && (
-                              <div className="etiqueta-preview-frame">
-                                <EtiquetaPreviewUnit form={form} compact />
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </article>
-                    <p className="hint-text etiqueta-sheet-hint">
-                      Linhas tracejadas no PDF indicam o corte entre etiquetas.
-                    </p>
-                  </>
-                )}
+                <div className="etiqueta-preview-frame etiqueta-preview-frame--termica">
+                  <EtiquetaPreviewUnit form={form} />
+                </div>
+                <p className="hint-text etiqueta-termica-hint">
+                  Sem logo nem layout decorativo — apenas as informações variáveis para colar na etiqueta já impressa do móvel.
+                </p>
               </div>
 
               <div className="etiqueta-form">
@@ -269,29 +252,20 @@ export default function EtiquetaProdutoModal({
                 </div>
                 <div className="form-group">
                   <label htmlFor="etiqueta-quantidade">
-                    {isAddMode ? 'Quantidade na seleção' : 'Etiquetas nesta folha'}
+                    {isAddMode ? 'Quantidade na seleção' : 'Cópias idênticas no PDF'}
                   </label>
-                  {isAddMode ? (
-                    <input
-                      id="etiqueta-quantidade"
-                      type="number"
-                      min="1"
-                      max="99"
-                      value={quantidade}
-                      onChange={(e) => setQuantidade(e.target.value)}
-                    />
-                  ) : (
-                    <select
-                      id="etiqueta-quantidade"
-                      value={copias}
-                      onChange={(e) => setCopias(e.target.value)}
-                    >
-                      {Array.from({ length: LABELS_PER_PAGE }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>
-                          {n} etiqueta{n > 1 ? 's' : ''} (de {LABELS_PER_PAGE} na folha)
-                        </option>
-                      ))}
-                    </select>
+                  <input
+                    id="etiqueta-quantidade"
+                    type="number"
+                    min="1"
+                    max={isAddMode ? 99 : 999}
+                    value={isAddMode ? quantidade : copias}
+                    onChange={(e) => (
+                      isAddMode ? setQuantidade(e.target.value) : setCopias(e.target.value)
+                    )}
+                  />
+                  {!isAddMode && (
+                    <span className="hint-text">Cada cópia vira uma página no arquivo (uma etiqueta na impressora).</span>
                   )}
                 </div>
               </div>
@@ -304,10 +278,10 @@ export default function EtiquetaProdutoModal({
             </button>
             <button type="submit" className="btn btn-primary" disabled={printing}>
               {printing
-                ? 'Gerando PDF...'
+                ? 'Gerando arquivo...'
                 : isAddMode
                   ? 'Adicionar à seleção'
-                  : 'Gerar folha A4'}
+                  : 'Gerar para impressora térmica'}
             </button>
           </div>
         </form>

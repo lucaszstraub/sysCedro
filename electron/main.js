@@ -39,7 +39,7 @@ const { gerarPdfAlteracaoVenda } = require('./pdfAlteracaoVenda');
 const { gerarPdfEncomendaFornecedor } = require('./pdfEncomendaFornecedor');
 const { gerarPdfEntrega } = require('./pdfEntrega');
 const { gerarPdfEtiquetaProduto, gerarPdfFolhasEtiquetas } = require('./pdfEtiquetaProduto');
-const { salvarEAbrirPdf } = require('./pdfExport');
+const { salvarEAbrirPdf, pdfDefaultFileName, sanitizeFilePart } = require('./pdfExport');
 const { initImages } = require('./images');
 
 const isDev = !app.isPackaged;
@@ -171,7 +171,7 @@ function registerHandlers() {
       const sku = data.sku || produto.sku;
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar etiqueta do produto',
-        defaultPath: `Etiqueta-${sku}.pdf`,
+        defaultPath: pdfDefaultFileName('Etiqueta-Termica', sku),
       }, (filePath) => gerarPdfEtiquetaProduto(filePath, {
         sku,
         nome: data.nome || produto.nome,
@@ -189,8 +189,8 @@ function registerHandlers() {
       if (!etiquetas?.length) throw new Error('Nenhuma etiqueta na seleção.');
       const total = etiquetas.length;
       return salvarEAbrirPdf(mainWindow, {
-        title: 'Salvar folhas de etiquetas',
-        defaultPath: `Etiquetas-${total}.pdf`,
+        title: 'Salvar etiquetas térmicas',
+        defaultPath: pdfDefaultFileName('Etiquetas-Termicas', `${total}un`),
       }, (filePath) => gerarPdfFolhasEtiquetas(filePath, etiquetas));
     },
     'estoque:list': (_, busca) => services.listEstoque(busca),
@@ -214,7 +214,7 @@ function registerHandlers() {
       if (!data) throw new Error('Orçamento não encontrado.');
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar orçamento em PDF',
-        defaultPath: `Orcamento-${data.numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Orcamento', data.numero),
       }, (filePath) => gerarPdfOrcamento(filePath, id));
     },
     'orcamentosPlanejados:list': (_, busca) => orcamentosPlanejados.listOrcamentosPlanejados(busca),
@@ -227,7 +227,7 @@ function registerHandlers() {
       if (!data) throw new Error('Orçamento planejado não encontrado.');
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar orçamento planejado em PDF',
-        defaultPath: `Orcamento-Planejado-${data.numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Orcamento-Planejado', data.numero),
       }, (filePath) => gerarPdfOrcamentoPlanejado(filePath, id));
     },
     'vendasPlanejados:list': (_, busca) => vendasPlanejados.listVendasPlanejados(busca),
@@ -240,7 +240,7 @@ function registerHandlers() {
       if (!data) throw new Error('Venda planejada não encontrada.');
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido planejado em PDF',
-        defaultPath: `Venda-Planejada-${data.numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Venda-Planejada', data.numero),
       }, (filePath) => gerarPdfVendaPlanejado(filePath, id));
     },
     'acompanhamentoPedidosPlanejados:list': (_, busca) => acompanhamentoPedidosPlanejados.listAcompanhamentoPedidos(busca),
@@ -266,7 +266,7 @@ function registerHandlers() {
       if (!data) throw new Error('Venda não encontrada.');
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido de venda em PDF',
-        defaultPath: `Venda-${data.numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Venda', data.numero),
       }, (filePath) => gerarPdfVenda(filePath, id));
     },
     'vendas:pdf-alteracao': async (_, id) => {
@@ -274,7 +274,7 @@ function registerHandlers() {
       if (!data) throw new Error('Venda não encontrada.');
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar comprovante de alteração',
-        defaultPath: `Alteracao-${data.numero_pedido || data.numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Alteracao', data.numero_pedido || data.numero),
       }, (filePath) => gerarPdfAlteracaoVenda(filePath, id));
     },
     'entregas:list': (_, filtro, busca) => entregas.listEntregas(filtro, busca),
@@ -289,9 +289,11 @@ function registerHandlers() {
     'entregas:pdf': async (_, id) => {
       const data = await entregas.getEntrega(id);
       if (!data) throw new Error('Entrega não encontrada.');
+      const pedido = data.numero_pedido || data.venda_numero;
+      const exp = data.numero > 1 ? `exp${data.numero}` : null;
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar ticket de entrega em PDF',
-        defaultPath: `Entrega-${data.numero_pedido || data.venda_numero}.pdf`,
+        defaultPath: pdfDefaultFileName('Entrega', pedido, exp),
       }, (filePath) => gerarPdfEntrega(filePath, id));
     },
     'encomendas:list': (_, busca) => encomendas.listEncomendasFornecedor(busca),
@@ -311,14 +313,10 @@ function registerHandlers() {
     'encomendas:pdf': async (_, id) => {
       const data = await encomendas.getEncomendaFornecedor(id);
       if (!data) throw new Error('Encomenda não encontrada.');
-      const fornecedorSlug = String(data.fornecedor_nome || 'Fornecedor')
-        .replace(/[^\w\s-]/g, '')
-        .trim()
-        .replace(/\s+/g, '-')
-        .slice(0, 40);
+      const fornecedorSlug = sanitizeFilePart(data.fornecedor_nome || 'Fornecedor', 40);
       return salvarEAbrirPdf(mainWindow, {
         title: 'Salvar pedido ao fornecedor em PDF',
-        defaultPath: `Encomenda-${data.numero}-${fornecedorSlug}.pdf`,
+        defaultPath: pdfDefaultFileName('Encomenda', data.numero, fornecedorSlug),
       }, (filePath) => gerarPdfEncomendaFornecedor(filePath, id));
     },
     'vendedores:list': (_, busca, classificacao) => vendedores.listVendedores(busca, classificacao),

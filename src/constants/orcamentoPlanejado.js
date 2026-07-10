@@ -52,12 +52,14 @@ export const TIPO_FUNDO_OPTIONS = [
   { value: 'grosso', label: 'Grosso' },
   { value: 'fino', label: 'Fino' },
   { value: 'com_manta_isolante', label: 'Com manta isolante' },
+  { value: 'outro', label: 'Outro' },
 ];
 
 export const TIPO_PORTA_OPTIONS = [
   { value: 'sem_porta', label: 'Sem porta' },
   { value: 'porta_correr', label: 'Porta de correr' },
   { value: 'porta_giro', label: 'Porta de giro' },
+  { value: 'outro', label: 'Outro' },
 ];
 
 export const TIPO_PUXADOR_OPTIONS = [
@@ -74,7 +76,20 @@ export const TIPO_CORREDICAS_OPTIONS = [
   { value: 'sem_corredicas', label: 'Sem corrediças' },
   { value: 'padrao', label: 'Padrão' },
   { value: 'invisiveis', label: 'Invisíveis' },
+  { value: 'outro', label: 'Outro' },
 ];
+
+export const OPCAO_OUTRO = { value: 'outro', label: 'Outro' };
+
+export function optionsComOutro(options) {
+  if (options.some((o) => o.value === OPCAO_OUTRO.value)) return options;
+  return [...options, OPCAO_OUTRO];
+}
+
+export function labelCampoPlanejadoComOutro(tipo, outroTexto, labels) {
+  if (tipo === OPCAO_OUTRO.value && outroTexto) return outroTexto;
+  return labels[tipo] || tipo || '—';
+}
 
 export const TIPO_FUNDO_LABEL = Object.fromEntries(TIPO_FUNDO_OPTIONS.map((o) => [o.value, o.label]));
 export const TIPO_PORTA_LABEL = Object.fromEntries(TIPO_PORTA_OPTIONS.map((o) => [o.value, o.label]));
@@ -111,11 +126,14 @@ export function criarItemPlanejado() {
     espessura_mdf: 18,
     padrao_mdf: '',
     tipo_fundo: 'fino',
+    tipo_fundo_outro: '',
     tipo_porta: 'sem_porta',
+    tipo_porta_outro: '',
     tipo_puxador: 'sem_puxador',
     tipo_puxador_outro: '',
     cor_puxador: '',
     tipo_corredicas: 'sem_corredicas',
+    tipo_corredicas_outro: '',
     canaleta_led: false,
     itens_extra: '',
     quantidade: 1,
@@ -137,11 +155,14 @@ export function aplicarTemplatePlanejado(item, template) {
     espessura_mdf: template.espessura_mdf ?? 18,
     padrao_mdf: template.padrao_mdf || '',
     tipo_fundo: template.tipo_fundo || 'fino',
+    tipo_fundo_outro: template.tipo_fundo_outro || '',
     tipo_porta: template.tipo_porta || 'sem_porta',
+    tipo_porta_outro: template.tipo_porta_outro || '',
     tipo_puxador: template.tipo_puxador || 'sem_puxador',
     tipo_puxador_outro: template.tipo_puxador_outro || '',
     cor_puxador: template.cor_puxador || '',
     tipo_corredicas: template.tipo_corredicas || 'sem_corredicas',
+    tipo_corredicas_outro: template.tipo_corredicas_outro || '',
     canaleta_led: Boolean(template.canaleta_led),
     itens_extra: template.itens_extra || '',
     preco_unitario: precoSugerido > 0 ? precoSugerido : item.preco_unitario,
@@ -157,11 +178,14 @@ export function criarProdutoPlanejadoTemplate() {
     espessura_mdf: 18,
     padrao_mdf: '',
     tipo_fundo: 'fino',
+    tipo_fundo_outro: '',
     tipo_porta: 'sem_porta',
+    tipo_porta_outro: '',
     tipo_puxador: 'sem_puxador',
     tipo_puxador_outro: '',
     cor_puxador: '',
     tipo_corredicas: 'sem_corredicas',
+    tipo_corredicas_outro: '',
     canaleta_led: false,
     itens_extra: '',
     preco_unitario_sugerido: 0,

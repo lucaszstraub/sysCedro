@@ -1,4 +1,5 @@
 import NumericInput from './NumericInput';
+import SelectComOutro from './SelectComOutro';
 import {
   TIPO_CORREDICAS_OPTIONS,
   TIPO_FUNDO_OPTIONS,
@@ -110,41 +111,36 @@ export default function OrcamentoPlanejadoItemForm({
             />
           </div>
 
-          <div className="form-group">
-            <label>Tipo de fundo</label>
-            <select value={item.tipo_fundo} onChange={(e) => update('tipo_fundo', e.target.value)}>
-              {TIPO_FUNDO_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-group">
-            <label>Tipo de porta</label>
-            <select value={item.tipo_porta} onChange={(e) => update('tipo_porta', e.target.value)}>
-              {TIPO_PORTA_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label>Tipo de puxador</label>
-            <select value={item.tipo_puxador} onChange={(e) => update('tipo_puxador', e.target.value)}>
-              {TIPO_PUXADOR_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
-          {item.tipo_puxador === 'outro' && (
-            <div className="form-group">
-              <label>Nome do puxador</label>
-              <input
-                value={item.tipo_puxador_outro}
-                onChange={(e) => update('tipo_puxador_outro', e.target.value)}
-                placeholder="Informe o puxador"
-              />
-            </div>
-          )}
+          <SelectComOutro
+            id={`item-${itemIndex}-tipo-fundo`}
+            label="Tipo de fundo"
+            value={item.tipo_fundo}
+            outroValue={item.tipo_fundo_outro}
+            options={TIPO_FUNDO_OPTIONS}
+            onChange={(v) => update('tipo_fundo', v)}
+            onOutroChange={(v) => update('tipo_fundo_outro', v)}
+            outroPlaceholder="Descreva o tipo de fundo"
+          />
+          <SelectComOutro
+            id={`item-${itemIndex}-tipo-porta`}
+            label="Tipo de porta"
+            value={item.tipo_porta}
+            outroValue={item.tipo_porta_outro}
+            options={TIPO_PORTA_OPTIONS}
+            onChange={(v) => update('tipo_porta', v)}
+            onOutroChange={(v) => update('tipo_porta_outro', v)}
+            outroPlaceholder="Descreva o tipo de porta"
+          />
+          <SelectComOutro
+            id={`item-${itemIndex}-tipo-puxador`}
+            label="Tipo de puxador"
+            value={item.tipo_puxador}
+            outroValue={item.tipo_puxador_outro}
+            options={TIPO_PUXADOR_OPTIONS}
+            onChange={(v) => update('tipo_puxador', v)}
+            onOutroChange={(v) => update('tipo_puxador_outro', v)}
+            outroPlaceholder="Nome do puxador"
+          />
 
           <div className="form-group">
             <label>Cor do puxador</label>
@@ -154,14 +150,16 @@ export default function OrcamentoPlanejadoItemForm({
               placeholder="Ex: Preto, Inox..."
             />
           </div>
-          <div className="form-group">
-            <label>Tipo de corrediças</label>
-            <select value={item.tipo_corredicas} onChange={(e) => update('tipo_corredicas', e.target.value)}>
-              {TIPO_CORREDICAS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </div>
+          <SelectComOutro
+            id={`item-${itemIndex}-tipo-corredicas`}
+            label="Tipo de corrediças"
+            value={item.tipo_corredicas}
+            outroValue={item.tipo_corredicas_outro}
+            options={TIPO_CORREDICAS_OPTIONS}
+            onChange={(v) => update('tipo_corredicas', v)}
+            onOutroChange={(v) => update('tipo_corredicas_outro', v)}
+            outroPlaceholder="Descreva o tipo de corrediças"
+          />
 
           <div className="form-group">
             <label>Canaleta LED com difusor</label>

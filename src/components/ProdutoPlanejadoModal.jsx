@@ -1,6 +1,7 @@
 import { InlineAlert } from './PageAlert';
 import { useState } from 'react';
 import NumericInput from './NumericInput';
+import SelectComOutro from './SelectComOutro';
 import {
   TIPO_CORREDICAS_OPTIONS,
   TIPO_FUNDO_OPTIONS,
@@ -9,8 +10,9 @@ import {
   criarProdutoPlanejadoTemplate,
 } from '../constants/orcamentoPlanejado';
 
-export default function ProdutoPlanejadoModal({ produto, onClose, onSave }) {
-  const [form, setForm] = useState(produto ? {
+function estadoFormProdutoPlanejado(produto) {
+  if (!produto) return criarProdutoPlanejadoTemplate();
+  return {
     nome: produto.nome,
     largura: produto.largura ?? '',
     profundidade: produto.profundidade ?? '',
@@ -18,15 +20,22 @@ export default function ProdutoPlanejadoModal({ produto, onClose, onSave }) {
     espessura_mdf: produto.espessura_mdf ?? 18,
     padrao_mdf: produto.padrao_mdf || '',
     tipo_fundo: produto.tipo_fundo || 'fino',
+    tipo_fundo_outro: produto.tipo_fundo_outro || '',
     tipo_porta: produto.tipo_porta || 'sem_porta',
+    tipo_porta_outro: produto.tipo_porta_outro || '',
     tipo_puxador: produto.tipo_puxador || 'sem_puxador',
     tipo_puxador_outro: produto.tipo_puxador_outro || '',
     cor_puxador: produto.cor_puxador || '',
     tipo_corredicas: produto.tipo_corredicas || 'sem_corredicas',
+    tipo_corredicas_outro: produto.tipo_corredicas_outro || '',
     canaleta_led: Boolean(produto.canaleta_led),
     itens_extra: produto.itens_extra || '',
     preco_unitario_sugerido: Number(produto.preco_unitario_sugerido) || 0,
-  } : criarProdutoPlanejadoTemplate());
+  };
+}
+
+export default function ProdutoPlanejadoModal({ produto, onClose, onSave }) {
+  const [form, setForm] = useState(() => estadoFormProdutoPlanejado(produto));
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -91,42 +100,51 @@ export default function ProdutoPlanejadoModal({ produto, onClose, onSave }) {
               <input value={form.padrao_mdf} onChange={(e) => update('padrao_mdf', e.target.value)} placeholder="Ex: Branco TX..." />
             </div>
 
-            <div className="form-group">
-              <label>Tipo de fundo</label>
-              <select value={form.tipo_fundo} onChange={(e) => update('tipo_fundo', e.target.value)}>
-                {TIPO_FUNDO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-            <div className="form-group">
-              <label>Tipo de porta</label>
-              <select value={form.tipo_porta} onChange={(e) => update('tipo_porta', e.target.value)}>
-                {TIPO_PORTA_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Tipo de puxador</label>
-              <select value={form.tipo_puxador} onChange={(e) => update('tipo_puxador', e.target.value)}>
-                {TIPO_PUXADOR_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
-            {form.tipo_puxador === 'outro' && (
-              <div className="form-group">
-                <label>Nome do puxador</label>
-                <input value={form.tipo_puxador_outro} onChange={(e) => update('tipo_puxador_outro', e.target.value)} />
-              </div>
-            )}
+            <SelectComOutro
+              id="tipo-fundo"
+              label="Tipo de fundo"
+              value={form.tipo_fundo}
+              outroValue={form.tipo_fundo_outro}
+              options={TIPO_FUNDO_OPTIONS}
+              onChange={(v) => update('tipo_fundo', v)}
+              onOutroChange={(v) => update('tipo_fundo_outro', v)}
+              outroPlaceholder="Descreva o tipo de fundo"
+            />
+            <SelectComOutro
+              id="tipo-porta"
+              label="Tipo de porta"
+              value={form.tipo_porta}
+              outroValue={form.tipo_porta_outro}
+              options={TIPO_PORTA_OPTIONS}
+              onChange={(v) => update('tipo_porta', v)}
+              onOutroChange={(v) => update('tipo_porta_outro', v)}
+              outroPlaceholder="Descreva o tipo de porta"
+            />
+            <SelectComOutro
+              id="tipo-puxador"
+              label="Tipo de puxador"
+              value={form.tipo_puxador}
+              outroValue={form.tipo_puxador_outro}
+              options={TIPO_PUXADOR_OPTIONS}
+              onChange={(v) => update('tipo_puxador', v)}
+              onOutroChange={(v) => update('tipo_puxador_outro', v)}
+              outroPlaceholder="Nome do puxador"
+            />
 
             <div className="form-group">
               <label>Cor do puxador</label>
               <input value={form.cor_puxador} onChange={(e) => update('cor_puxador', e.target.value)} />
             </div>
-            <div className="form-group">
-              <label>Tipo de corrediças</label>
-              <select value={form.tipo_corredicas} onChange={(e) => update('tipo_corredicas', e.target.value)}>
-                {TIPO_CORREDICAS_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-              </select>
-            </div>
+            <SelectComOutro
+              id="tipo-corredicas"
+              label="Tipo de corrediças"
+              value={form.tipo_corredicas}
+              outroValue={form.tipo_corredicas_outro}
+              options={TIPO_CORREDICAS_OPTIONS}
+              onChange={(v) => update('tipo_corredicas', v)}
+              onOutroChange={(v) => update('tipo_corredicas_outro', v)}
+              outroPlaceholder="Descreva o tipo de corrediças"
+            />
 
             <div className="form-group">
               <label>Canaleta LED</label>

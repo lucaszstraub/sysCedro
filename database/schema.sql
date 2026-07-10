@@ -847,6 +847,18 @@ CREATE TABLE IF NOT EXISTS produtos_planejados (
 CREATE INDEX IF NOT EXISTS idx_produtos_planejados_ativo ON produtos_planejados(ativo);
 CREATE INDEX IF NOT EXISTS idx_produtos_planejados_nome ON produtos_planejados(nome);
 
+ALTER TABLE produtos_planejados ADD COLUMN IF NOT EXISTS tipo_fundo_outro VARCHAR(100);
+ALTER TABLE produtos_planejados ADD COLUMN IF NOT EXISTS tipo_porta_outro VARCHAR(100);
+ALTER TABLE produtos_planejados ADD COLUMN IF NOT EXISTS tipo_corredicas_outro VARCHAR(100);
+
+ALTER TABLE orcamento_planejado_itens ADD COLUMN IF NOT EXISTS tipo_fundo_outro VARCHAR(100);
+ALTER TABLE orcamento_planejado_itens ADD COLUMN IF NOT EXISTS tipo_porta_outro VARCHAR(100);
+ALTER TABLE orcamento_planejado_itens ADD COLUMN IF NOT EXISTS tipo_corredicas_outro VARCHAR(100);
+
+ALTER TABLE venda_planejado_itens ADD COLUMN IF NOT EXISTS tipo_fundo_outro VARCHAR(100);
+ALTER TABLE venda_planejado_itens ADD COLUMN IF NOT EXISTS tipo_porta_outro VARCHAR(100);
+ALTER TABLE venda_planejado_itens ADD COLUMN IF NOT EXISTS tipo_corredicas_outro VARCHAR(100);
+
 ALTER TABLE orcamento_planejado_itens ADD COLUMN IF NOT EXISTS produto_planejado_id INTEGER REFERENCES produtos_planejados(id);
 ALTER TABLE venda_planejado_itens ADD COLUMN IF NOT EXISTS produto_planejado_id INTEGER REFERENCES produtos_planejados(id);
 ALTER TABLE orcamento_planejado_itens ALTER COLUMN tipo_fundo SET DEFAULT 'fino';

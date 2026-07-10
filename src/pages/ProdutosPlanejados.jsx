@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
 import ProdutoPlanejadoModal from '../components/ProdutoPlanejadoModal';
-import { TIPO_FUNDO_LABEL, TIPO_PORTA_LABEL, formatDimensaoPlanejada } from '../constants/orcamentoPlanejado';
+import { TIPO_FUNDO_LABEL, TIPO_PORTA_LABEL, labelCampoPlanejadoComOutro, formatDimensaoPlanejada } from '../constants/orcamentoPlanejado';
 import { formatCurrency } from '../utils/format';
 
 const base = '/gestao-estoque/produtos-planejados';
@@ -115,8 +115,8 @@ export default function ProdutosPlanejados() {
                   <tr key={p.id} className={!p.ativo ? 'row-muted' : ''}>
                     <td><strong>{p.nome}</strong></td>
                     <td>{formatDimensaoPlanejada(p.largura)} × {formatDimensaoPlanejada(p.profundidade)} × {formatDimensaoPlanejada(p.altura)}</td>
-                    <td>{TIPO_FUNDO_LABEL[p.tipo_fundo] || p.tipo_fundo}</td>
-                    <td>{TIPO_PORTA_LABEL[p.tipo_porta] || p.tipo_porta}</td>
+                    <td>{labelCampoPlanejadoComOutro(p.tipo_fundo, p.tipo_fundo_outro, TIPO_FUNDO_LABEL)}</td>
+                    <td>{labelCampoPlanejadoComOutro(p.tipo_porta, p.tipo_porta_outro, TIPO_PORTA_LABEL)}</td>
                     <td>{Number(p.preco_unitario_sugerido) > 0 ? formatCurrency(p.preco_unitario_sugerido) : '—'}</td>
                     <td>{p.ativo ? 'Ativo' : 'Inativo'}</td>
                     <td>

@@ -4,12 +4,11 @@ import PageAlert from '../components/PageAlert';
 import EtiquetaProdutoModal, { EtiquetaPreviewUnit } from '../components/EtiquetaProdutoModal';
 import { useFeedback } from '../context/FeedbackContext';
 import {
+  calcularPrecosEtiqueta,
+  descricaoTamanhoEtiquetaTermica,
   flattenSelecaoEtiquetas,
-  folhasNecessarias,
-  LABELS_PER_PAGE,
   mesclarNaSelecao,
   totalEtiquetasSelecao,
-  calcularPrecosEtiqueta,
 } from '../utils/etiquetaProduto';
 import { formatCurrency, formatDate } from '../utils/format';
 
@@ -23,7 +22,6 @@ function EtiquetaSelecaoBar({
   imprimindo,
 }) {
   const total = totalEtiquetasSelecao(selecao);
-  const folhas = folhasNecessarias(total);
 
   if (!selecao.length) return null;
 
@@ -33,7 +31,7 @@ function EtiquetaSelecaoBar({
         <div>
           <strong>Seleção atual</strong>
           <span className="hint-text etiquetas-selecao-bar-meta">
-            {total} etiqueta{total !== 1 ? 's' : ''} · {folhas} folha{folhas !== 1 ? 's' : ''} A4
+            {total} etiqueta{total !== 1 ? 's' : ''} térmica{total !== 1 ? 's' : ''}
           </span>
         </div>
         <div className="etiquetas-selecao-acoes">
@@ -49,7 +47,7 @@ function EtiquetaSelecaoBar({
             onClick={onImprimir}
             disabled={imprimindo}
           >
-            {imprimindo ? 'Gerando PDF...' : 'Gerar impressão'}
+            {imprimindo ? 'Gerando arquivo...' : 'Gerar para impressora térmica'}
           </button>
         </div>
       </div>
@@ -104,9 +102,9 @@ function EtiquetaSelecaoPanel({
   imprimindo,
 }) {
   const total = totalEtiquetasSelecao(selecao);
-  const folhas = folhasNecessarias(total);
   const etiquetasFlat = useMemo(() => flattenSelecaoEtiquetas(selecao), [selecao]);
-  const primeiraFolha = etiquetasFlat.slice(0, LABELS_PER_PAGE);
+  const primeiraEtiqueta = etiquetasFlat[0];
+  const tamanhoEtiqueta = descricaoTamanhoEtiquetaTermica();
 
   if (!selecao.length) {
     return (
@@ -121,7 +119,7 @@ function EtiquetaSelecaoPanel({
       <div className="etiquetas-selecao-resumo">
         <div>
           <strong>{total}</strong> etiqueta{total !== 1 ? 's' : ''} ·{' '}
-          <strong>{folhas}</strong> folha{folhas !== 1 ? 's' : ''} A4
+          <span className="hint-text">adesivo {tamanhoEtiqueta} por item</span>
         </div>
         <div className="etiquetas-selecao-acoes">
           <button type="button" className="btn btn-secondary btn-sm" onClick={onLimpar}>
@@ -133,7 +131,7 @@ function EtiquetaSelecaoPanel({
             onClick={onImprimir}
             disabled={imprimindo}
           >
-            {imprimindo ? 'Gerando PDF...' : 'Gerar folha de impressão'}
+            {imprimindo ? 'Gerando arquivo...' : 'Gerar para impressora térmica'}
           </button>
         </div>
       </div>
@@ -192,28 +190,22 @@ function EtiquetaSelecaoPanel({
         </div>
 
         <div className="etiquetas-selecao-preview-wrap">
-          <p className="hint-text etiqueta-preview-label">Prévia da 1ª folha A4</p>
-          <article className="etiqueta-sheet-preview" aria-hidden="true">
-            <div className="etiqueta-sheet-grid">
-              {Array.from({ length: LABELS_PER_PAGE }, (_, i) => (
-                <div
-                  key={i}
-                  className={`etiqueta-sheet-cell${i < primeiraFolha.length ? '' : ' etiqueta-sheet-cell--vazia'}`}
-                >
-                  {primeiraFolha[i] && (
-                    <div className="etiqueta-preview-frame">
-                      <EtiquetaPreviewUnit form={primeiraFolha[i]} compact />
-                    </div>
-                  )}
-                </div>
-              ))}
+          <p className="hint-text etiqueta-preview-label">
+            Prévia do adesivo ({tamanhoEtiqueta})
+          </p>
+          {primeiraEtiqueta ? (
+            <div className="etiqueta-preview-frame etiqueta-preview-frame--termica">
+              <EtiquetaPreviewUnit form={primeiraEtiqueta} />
             </div>
-          </article>
-          {folhas > 1 && (
-            <p className="hint-text etiqueta-sheet-hint">
-              As demais etiquetas continuam nas próximas folhas, na mesma ordem da lista.
+          ) : null}
+          {total > 1 && (
+            <p className="hint-text etiqueta-termica-hint">
+              O PDF terá {total} páginas — uma etiqueta térmica por página, na ordem da lista.
             </p>
           )}
+          <p className="hint-text etiqueta-termica-hint">
+            Configure a impressora com papel {tamanhoEtiqueta}. Cada página do PDF corresponde a uma etiqueta.
+          </p>
         </div>
       </div>
     </div>
@@ -311,9 +303,9 @@ export default function Etiquetas() {
       const result = await runWithFeedback(
         () => api.gerarPdfFolhasEtiquetas({ etiquetas }),
         {
-          loading: 'Gerando folhas de etiquetas...',
-          success: 'PDF gerado com sucesso.',
-          error: 'Não foi possível gerar as folhas.',
+          loading: 'Gerando arquivo para impressora térmica...',
+          success: 'Arquivo gerado. Envie para a impressora de etiquetas.',
+          error: 'Não foi possível gerar o arquivo de impressão.',
         }
       );
       if (!result?.cancelled) {
@@ -330,7 +322,10 @@ export default function Etiquetas() {
     <>
       <header className="page-header">
         <h2>Etiquetas</h2>
-        <p>Monte a seleção com vários produtos e gere as folhas A4 de uma vez</p>
+        <p>
+          Monte a seleção e gere o arquivo para impressora térmica ({descricaoTamanhoEtiquetaTermica()}).
+          O adesivo impresso é colado na etiqueta física do móvel.
+        </p>
       </header>
 
       {error && <PageAlert onDismiss={() => setError('')}>{error}</PageAlert>}
@@ -382,7 +377,7 @@ export default function Etiquetas() {
             <div className="card-header">Catálogo de produtos</div>
             <div className="card-body">
               <p className="hint-text etiquetas-section-hint">
-                Busque um produto e adicione à seleção. Você pode combinar vários na mesma folha A4.
+                Busque um produto e adicione à seleção. Cada item gera um adesivo térmico com nome, medidas e preços.
               </p>
               <form
                 className="toolbar etiquetas-toolbar"

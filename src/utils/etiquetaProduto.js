@@ -10,7 +10,10 @@ function round2(n) {
 
 export const DESCONTO_PADRAO_ETIQUETA = 8;
 export const DIMENSAO_EXPOSTA_ETIQUETA = 'Peça Exposta';
-export const LABELS_PER_PAGE = 6;
+
+/** Etiqueta térmica — adesivo sobre a etiqueta física do móvel (50 × 40 mm). */
+export const THERMAL_LABEL_WIDTH_MM = 50;
+export const THERMAL_LABEL_HEIGHT_MM = 40;
 
 export function tamanhoLxPxA(produto) {
   const largura = formatDim(produto.largura_cm);
@@ -94,11 +97,6 @@ export function totalEtiquetasSelecao(selecao) {
   return selecao.reduce((sum, item) => sum + Math.max(Number(item.quantidade) || 1, 1), 0);
 }
 
-export function folhasNecessarias(totalEtiquetas) {
-  if (!totalEtiquetas) return 0;
-  return Math.ceil(totalEtiquetas / LABELS_PER_PAGE);
-}
-
 export function mesclarNaSelecao(selecao, item) {
   const incoming = normalizarEtiqueta(item);
   const existing = selecao.find((s) => {
@@ -152,4 +150,8 @@ export function textoParcelamentoEtiqueta(valorPrazo, parcela) {
 export function formatCurrencyEtiqueta(value) {
   const n = Number(value) || 0;
   return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
+
+export function descricaoTamanhoEtiquetaTermica() {
+  return `${THERMAL_LABEL_WIDTH_MM} × ${THERMAL_LABEL_HEIGHT_MM} mm`;
 }

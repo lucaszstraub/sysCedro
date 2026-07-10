@@ -371,11 +371,12 @@ async function salvarVendaPlanejado(data, id = null) {
           INSERT INTO venda_planejado_itens (
             venda_planejado_id, ambiente_id, produto_planejado_id, descricao,
             largura, profundidade, altura, espessura_mdf, padrao_mdf,
-            tipo_fundo, tipo_porta, tipo_puxador, tipo_puxador_outro, cor_puxador,
-            tipo_corredicas, canaleta_led, itens_extra,
+            tipo_fundo, tipo_fundo_outro, tipo_porta, tipo_porta_outro,
+            tipo_puxador, tipo_puxador_outro, cor_puxador,
+            tipo_corredicas, tipo_corredicas_outro, canaleta_led, itens_extra,
             quantidade, preco_unitario, subtotal, ordem
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
         `, [
           venda.id,
           ambienteId,
@@ -387,11 +388,14 @@ async function salvarVendaPlanejado(data, id = null) {
           item.espessura_mdf,
           item.padrao_mdf,
           item.tipo_fundo,
+          item.tipo_fundo_outro,
           item.tipo_porta,
+          item.tipo_porta_outro,
           item.tipo_puxador,
           item.tipo_puxador_outro,
           item.cor_puxador,
           item.tipo_corredicas,
+          item.tipo_corredicas_outro,
           item.canaleta_led,
           item.itens_extra,
           item.quantidade,
