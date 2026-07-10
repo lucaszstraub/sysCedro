@@ -289,6 +289,20 @@ ALTER TABLE vendas ADD COLUMN IF NOT EXISTS desativada_em TIMESTAMP;
 
 CREATE INDEX IF NOT EXISTS idx_vendas_desativada ON vendas(desativada) WHERE desativada = true;
 
+CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  login VARCHAR(50) NOT NULL UNIQUE,
+  senha_hash VARCHAR(255) NOT NULL,
+  nome VARCHAR(200) NOT NULL,
+  atribuicao VARCHAR(30) NOT NULL,
+  is_master BOOLEAN DEFAULT FALSE,
+  ativo BOOLEAN DEFAULT TRUE,
+  criado_em TIMESTAMP DEFAULT NOW(),
+  atualizado_em TIMESTAMP DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_usuarios_login ON usuarios(LOWER(login));
+
 CREATE TABLE IF NOT EXISTS venda_alteracoes (
   id SERIAL PRIMARY KEY,
   venda_id INTEGER NOT NULL REFERENCES vendas(id) ON DELETE CASCADE,
@@ -697,20 +711,6 @@ WHERE p.id = vi.produto_id
 ALTER TABLE fornecedores ADD COLUMN IF NOT EXISTS localizacao VARCHAR(200);
 ALTER TABLE fornecedores ADD COLUMN IF NOT EXISTS representante_nome VARCHAR(200);
 ALTER TABLE fornecedores ADD COLUMN IF NOT EXISTS representante_contato VARCHAR(150);
-
-CREATE TABLE IF NOT EXISTS usuarios (
-  id SERIAL PRIMARY KEY,
-  login VARCHAR(50) NOT NULL UNIQUE,
-  senha_hash VARCHAR(255) NOT NULL,
-  nome VARCHAR(200) NOT NULL,
-  atribuicao VARCHAR(30) NOT NULL,
-  is_master BOOLEAN DEFAULT FALSE,
-  ativo BOOLEAN DEFAULT TRUE,
-  criado_em TIMESTAMP DEFAULT NOW(),
-  atualizado_em TIMESTAMP DEFAULT NOW()
-);
-
-CREATE INDEX IF NOT EXISTS idx_usuarios_login ON usuarios(LOWER(login));
 
 ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS vendedor_id INTEGER REFERENCES vendedores(id);
 ALTER TABLE vendedores ADD COLUMN IF NOT EXISTS usuario_id INTEGER REFERENCES usuarios(id);
