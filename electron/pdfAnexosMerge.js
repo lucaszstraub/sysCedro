@@ -74,7 +74,7 @@ async function mergePdfBuffers(buffers) {
 async function anexosParaBuffers(anexos, getAnexoPath) {
   const buffers = [];
   for (const anexo of anexos || []) {
-    const fullPath = getAnexoPath(anexo.caminho);
+    const fullPath = await getAnexoPath(anexo.caminho);
     if (!fullPath || !fs.existsSync(fullPath)) continue;
     if (!isAnexoPermitido(anexo, fullPath)) continue;
 

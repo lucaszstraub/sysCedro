@@ -8,6 +8,7 @@ const {
 } = require('./vendedorUsuario');
 const formasPagamentoCadastro = require('./formasPagamento');
 const anexosVendaPlanejado = require('./anexosVendaPlanejado');
+const { loadVendaPlanejadoAmbientesComItens } = require('./ambienteItensLoader');
 const { normalizarItemPlanejado } = require('./produtosPlanejados');
 const { ensureAcompanhamentoVenda } = require('./acompanhamentoPedidosPlanejados');
 const { calcularSubtotalBruto, aplicarPrecosEfetivosNosItens } = require('./precosEfetivos');
@@ -142,21 +143,7 @@ async function getVendaPlanejado(id) {
   assertAcessoVendedorRecurso(getSession(), row.vendedor_id, 'venda planejada');
   row.pagamentos = await enriquecerPagamentos(normalizarPagamentos(row.pagamentos));
 
-  const ambientesResult = await db.query(`
-    SELECT * FROM venda_planejado_ambientes
-    WHERE venda_planejado_id = $1
-    ORDER BY ordem, id
-  `, [id]);
-
-  const ambientes = [];
-  for (const ambiente of ambientesResult.rows) {
-    const itens = await db.query(`
-      SELECT * FROM venda_planejado_itens
-      WHERE ambiente_id = $1
-      ORDER BY ordem, id
-    `, [ambiente.id]);
-    ambientes.push({ ...ambiente, itens: itens.rows });
-  }
+  const ambientes = await loadVendaPlanejadoAmbientesComItens(db, id);
 
   const anexos = await db.query(`
     SELECT id, nome_original, caminho, tamanho_bytes, mime_type, ordem, criado_em
@@ -179,7 +166,7 @@ async function processarAnexos(client, vendaId, anexosPayload = []) {
 
   for (const row of existentes.rows) {
     if (!manterIds.has(row.id)) {
-      anexosVendaPlanejado.removerAnexoArquivo(row.caminho);
+      await anexosVendaPlanejado.removerAnexoArquivo(row.caminho);
       await client.query('DELETE FROM venda_planejado_anexos WHERE id = $1', [row.id]);
     }
   }
@@ -195,7 +182,7 @@ async function processarAnexos(client, vendaId, anexosPayload = []) {
       continue;
     }
     if (!anexo.base64) continue;
-    const salvo = anexosVendaPlanejado.salvarAnexoArquivo(vendaId, {
+    const salvo = await anexosVendaPlanejado.salvarAnexoArquivo(vendaId, {
       nome_original: anexo.nome_original,
       base64: anexo.base64,
     });
@@ -431,7 +418,7 @@ async function deleteVendaPlanejado(id) {
     [id]
   );
   for (const row of anexos.rows) {
-    anexosVendaPlanejado.removerAnexoArquivo(row.caminho);
+    await anexosVendaPlanejado.removerAnexoArquivo(row.caminho);
   }
 
   await db.query('DELETE FROM vendas_planejados WHERE id = $1', [id]);

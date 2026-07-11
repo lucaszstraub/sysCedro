@@ -423,7 +423,6 @@ async function sincronizarComissoesVenda(vendaId) {
 
 async function listControleComissoes(filtros = {}) {
   assertAcessoComissaoVendas();
-  await sincronizarComissoes();
 
   const db = getPool();
   const { params, whereClause } = buildFiltros(filtros);

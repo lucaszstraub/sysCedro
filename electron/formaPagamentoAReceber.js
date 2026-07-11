@@ -1,3 +1,5 @@
+const { getCached, TTL, invalidate } = require('./referenceCache');
+
 function round2(n) {
   return Math.round((Number(n) || 0) * 100) / 100;
 }
@@ -25,9 +27,22 @@ function parsePagamentosVenda(raw) {
     .filter((p) => p.valor > 0);
 }
 
+const CACHE_KEY = 'formas:a-receber';
+
 async function getIdsFormaAReceber(db) {
-  const result = await db.query('SELECT id, nome FROM formas_pagamento WHERE ativo = true');
-  return result.rows.filter((row) => isFormaAReceber(row.nome)).map((row) => row.id);
+  return getCached(CACHE_KEY, TTL.MEDIUM, async () => {
+    const result = await db.query(`
+      SELECT id
+      FROM formas_pagamento
+      WHERE ativo = true
+        AND lower(trim(nome)) = 'a receber'
+    `);
+    return result.rows.map((row) => row.id);
+  });
+}
+
+function invalidateFormaAReceberCache() {
+  invalidate(CACHE_KEY);
 }
 
 async function calcularValorAReceberVenda(db, pagamentosRaw) {
@@ -69,4 +84,5 @@ module.exports = {
   getIdsFormaAReceber,
   calcularValorAReceberVenda,
   calcularMapaAReceberPorVenda,
+  invalidateFormaAReceberCache,
 };

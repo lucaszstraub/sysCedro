@@ -1,6 +1,11 @@
 const { getPool } = require('./database');
+const { getCached, TTL, invalidate } = require('./referenceCache');
+const { invalidateFormaAReceberCache } = require('./formaPagamentoAReceber');
+
+let formaAReceberEnsured = false;
 
 async function ensureFormaAReceber() {
+  if (formaAReceberEnsured) return;
   const db = getPool();
   await db.query(`
     INSERT INTO formas_pagamento (nome, taxa_percentual)
@@ -9,20 +14,24 @@ async function ensureFormaAReceber() {
       SELECT 1 FROM formas_pagamento WHERE lower(trim(nome)) = 'a receber'
     )
   `);
+  formaAReceberEnsured = true;
+  invalidateFormaAReceberCache();
 }
 
 async function listFormasPagamento(busca = '') {
   await ensureFormaAReceber();
-  const db = getPool();
-  const termo = `%${busca}%`;
-  const result = await db.query(`
-    SELECT id, nome, taxa_percentual, ativo, criado_em, atualizado_em
-    FROM formas_pagamento
-    WHERE ativo = true
-      AND ($1 = '' OR nome ILIKE $1)
-    ORDER BY nome
-  `, [termo]);
-  return result.rows;
+  return getCached(`formas:list:${busca}`, TTL.MEDIUM, async () => {
+    const db = getPool();
+    const termo = `%${busca}%`;
+    const result = await db.query(`
+      SELECT id, nome, taxa_percentual, ativo, criado_em, atualizado_em
+      FROM formas_pagamento
+      WHERE ativo = true
+        AND ($1 = '' OR nome ILIKE $1)
+      ORDER BY nome
+    `, [termo]);
+    return result.rows;
+  });
 }
 
 async function listFormasPagamentoTodas(busca = '') {
@@ -68,6 +77,8 @@ async function createFormaPagamento(data) {
     VALUES ($1, $2)
     RETURNING *
   `, [data.nome.trim(), taxa]);
+  invalidate('formas:');
+  invalidateFormaAReceberCache();
   return result.rows[0];
 }
 
@@ -89,6 +100,8 @@ async function updateFormaPagamento(id, data) {
     RETURNING *
   `, [id, data.nome.trim(), taxa]);
   if (result.rowCount === 0) throw new Error('Forma de pagamento não encontrada.');
+  invalidate('formas:');
+  invalidateFormaAReceberCache();
   return result.rows[0];
 }
 
@@ -99,10 +112,13 @@ async function deleteFormaPagamento(id) {
     [id]
   );
   if (result.rowCount === 0) throw new Error('Forma de pagamento não encontrada.');
+  invalidate('formas:');
+  invalidateFormaAReceberCache();
   return { id };
 }
 
 module.exports = {
+  ensureFormaAReceber,
   listFormasPagamento,
   listFormasPagamentoTodas,
   getFormaPagamento,

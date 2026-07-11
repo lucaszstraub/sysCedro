@@ -1,5 +1,6 @@
 const { getPool } = require('./database');
 const images = require('./images');
+const { getCached, TTL, invalidate } = require('./referenceCache');
 
 const CODIGO_LOCALIZACAO_NAO_ALOCADOS = 'NAO-ALOC';
 
@@ -83,15 +84,19 @@ async function getDashboard() {
 }
 
 async function listCategorias() {
-  const db = getPool();
-  const result = await db.query('SELECT * FROM categorias ORDER BY nome');
-  return result.rows;
+  return getCached('ref:categorias', TTL.MEDIUM, async () => {
+    const db = getPool();
+    const result = await db.query('SELECT * FROM categorias ORDER BY nome');
+    return result.rows;
+  });
 }
 
 async function listLocalizacoes() {
-  const db = getPool();
-  const result = await db.query('SELECT * FROM localizacoes WHERE ativo = true ORDER BY codigo');
-  return result.rows;
+  return getCached('ref:localizacoes', TTL.MEDIUM, async () => {
+    const db = getPool();
+    const result = await db.query('SELECT * FROM localizacoes WHERE ativo = true ORDER BY codigo');
+    return result.rows;
+  });
 }
 
 async function listProdutos(busca = '') {
@@ -473,6 +478,7 @@ async function createLocalizacao(data) {
     VALUES ($1, $2, $3, $4, $5)
     RETURNING *
   `, [codigo, data.nome, data.corredor || null, data.prateleira || null, data.capacidade || 0]);
+  invalidate('ref:localizacoes');
   return result.rows[0];
 }
 
@@ -518,6 +524,7 @@ async function updateLocalizacao(id, data) {
     data.prateleira || null,
     Number(data.capacidade) || 0,
   ]);
+  invalidate('ref:localizacoes');
   return result.rows[0];
 }
 
@@ -545,6 +552,7 @@ async function deleteLocalizacao(id) {
   }
 
   await db.query('UPDATE localizacoes SET ativo = false WHERE id = $1', [id]);
+  invalidate('ref:localizacoes');
   return { success: true };
 }
 

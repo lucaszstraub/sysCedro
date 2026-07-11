@@ -367,6 +367,7 @@ app.whenReady().then(async () => {
   try {
     await initDatabase();
     await initImages();
+    await entregas.backfillEntregasExistentes();
     await orcamentos.marcarOrcamentosExpirados();
     await orcamentosPlanejados.marcarOrcamentosPlanejadosExpirados();
     registerHandlers();

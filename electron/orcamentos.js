@@ -1,4 +1,5 @@
 const { getPool } = require('./database');
+const { loadOrcamentoAmbientesComItens } = require('./ambienteItensLoader');
 const { getSession } = require('./auth');
 const {
   buildFiltroVendedorSql,
@@ -81,7 +82,6 @@ async function enriquecerPagamentosOrcamento(pagamentos) {
 }
 
 async function listOrcamentos(busca = '') {
-  await marcarOrcamentosExpirados();
   const db = getPool();
   const params = [`%${busca}%`];
   const filtro = buildFiltroVendedorSql(getSession(), 'o', params);
@@ -224,7 +224,6 @@ async function listClientesMarketing(motivoEncerramento) {
 }
 
 async function getOrcamento(id) {
-  await marcarOrcamentosExpirados();
   const db = getPool();
   const orcamento = await db.query(`
     SELECT o.*, c.nome AS cliente_nome, c.cpf_cnpj AS cliente_cpf_cnpj,
@@ -248,23 +247,7 @@ async function getOrcamento(id) {
   );
   row.validade_dias = row.validade_dias || 30;
 
-  const ambientesResult = await db.query(`
-    SELECT * FROM orcamento_ambientes
-    WHERE orcamento_id = $1
-    ORDER BY ordem, id
-  `, [id]);
-
-  const ambientes = [];
-  for (const ambiente of ambientesResult.rows) {
-    const itens = await db.query(`
-      SELECT oi.*, p.sku AS produto_sku, p.foto_path AS produto_foto_path
-      FROM orcamento_itens oi
-      LEFT JOIN produtos p ON p.id = oi.produto_id
-      WHERE oi.ambiente_id = $1
-      ORDER BY oi.ordem, oi.id
-    `, [ambiente.id]);
-    ambientes.push({ ...ambiente, itens: itens.rows });
-  }
+  const ambientes = await loadOrcamentoAmbientesComItens(db, id);
 
   return { ...row, ambientes };
 }

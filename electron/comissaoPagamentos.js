@@ -91,7 +91,6 @@ async function calcularValorDevidoMes(client, ano, mes, perfil) {
 
 async function getControleMensalComissoes(filtros = {}) {
   assertAcesso();
-  await sincronizarComissoes();
 
   const ano = Number(filtros.ano) || new Date().getFullYear();
   const db = getPool();

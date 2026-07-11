@@ -200,6 +200,37 @@ async function atualizarStatusEntregaMaster(client, vendaId) {
   if (masterId) await atualizarStatusEntrega(client, masterId);
 }
 
+async function listarItensConsignadosBatch(client, entregaIds) {
+  if (!entregaIds.length) return new Map();
+
+  const result = await client.query(`
+    SELECT
+      c.id,
+      c.entrega_id,
+      c.produto_id,
+      c.venda_item_id,
+      c.descricao,
+      c.quantidade,
+      c.volumes_por_unidade,
+      c.observacoes,
+      c.criado_em,
+      c.atualizado_em,
+      p.sku AS produto_sku,
+      p.nome AS produto_nome
+    FROM entrega_itens_consignados c
+    LEFT JOIN produtos p ON p.id = c.produto_id
+    WHERE c.entrega_id = ANY($1::int[])
+    ORDER BY c.entrega_id, c.id
+  `, [entregaIds]);
+
+  const mapa = new Map();
+  for (const row of result.rows) {
+    if (!mapa.has(row.entrega_id)) mapa.set(row.entrega_id, []);
+    mapa.get(row.entrega_id).push(row);
+  }
+  return mapa;
+}
+
 async function listarItensConsignados(client, entregaId) {
   const result = await client.query(`
     SELECT
@@ -420,7 +451,34 @@ async function obterQuantidadeRecebidaEncomenda(client, vendaItemId) {
   return Number(result.rows[0]?.qtd) || 0;
 }
 
-async function calcularDisponibilidadeItem(client, vendaItem) {
+async function preloadDisponibilidadeMaps(client, vendaItemIds) {
+  const ids = [...new Set((vendaItemIds || []).filter(Boolean))];
+  if (!ids.length) {
+    return { reservas: new Map(), recebidos: new Map() };
+  }
+
+  const [reservasResult, recebidosResult] = await Promise.all([
+    client.query(`
+      SELECT DISTINCT ON (venda_item_id) venda_item_id, quantidade
+      FROM estoque_reservas
+      WHERE venda_item_id = ANY($1::int[]) AND status = 'ativa'
+      ORDER BY venda_item_id, id DESC
+    `, [ids]),
+    client.query(`
+      SELECT venda_item_id, COALESCE(SUM(quantidade_recebida), 0)::int AS qtd
+      FROM encomenda_fornecedor_itens
+      WHERE venda_item_id = ANY($1::int[]) AND status != 'cancelado'
+      GROUP BY venda_item_id
+    `, [ids]),
+  ]);
+
+  return {
+    reservas: new Map(reservasResult.rows.map((r) => [r.venda_item_id, r])),
+    recebidos: new Map(recebidosResult.rows.map((r) => [r.venda_item_id, Number(r.qtd)])),
+  };
+}
+
+function calcularDisponibilidadeItemSync(vendaItem, maps) {
   const total = Number(vendaItem.quantidade) || 0;
   const entregue = Number(vendaItem.quantidade_entregue) || 0;
   const pendente = Math.max(total - entregue, 0);
@@ -438,7 +496,7 @@ async function calcularDisponibilidadeItem(client, vendaItem) {
     };
   }
 
-  const reserva = await obterReservaAtiva(client, vendaItem.id);
+  const reserva = maps.reservas.get(vendaItem.id);
   if (reserva && pendente > 0) {
     const disponivelReserva = Math.max(0, Math.min(Number(reserva.quantidade), pendente));
     return {
@@ -463,7 +521,7 @@ async function calcularDisponibilidadeItem(client, vendaItem) {
 
   let disponivelEncomenda = 0;
   if (qtdEncomenda > 0 && pendente > 0) {
-    const recebido = await obterQuantidadeRecebidaEncomenda(client, vendaItem.id);
+    const recebido = maps.recebidos.get(vendaItem.id) || 0;
     const jaEntregueEncomenda = Math.max(0, entregue - qtdEstoque);
     disponivelEncomenda = Math.max(
       0,
@@ -482,6 +540,11 @@ async function calcularDisponibilidadeItem(client, vendaItem) {
     disponivel_encomenda: disponivelEncomenda,
     pronto: disponivel >= pendente && pendente > 0,
   };
+}
+
+async function calcularDisponibilidadeItem(client, vendaItem, maps = null) {
+  const preload = maps || await preloadDisponibilidadeMaps(client, [vendaItem.id]);
+  return calcularDisponibilidadeItemSync(vendaItem, preload);
 }
 
 async function montarItensEntrega(client, entregaId) {
@@ -514,20 +577,23 @@ async function montarItensEntrega(client, entregaId) {
     ORDER BY ei.id
   `, [entregaId]);
 
+  const vendaItemIds = result.rows.map((row) => row.venda_item_id);
+  const dispMaps = await preloadDisponibilidadeMaps(client, vendaItemIds);
+
   const itens = [];
   for (const row of result.rows) {
     const entregueVenda = Number(row.quantidade_entregue_venda) || 0;
     const entregueExpedicao = Number(row.quantidade_entregue) || 0;
     const isMaster = entregaNumero === 1;
 
-    const disp = await calcularDisponibilidadeItem(client, {
+    const disp = calcularDisponibilidadeItemSync({
       id: row.venda_item_id,
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
       quantidade_entregue: entregueVenda,
       status: row.item_status,
-    });
+    }, dispMaps);
 
     const pendenteEntrega = isMaster
       ? Math.max(0, Number(row.quantidade_venda) - entregueVenda)
@@ -597,41 +663,13 @@ async function sincronizarItensFaltantesEntrega(client, vendaId) {
   `, [vendaId]);
 }
 
-async function calcularResumoEntrega(client, entrega) {
-  await sincronizarItensFaltantesEntrega(client, entrega.venda_id);
+async function calcularResumoEntrega(client, entrega, options = {}) {
+  if (!options.readOnly) {
+    await sincronizarItensFaltantesEntrega(client, entrega.venda_id);
+  }
   const itens = await montarItensEntrega(client, entrega.id);
   const itens_consignados = await listarItensConsignados(client, entrega.id);
-  const totalItens = itens.reduce((s, i) => s + Number(i.quantidade), 0);
-  const totalEntregue = itens.reduce((s, i) => s + Number(i.quantidade_entregue), 0);
-  const totalPendente = itens.reduce((s, i) => s + Number(i.pendente_entrega), 0);
-  const totalDisponivel = itens.reduce((s, i) => s + Number(i.disponivel_agora), 0);
-  const volumes_calculados = calcularVolumesTotais(itens, null, itens_consignados);
-  const todosProntos = itens.every((i) => i.item_pronto || Number(i.pendente_entrega) === 0);
-  const algumEntregue = totalEntregue > 0;
-  const tudoEntregue = totalPendente === 0 && totalItens > 0;
-
-  let situacao = 'indisponivel';
-  if (tudoEntregue) {
-    situacao = 'entregue';
-  } else if (algumEntregue) {
-    situacao = 'parcial';
-  } else if (entrega.tipo_liberacao === 'completa' && todosProntos && totalPendente > 0) {
-    situacao = 'disponivel';
-  } else if (entrega.tipo_liberacao === 'parcial' && totalDisponivel > 0) {
-    situacao = 'disponivel';
-  }
-
-  return {
-    itens,
-    itens_consignados,
-    total_itens: totalItens,
-    total_entregue: totalEntregue,
-    total_pendente: totalPendente,
-    total_disponivel: totalDisponivel,
-    volumes_calculados,
-    todos_prontos: todosProntos,
-    situacao,
-  };
+  return montarResumoEntregaFromItens(itens, itens_consignados, entrega);
 }
 
 async function atualizarStatusEntrega(client, entregaId) {
@@ -877,6 +915,174 @@ async function obterResumoExpedicoes(client, vendaId) {
   };
 }
 
+async function obterResumoExpedicoesBatch(client, vendaIds) {
+  if (!vendaIds.length) return {};
+
+  const [resumoResult, periodoResult] = await Promise.all([
+    client.query(`
+      SELECT
+        venda_id,
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (WHERE status = 'agendada')::int AS agendadas,
+        COUNT(*) FILTER (WHERE status IN ('entregue', 'parcial'))::int AS concluidas,
+        MIN(data_prevista) FILTER (WHERE status = 'agendada') AS proxima_data,
+        COUNT(*) FILTER (
+          WHERE status = 'agendada' AND confirmacao_cliente = 'pendente'
+        )::int AS aguardando_confirmacao
+      FROM entregas
+      WHERE venda_id = ANY($1::int[]) AND numero > 1
+      GROUP BY venda_id
+    `, [vendaIds]),
+    client.query(`
+      SELECT DISTINCT ON (venda_id)
+        venda_id,
+        periodo_entrega AS proximo_periodo
+      FROM entregas
+      WHERE venda_id = ANY($1::int[])
+        AND numero > 1
+        AND status = 'agendada'
+      ORDER BY venda_id, data_prevista ASC NULLS LAST, id ASC
+    `, [vendaIds]),
+  ]);
+
+  const vazio = {
+    total: 0,
+    agendadas: 0,
+    concluidas: 0,
+    proxima_data: null,
+    proximo_periodo: null,
+    aguardando_confirmacao: 0,
+  };
+
+  const mapa = {};
+  for (const row of resumoResult.rows) {
+    mapa[row.venda_id] = { ...vazio, ...row };
+  }
+  for (const row of periodoResult.rows) {
+    if (!mapa[row.venda_id]) mapa[row.venda_id] = { ...vazio };
+    mapa[row.venda_id].proximo_periodo = row.proximo_periodo;
+  }
+  return mapa;
+}
+
+function montarResumoEntregaFromItens(itens, itensConsignados, entrega) {
+  const totalItens = itens.reduce((s, i) => s + Number(i.quantidade), 0);
+  const totalEntregue = itens.reduce((s, i) => s + Number(i.quantidade_entregue), 0);
+  const totalPendente = itens.reduce((s, i) => s + Number(i.pendente_entrega), 0);
+  const totalDisponivel = itens.reduce((s, i) => s + Number(i.disponivel_agora), 0);
+  const volumes_calculados = calcularVolumesTotais(itens, null, itensConsignados);
+  const todosProntos = itens.every((i) => i.item_pronto || Number(i.pendente_entrega) === 0);
+  const algumEntregue = totalEntregue > 0;
+  const tudoEntregue = totalPendente === 0 && totalItens > 0;
+
+  let situacao = 'indisponivel';
+  if (tudoEntregue) {
+    situacao = 'entregue';
+  } else if (algumEntregue) {
+    situacao = 'parcial';
+  } else if (entrega.tipo_liberacao === 'completa' && todosProntos && totalPendente > 0) {
+    situacao = 'disponivel';
+  } else if (entrega.tipo_liberacao === 'parcial' && totalDisponivel > 0) {
+    situacao = 'disponivel';
+  }
+
+  return {
+    itens,
+    itens_consignados: itensConsignados,
+    total_itens: totalItens,
+    total_entregue: totalEntregue,
+    total_pendente: totalPendente,
+    total_disponivel: totalDisponivel,
+    volumes_calculados,
+    todos_prontos: todosProntos,
+    situacao,
+  };
+}
+
+function montarItensEntregaFromRows(rows, entregaNumero, dispMaps) {
+  const itens = [];
+  for (const row of rows) {
+    const entregueVenda = Number(row.quantidade_entregue_venda) || 0;
+    const entregueExpedicao = Number(row.quantidade_entregue) || 0;
+    const isMaster = entregaNumero === 1;
+
+    const disp = calcularDisponibilidadeItemSync({
+      id: row.venda_item_id,
+      quantidade: row.quantidade_venda,
+      quantidade_estoque: row.quantidade_estoque,
+      quantidade_encomenda: row.quantidade_encomenda,
+      quantidade_entregue: entregueVenda,
+      status: row.item_status,
+    }, dispMaps);
+
+    const pendenteEntrega = isMaster
+      ? Math.max(0, Number(row.quantidade_venda) - entregueVenda)
+      : Math.max(0, Number(row.quantidade) - entregueExpedicao);
+    const quantidadeEntregueExibicao = isMaster ? entregueVenda : entregueExpedicao;
+
+    itens.push({
+      ...row,
+      quantidade_entregue: quantidadeEntregueExibicao,
+      pendente_entrega: pendenteEntrega,
+      disponivel_agora: Math.min(disp.disponivel, pendenteEntrega),
+      item_pronto: disp.disponivel >= pendenteEntrega && pendenteEntrega > 0,
+    });
+  }
+  return itens;
+}
+
+async function calcularResumosEntregaLista(client, entregasRows) {
+  if (!entregasRows.length) return new Map();
+
+  const entregaIds = entregasRows.map((r) => r.id);
+  const itemsResult = await client.query(`
+    SELECT
+      ei.id,
+      ei.entrega_id,
+      ei.venda_item_id,
+      ei.quantidade,
+      ei.quantidade_entregue,
+      vi.descricao,
+      vi.produto_id,
+      vi.quantidade AS quantidade_venda,
+      vi.quantidade_estoque,
+      vi.quantidade_encomenda,
+      vi.quantidade_entregue AS quantidade_entregue_venda,
+      vi.status AS item_status,
+      p.sku AS produto_sku,
+      COALESCE(p.volumes_por_unidade, 1) AS volumes_por_unidade,
+      e.numero AS entrega_numero
+    FROM entrega_itens ei
+    JOIN venda_itens vi ON vi.id = ei.venda_item_id
+    LEFT JOIN produtos p ON p.id = vi.produto_id
+    JOIN entregas e ON e.id = ei.entrega_id
+    WHERE ei.entrega_id = ANY($1::int[])
+    ORDER BY ei.entrega_id, ei.id
+  `, [entregaIds]);
+
+  const vendaItemIds = itemsResult.rows.map((r) => r.venda_item_id);
+  const [dispMaps, consignadosMap] = await Promise.all([
+    preloadDisponibilidadeMaps(client, vendaItemIds),
+    listarItensConsignadosBatch(client, entregaIds),
+  ]);
+
+  const itensPorEntrega = new Map();
+  for (const row of itemsResult.rows) {
+    if (!itensPorEntrega.has(row.entrega_id)) itensPorEntrega.set(row.entrega_id, []);
+    itensPorEntrega.get(row.entrega_id).push(row);
+  }
+
+  const resumos = new Map();
+  for (const entrega of entregasRows) {
+    const rows = itensPorEntrega.get(entrega.id) || [];
+    const entregaNumero = rows[0]?.entrega_numero ?? entrega.numero ?? 1;
+    const itens = montarItensEntregaFromRows(rows, entregaNumero, dispMaps);
+    const itensConsignados = consignadosMap.get(entrega.id) || [];
+    resumos.set(entrega.id, montarResumoEntregaFromItens(itens, itensConsignados, entrega));
+  }
+  return resumos;
+}
+
 async function sincronizarReservasEncomendaRecebida(client) {
   const items = await client.query(`
     SELECT
@@ -919,7 +1125,11 @@ async function sincronizarReservasEncomendaRecebida(client) {
   }
 }
 
+let backfillEntregasDone = false;
+
 async function backfillEntregasExistentes() {
+  if (backfillEntregasDone) return;
+  backfillEntregasDone = true;
   const db = getPool();
   const client = await db.connect();
   try {
@@ -956,7 +1166,6 @@ async function backfillEntregasExistentes() {
 }
 
 async function listEntregasAgendadas(busca = '') {
-  await backfillEntregasExistentes();
   const db = getPool();
   const termo = `%${busca}%`;
   const result = await db.query(`
@@ -965,11 +1174,15 @@ async function listEntregasAgendadas(busca = '') {
       v.numero AS venda_numero,
       v.numero_pedido,
       v.observacoes AS venda_observacoes,
+      v.pagamentos AS venda_pagamentos,
+      v.criado_em AS venda_criado_em,
       c.nome AS cliente_nome,
-      c.telefone AS cliente_telefone
+      c.telefone AS cliente_telefone,
+      vd.nome AS vendedor_nome
     FROM entregas e
     JOIN vendas v ON v.id = e.venda_id
     JOIN clientes c ON c.id = v.cliente_id
+    LEFT JOIN vendedores vd ON vd.id = v.vendedor_id
     WHERE COALESCE(v.desativada, false) = false
       AND e.status IN ('agendada', 'entregue', 'parcial')
       AND (
@@ -986,17 +1199,36 @@ async function listEntregasAgendadas(busca = '') {
       e.criado_em DESC
   `, [termo]);
 
-  const lista = [];
-  for (const row of result.rows) {
-    const resumo = await calcularResumoEntrega(db, row);
-    const enriquecida = await enriquecerEntregaKanban(db, {
+  const { getIdsFormaAReceber, calcularMapaAReceberPorVenda } = require('./formaPagamentoAReceber');
+  const [resumosMap, idsAReceber] = await Promise.all([
+    calcularResumosEntregaLista(db, result.rows),
+    getIdsFormaAReceber(db),
+  ]);
+  const vendaIds = [...new Set(result.rows.map((r) => r.venda_id))];
+  const mapaAReceber = await calcularMapaAReceberPorVenda(db, vendaIds, idsAReceber);
+  const idSet = new Set(idsAReceber.map(Number));
+
+  return result.rows.map((row) => {
+    const resumo = resumosMap.get(row.id) || montarResumoEntregaFromItens([], [], row);
+    const valorAReceber = idSet.size
+      ? (mapaAReceber[row.venda_id] || 0)
+      : 0;
+    const indiceLabel = row.indice_sequencia && row.indice_total
+      ? `${row.indice_sequencia}/${row.indice_total}`
+      : null;
+
+    return {
       ...row,
       ...resumo,
       situacao: resumo.situacao,
-    });
-    lista.push(enriquecida);
-  }
-  return lista;
+      vendedor_nome: row.vendedor_nome || null,
+      venda_criado_em: row.venda_criado_em || null,
+      valor_a_receber: valorAReceber,
+      tem_a_receber: valorAReceber > 0,
+      indice_label: indiceLabel,
+      kanban_coluna: row.status === 'agendada' ? 'agendada' : 'concluida',
+    };
+  });
 }
 
 async function agendarExpedicao(vendaId, data = {}) {
@@ -1233,7 +1465,6 @@ async function confirmarAgendamentoCliente(id) {
 }
 
 async function listEntregas(filtro = 'todos', busca = '') {
-  await backfillEntregasExistentes();
   const db = getPool();
   const termo = `%${busca}%`;
   const result = await db.query(`
@@ -1254,17 +1485,27 @@ async function listEntregas(filtro = 'todos', busca = '') {
     ORDER BY e.criado_em DESC
   `, [termo]);
 
+  const [resumosMap, expedicoesMap] = await Promise.all([
+    calcularResumosEntregaLista(db, result.rows),
+    obterResumoExpedicoesBatch(db, [...new Set(result.rows.map((r) => r.venda_id))]),
+  ]);
+
   const lista = [];
   for (const row of result.rows) {
-    const client = db;
-    const resumo = await calcularResumoEntrega(client, row);
+    const resumo = resumosMap.get(row.id) || montarResumoEntregaFromItens([], [], row);
     if (filtro !== 'todos' && resumo.situacao !== filtro) continue;
-    const expedicoes = await obterResumoExpedicoes(client, row.venda_id);
     lista.push({
       ...row,
       ...resumo,
       situacao: resumo.situacao,
-      expedicoes,
+      expedicoes: expedicoesMap[row.venda_id] || {
+        total: 0,
+        agendadas: 0,
+        concluidas: 0,
+        proxima_data: null,
+        proximo_periodo: null,
+        aguardando_confirmacao: 0,
+      },
     });
   }
   return lista;
@@ -1552,6 +1793,7 @@ module.exports = {
   criarEntregaInicial,
   sincronizarItensFaltantesEntrega,
   sincronizarEntregasVenda,
+  backfillEntregasExistentes,
   listEntregas,
   listEntregasAgendadas,
   agendarExpedicao,

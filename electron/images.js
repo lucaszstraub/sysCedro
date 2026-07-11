@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
+const storage = require('./supabaseStorage');
 
 const STORAGE_MAX = 1200;
 const STORAGE_SIZE = 800;
@@ -12,6 +13,11 @@ let placeholderPath = null;
 
 function getFotosDir() {
   if (!fotosDir) {
+    if (storage.isCloudStorage()) {
+      fotosDir = storage.getCacheDir(storage.BUCKETS.PRODUTOS_FOTOS);
+      return fotosDir;
+    }
+
     try {
       const { app } = require('electron');
       if (app?.getPath) {
@@ -26,6 +32,24 @@ function getFotosDir() {
     fs.mkdirSync(fotosDir, { recursive: true });
   }
   return fotosDir;
+}
+
+async function processFotoBuffer(base64Data) {
+  const base64 = base64Data.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
+  const buffer = Buffer.from(base64, 'base64');
+
+  return sharp(buffer)
+    .rotate()
+    .resize(STORAGE_MAX, STORAGE_MAX, {
+      fit: 'inside',
+      withoutEnlargement: true,
+    })
+    .resize(STORAGE_SIZE, STORAGE_SIZE, {
+      fit: 'cover',
+      position: 'centre',
+    })
+    .jpeg({ quality: 92, mozjpeg: true })
+    .toBuffer();
 }
 
 async function ensurePlaceholder() {
@@ -44,10 +68,20 @@ async function ensurePlaceholder() {
         <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#4a2e1f">Sem foto</text>
       </svg>
     `;
-    await sharp(Buffer.from(svg))
+    const placeholderBuffer = await sharp(Buffer.from(svg))
       .resize(STORAGE_SIZE, STORAGE_SIZE)
       .jpeg({ quality: 90 })
-      .toFile(placeholderPath);
+      .toBuffer();
+
+    if (storage.isCloudStorage()) {
+      await storage.uploadObject(
+        storage.BUCKETS.PRODUTOS_FOTOS,
+        PLACEHOLDER_NAME,
+        placeholderBuffer,
+        'image/jpeg'
+      );
+    }
+    fs.writeFileSync(placeholderPath, placeholderBuffer);
   }
 
   return placeholderPath;
@@ -57,8 +91,27 @@ async function initImages() {
   await ensurePlaceholder();
 }
 
-function getProdutoFotoPath(fotoPath) {
+async function resolveFotoLocalPath(fotoPath) {
+  await ensurePlaceholder();
+
   if (fotoPath) {
+    if (storage.isCloudStorage()) {
+      try {
+        return await storage.ensureLocalCache(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
+      } catch (_) {
+        // fallback placeholder
+      }
+    } else {
+      const full = path.join(getFotosDir(), fotoPath);
+      if (fs.existsSync(full)) return full;
+    }
+  }
+
+  return placeholderPath || path.join(getFotosDir(), PLACEHOLDER_NAME);
+}
+
+function getProdutoFotoPath(fotoPath) {
+  if (fotoPath && !storage.isCloudStorage()) {
     const full = path.join(getFotosDir(), fotoPath);
     if (fs.existsSync(full)) return full;
   }
@@ -66,35 +119,55 @@ function getProdutoFotoPath(fotoPath) {
 }
 
 async function salvarFotoProduto(produtoId, base64Data) {
-  const base64 = base64Data.replace(/^data:image\/[a-zA-Z+]+;base64,/, '');
-  const buffer = Buffer.from(base64, 'base64');
   const filename = `produto-${produtoId}.jpg`;
+  const fotoBuffer = await processFotoBuffer(base64Data);
+
+  if (storage.isCloudStorage()) {
+    await storage.uploadObject(
+      storage.BUCKETS.PRODUTOS_FOTOS,
+      filename,
+      fotoBuffer,
+      'image/jpeg'
+    );
+    storage.removeLocalCache(storage.BUCKETS.PRODUTOS_FOTOS, filename);
+    const pdfCache = path.join(getFotosDir(), `pdf-${path.basename(filename, '.jpg')}-hq.jpg`);
+    if (fs.existsSync(pdfCache)) fs.unlinkSync(pdfCache);
+    return filename;
+  }
+
   const filepath = path.join(getFotosDir(), filename);
-
-  await sharp(buffer)
-    .rotate()
-    .resize(STORAGE_MAX, STORAGE_MAX, {
-      fit: 'inside',
-      withoutEnlargement: true,
-    })
-    .resize(STORAGE_SIZE, STORAGE_SIZE, {
-      fit: 'cover',
-      position: 'centre',
-    })
-    .jpeg({ quality: 92, mozjpeg: true })
-    .toFile(filepath);
-
+  fs.writeFileSync(filepath, fotoBuffer);
   return filename;
 }
 
 async function removerFotoProduto(fotoPath) {
   if (!fotoPath || fotoPath === PLACEHOLDER_NAME) return;
+
+  if (storage.isCloudStorage()) {
+    await storage.deleteObject(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
+    storage.removeLocalCache(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
+    const pdfCache = path.join(getFotosDir(), `pdf-${path.basename(fotoPath, path.extname(fotoPath))}-hq.jpg`);
+    if (fs.existsSync(pdfCache)) fs.unlinkSync(pdfCache);
+    return;
+  }
+
   const full = path.join(getFotosDir(), fotoPath);
   if (fs.existsSync(full)) fs.unlinkSync(full);
 }
 
 async function getProdutoFotoDataUrl(fotoPath) {
-  const imagePath = getProdutoFotoPath(fotoPath);
+  if (storage.isCloudStorage() && fotoPath) {
+    try {
+      const buffer = await storage.downloadObject(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
+      return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+    } catch (_) {
+      // placeholder abaixo
+    }
+  }
+
+  const imagePath = storage.isCloudStorage()
+    ? await resolveFotoLocalPath(fotoPath)
+    : getProdutoFotoPath(fotoPath);
   await ensurePlaceholder();
   const buffer = fs.readFileSync(imagePath);
   return `data:image/jpeg;base64,${buffer.toString('base64')}`;
@@ -102,7 +175,9 @@ async function getProdutoFotoDataUrl(fotoPath) {
 
 async function getPdfImagePath(fotoPath) {
   await ensurePlaceholder();
-  const source = getProdutoFotoPath(fotoPath);
+  const source = storage.isCloudStorage()
+    ? await resolveFotoLocalPath(fotoPath)
+    : getProdutoFotoPath(fotoPath);
   const cacheName = `pdf-${path.basename(source, path.extname(source))}-hq.jpg`;
   const cachePath = path.join(getFotosDir(), cacheName);
   const sourceStat = fs.existsSync(source) ? fs.statSync(source) : null;

@@ -211,7 +211,12 @@ function getPool() {
         'Banco não inicializado. Aguarde initDatabase() ou configure DATABASE_POOLER_URL no .env.'
       );
     }
-    pool = new Pool(config);
+    pool = new Pool({
+      ...config,
+      max: Number(process.env.DB_POOL_MAX) || 8,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 15000,
+    });
   }
   return pool;
 }
@@ -278,6 +283,9 @@ async function initDatabase() {
 
   const { ensureMasterUser } = require('./auth');
   await ensureMasterUser();
+
+  const { ensureFormaAReceber } = require('./formasPagamento');
+  await ensureFormaAReceber();
 
   const { ensureVendedoresUsuariosExistentes } = require('./vendedorUsuario');
   await ensureVendedoresUsuariosExistentes();

@@ -18,6 +18,7 @@ const markupVendas = require('./markupVendas');
 const { normalizarStatusItem, itemContaParaTotal } = require('./vendaItemStatus');
 const { calcularSubtotalBruto, aplicarPrecosEfetivosNosItens } = require('./precosEfetivos');
 const { enriquecerVendasComPendencias, enriquecerVendaComPendencias } = require('./vendaPendencias');
+const { loadVendaAmbientesComItens } = require('./ambienteItensLoader');
 
 const AMBIENTE_NOME_PADRAO = 'Geral';
 
@@ -182,23 +183,7 @@ async function getVenda(id) {
     }
   }
 
-  const ambientesResult = await db.query(`
-    SELECT * FROM venda_ambientes
-    WHERE venda_id = $1
-    ORDER BY ordem, id
-  `, [id]);
-
-  const ambientes = [];
-  for (const ambiente of ambientesResult.rows) {
-    const itens = await db.query(`
-      SELECT vi.*, p.sku AS produto_sku, p.foto_path AS produto_foto_path
-      FROM venda_itens vi
-      LEFT JOIN produtos p ON p.id = vi.produto_id
-      WHERE vi.ambiente_id = $1
-      ORDER BY vi.ordem, vi.id
-    `, [ambiente.id]);
-    ambientes.push({ ...ambiente, itens: itens.rows });
-  }
+  const ambientes = await loadVendaAmbientesComItens(db, id);
 
   const entregaResult = await db.query(`
     SELECT tipo_liberacao FROM entregas
