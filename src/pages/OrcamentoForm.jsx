@@ -24,6 +24,7 @@ import SelecionarProdutoModal from '../components/SelecionarProdutoModal';
 import { VENDEDOR_CLASSIFICACAO_MOVEIS_SOLTOS } from '../constants/vendedor';
 import { loadVendedoresPorClassificacao } from '../utils/loadVendedores';
 import { useAuth } from '../context/AuthContext';
+import { useOffline } from '../context/OfflineContext';
 import { isVendedorRestrito, getVendedorIdUsuario } from '../utils/vendedorRestrito';
 import ProdutoThumb from '../components/ProdutoThumb';
 
@@ -50,6 +51,7 @@ export default function OrcamentoForm() {
   const [error, setError] = useState('');
   const { success: showSuccess, runWithFeedback } = useFeedback();
   const { user } = useAuth();
+  const { offline } = useOffline();
   const vendedorBloqueado = isVendedorRestrito(user);
   const meuVendedorId = getVendedorIdUsuario(user);
 
@@ -769,7 +771,7 @@ export default function OrcamentoForm() {
           closeOnSelect
           onClose={() => setShowSelecionarProduto(false)}
           onSelect={(produto) => addProdutoAoAmbiente(produtoModalAmbienteIndex, produto)}
-          onNovoProduto={() => openProdutoModal(produtoModalAmbienteIndex)}
+          onNovoProduto={offline ? undefined : () => openProdutoModal(produtoModalAmbienteIndex)}
         />
       )}
 

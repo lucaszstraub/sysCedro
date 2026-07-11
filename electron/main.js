@@ -1,6 +1,15 @@
-const { app, BrowserWindow, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
-const { initDatabase } = require('./database');
+const {
+  initDatabase,
+  connectCloudAndSync,
+  getSyncStatus,
+  isHybridMode,
+  isCloudAvailable,
+  startConnectivityMonitor,
+  setConnectivityChangeHandler,
+} = require('./database');
+const { isOfflineMode } = require('./offlineMode');
 const services = require('./services');
 const clientes = require('./clientes');
 const orcamentos = require('./orcamentos');
@@ -11,6 +20,7 @@ const vendaEdicao = require('./vendaEdicao');
 const vendasPlanejados = require('./vendasPlanejados');
 const encomendas = require('./encomendas');
 const entregas = require('./entregas');
+const faseImplantacao = require('./faseImplantacao');
 const etiquetas = require('./etiquetas');
 const vendedores = require('./vendedores');
 const fornecedores = require('./fornecedores');
@@ -127,6 +137,12 @@ function registerHandlers() {
     'notasFiscais:get': (_, id) => notasFiscais.getNotaFiscal(id),
     'notasFiscais:create': (_, data) => notasFiscais.createNotaFiscal(data),
     'dashboard:get': () => services.getDashboard(),
+    'sync:status': () => ({
+      hybrid: isHybridMode(),
+      cloud: isCloudAvailable(),
+      offline: isOfflineMode(),
+      last: getSyncStatus(),
+    }),
     'categorias:list': () => services.listCategorias(),
     'fornecedores:list': (_, busca) => fornecedores.listFornecedores(busca),
     'fornecedores:get': (_, id) => fornecedores.getFornecedor(id),
@@ -286,6 +302,7 @@ function registerHandlers() {
     'entregas:agendar': (_, vendaId, data) => entregas.agendarExpedicao(vendaId, data),
     'entregas:assistencia': (_, data) => entregas.criarAssistenciaEntrega(data),
     'entregas:registrar': (_, id, data) => entregas.registrarEntrega(id, data),
+    'entregas:marcarJaRealizada': (_, id) => entregas.marcarEntregaJaRealizadaImplantacao(id),
     'entregas:pdf': async (_, id) => {
       const data = await entregas.getEntrega(id);
       if (!data) throw new Error('Entrega não encontrada.');
@@ -348,6 +365,9 @@ function registerHandlers() {
       }
       return shell.openExternal(url);
     },
+    'faseImplantacao:get': () => faseImplantacao.getFaseImplantacao(),
+    'faseImplantacao:set': (_, ativa) => faseImplantacao.setFaseImplantacao(ativa),
+    'faseImplantacao:backfill': () => faseImplantacao.backfillExpedicoesImplantacao(),
   };
 
   Object.entries(handlers).forEach(([channel, handler]) => {
@@ -365,15 +385,60 @@ function registerHandlers() {
 
 app.whenReady().then(async () => {
   try {
-    await initDatabase();
+    let cloudWasAvailable = false;
+    setConnectivityChangeHandler((status) => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('connectivity:changed', status);
+      }
+      if (status.cloud && !cloudWasAvailable && isHybridMode()) {
+        entregas.backfillEntregasExistentes()
+          .then(() => orcamentos.marcarOrcamentosExpirados())
+          .then(() => orcamentosPlanejados.marcarOrcamentosPlanejadosExpirados())
+          .catch((err) => console.error('Erro pós-reconexão:', err));
+      }
+      cloudWasAvailable = Boolean(status.cloud);
+    });
+
+    await initDatabase({ skipStartupSync: isHybridMode() });
     await initImages();
-    await entregas.backfillEntregasExistentes();
-    await orcamentos.marcarOrcamentosExpirados();
-    await orcamentosPlanejados.marcarOrcamentosPlanejadosExpirados();
     registerHandlers();
     createWindow();
+
+    if (isHybridMode()) {
+      startConnectivityMonitor(15000);
+      connectCloudAndSync()
+        .then(async () => {
+          if (isCloudAvailable()) {
+            await entregas.backfillEntregasExistentes();
+            await orcamentos.marcarOrcamentosExpirados();
+            await orcamentosPlanejados.marcarOrcamentosPlanejadosExpirados();
+          }
+          if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send('sync:completed', getSyncStatus());
+            mainWindow.webContents.send('connectivity:changed', {
+              hybrid: true,
+              cloud: isCloudAvailable(),
+              offline: isOfflineMode(),
+            });
+          }
+        })
+        .catch((error) => {
+          console.error('Erro ao conectar Supabase:', error);
+        });
+    } else {
+      entregas.backfillEntregasExistentes()
+        .then(() => orcamentos.marcarOrcamentosExpirados())
+        .then(() => orcamentosPlanejados.marcarOrcamentosPlanejadosExpirados())
+        .catch((error) => {
+          console.error('Erro nas tarefas pós-abertura:', error);
+        });
+    }
   } catch (error) {
     console.error('Erro ao iniciar:', error);
+    dialog.showErrorBox(
+      'SysCedro — Erro ao iniciar',
+      error?.message || 'Falha desconhecida ao iniciar o aplicativo.'
+    );
     app.quit();
   }
 

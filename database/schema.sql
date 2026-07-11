@@ -277,6 +277,7 @@ CREATE INDEX IF NOT EXISTS idx_venda_itens_venda ON venda_itens(venda_id);
 
 ALTER TABLE venda_itens ADD COLUMN IF NOT EXISTS quantidade_estoque INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE venda_itens ADD COLUMN IF NOT EXISTS quantidade_encomenda INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE venda_itens ADD COLUMN IF NOT EXISTS quantidade_peca_loja INTEGER NOT NULL DEFAULT 0;
 
 ALTER TABLE venda_itens ADD COLUMN IF NOT EXISTS status VARCHAR(20) NOT NULL DEFAULT 'efetivo'
   CHECK (status IN ('efetivo', 'consignado', 'cancelado'));

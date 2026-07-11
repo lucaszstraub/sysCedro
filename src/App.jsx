@@ -50,8 +50,12 @@ import {
   PERMISSIONS,
   VENDAS_BASE,
   filterMenuSections,
+  filterMenuSectionsOffline,
   getDefaultRoute,
+  getDefaultRouteOffline,
 } from './constants/auth';
+import { useOffline } from './context/OfflineContext';
+import { useFaseImplantacao } from './context/FaseImplantacaoContext';
 
 function RedirectOrcamentoId() {
   const { id } = useParams();
@@ -65,8 +69,11 @@ function RedirectVendaEdicao() {
 
 function AppLayout() {
   const { user, logout } = useAuth();
+  const { offline } = useOffline();
+  const { ativa: faseImplantacaoAtiva } = useFaseImplantacao();
   const location = useLocation();
-  const menuSections = filterMenuSections(user);
+  const menuSections = offline ? filterMenuSectionsOffline(user) : filterMenuSections(user);
+  const homeRoute = offline ? getDefaultRouteOffline(user) : getDefaultRoute(user);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useRouteFeedback();
@@ -119,14 +126,30 @@ function AppLayout() {
           <span aria-hidden>☰</span>
           <span className="mobile-menu-btn-label">Menu</span>
         </button>
+        {offline && (
+          <div className="offline-banner" role="status">
+            Modo offline — somente orçamentos (soltos e planejados) e cadastro de clientes.
+            Vendas e demais funções ficam indisponíveis até reconectar ao Supabase.
+          </div>
+        )}
+        {!offline && faseImplantacaoAtiva && (
+          <div className="implantacao-banner" role="status">
+            Fase de implantação ativa — vendas permitem &quot;Peça Loja&quot; e entregas históricas
+            podem ser concluídas sem data. Desativar a fase não apaga dados já cadastrados.
+          </div>
+        )}
         <Routes>
-          <Route path="/" element={<Navigate to={getDefaultRoute(user)} replace />} />
-          <Route path="/inicio" element={<Inicio />} />
+          <Route path="/" element={<Navigate to={homeRoute} replace />} />
+          <Route path="/inicio" element={offline ? <Navigate to={homeRoute} replace /> : <Inicio />} />
 
           <Route path={`${ESTOQUE_BASE}/painel`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Dashboard /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/produtos`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS]}><Produtos /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/fornecedores`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><Fornecedores /></ProtectedRoute>} />
-          <Route path={`${ESTOQUE_BASE}/clientes`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><Clientes /></ProtectedRoute>} />
+          <Route path={`${ESTOQUE_BASE}/clientes`} element={
+            <ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS]}>
+              <Clientes />
+            </ProtectedRoute>
+          } />
           <Route path={`${ESTOQUE_BASE}/formas-pagamento`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><FormasPagamento /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/centros-custo`} element={<ProtectedRoute administrador><CentrosCusto /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/produtos-planejados`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS]}><ProdutosPlanejados /></ProtectedRoute>} />
@@ -174,7 +197,7 @@ function AppLayout() {
           <Route path={`${ESTOQUE_BASE}/orcamentos/novo`} element={<Navigate to={`${VENDAS_BASE}/orcamentos/novo`} replace />} />
           <Route path={`${ESTOQUE_BASE}/orcamentos/:id`} element={<RedirectOrcamentoId />} />
           <Route path={`${ESTOQUE_BASE}/orcamentos`} element={<Navigate to={`${VENDAS_BASE}/orcamentos`} replace />} />
-          <Route path="*" element={<Navigate to={getDefaultRoute(user)} replace />} />
+          <Route path="*" element={<Navigate to={homeRoute} replace />} />
         </Routes>
       </main>
     </div>
@@ -183,6 +206,7 @@ function AppLayout() {
 
 export default function App() {
   const { user, loading } = useAuth();
+  const { offline } = useOffline();
 
   if (loading) {
     return (
@@ -199,7 +223,7 @@ export default function App() {
     <Routes>
       <Route
         path="/login"
-        element={user ? <Navigate to={getDefaultRoute(user)} replace /> : <Login />}
+        element={user ? <Navigate to={offline ? getDefaultRouteOffline(user) : getDefaultRoute(user)} replace /> : <Login />}
       />
       <Route
         path="/*"

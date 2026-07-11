@@ -5,9 +5,10 @@
 -- ORDEM NO SQL EDITOR DO SUPABASE:
 --
 --   1) Execute TODO o arquivo database/schema.sql (cria tabelas e índices)
---   2) Execute ESTE arquivo (segurança + storage)
---   3) (Opcional) Importe dados locais com pg_dump / psql
---   4) Ajuste sequences após importar dados (bloco no final deste arquivo)
+--   2) Execute database/sync-offline.sql (colunas de sincronização offline)
+--   3) Execute ESTE arquivo (segurança + storage)
+--   4) (Opcional) Importe dados locais com pg_dump / psql
+--   5) Ajuste sequences após importar dados (bloco no final deste arquivo)
 --
 -- Região recomendada do projeto: South America (São Paulo)
 -- =============================================================================

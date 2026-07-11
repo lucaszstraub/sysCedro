@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
+import { useFaseImplantacao } from '../context/FaseImplantacaoContext';
 import {
   ENTREGA_FILTRO_OPTIONS,
   ENTREGA_KANBAN_COLUNAS,
@@ -95,6 +96,7 @@ export default function Entregas() {
   const [showAssistenciaModal, setShowAssistenciaModal] = useState(false);
   const [statsResumo, setStatsResumo] = useState({ disponivel: 0, parcial: 0, indisponivel: 0 });
   const { success: showSuccess, runWithFeedback } = useFeedback();
+  const { ativa: faseImplantacaoAtiva } = useFaseImplantacao();
 
   const loadDisponibilidade = async (term = busca, filtroAtual = filtro) => {
     setLoading(true);
@@ -208,6 +210,22 @@ export default function Entregas() {
     setEntregaAtiva(null);
     showSuccess('Entrega registrada. O estoque foi atualizado.');
     await load();
+  };
+
+  const handleMarcarJaRealizada = async (entrega) => {
+    const pedido = entrega.numero_pedido || entrega.venda_numero;
+    if (!window.confirm(
+      `Marcar o pedido ${pedido} como entrega já realizada?\n\nNenhuma data será registrada e o estoque não será alterado novamente.`
+    )) {
+      return;
+    }
+    try {
+      await api.marcarEntregaJaRealizada(entrega.id);
+      showSuccess(`Pedido ${pedido} movido para entregas finalizadas.`);
+      await load();
+    } catch (err) {
+      setError(err.message);
+    }
   };
 
   const handlePrint = async (entregaRef = entregaAtiva) => {
@@ -541,8 +559,10 @@ export default function Entregas() {
                         <EntregaAgendadaKanbanCard
                           key={entrega.id}
                           entrega={entrega}
+                          faseImplantacaoAtiva={faseImplantacaoAtiva}
                           onEditar={(e) => abrirAgendada(e, 'editar')}
                           onConcluir={(e) => abrirAgendada(e, 'concluir')}
+                          onMarcarJaRealizada={handleMarcarJaRealizada}
                           onImprimir={handlePrint}
                           onObservacoes={setObservacoesEntrega}
                           onConfirmarCliente={handleConfirmarAgendamentoCliente}

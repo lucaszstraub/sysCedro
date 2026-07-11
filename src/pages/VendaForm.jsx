@@ -23,6 +23,7 @@ import SelecionarProdutoModal from '../components/SelecionarProdutoModal';
 import { VENDEDOR_CLASSIFICACAO_MOVEIS_SOLTOS } from '../constants/vendedor';
 import { loadVendedoresPorClassificacao } from '../utils/loadVendedores';
 import { useAuth } from '../context/AuthContext';
+import { useFaseImplantacao } from '../context/FaseImplantacaoContext';
 import { isVendedorRestrito, getVendedorIdUsuario } from '../utils/vendedorRestrito';
 import { clienteProntoParaVenda, mensagemClienteIncompletoVenda } from '../utils/clienteDados';
 import ProdutoThumb from '../components/ProdutoThumb';
@@ -37,6 +38,7 @@ function emptyItem() {
     quantidade: 1,
     quantidade_estoque: 1,
     quantidade_encomenda: 0,
+    quantidade_peca_loja: 0,
     preco_unitario: 0,
     status: 'efetivo',
   };
@@ -55,6 +57,7 @@ function mapAmbientesFromDb(ambientes) {
       quantidade: item.quantidade,
       quantidade_estoque: item.quantidade_estoque ?? item.quantidade,
       quantidade_encomenda: item.quantidade_encomenda ?? 0,
+      quantidade_peca_loja: item.quantidade_peca_loja ?? 0,
       preco_unitario: Number(item.preco_unitario),
       ...(item.preco_unitario_lista != null
         ? { preco_unitario_lista: Number(item.preco_unitario_lista) }
@@ -105,6 +108,7 @@ export default function VendaForm() {
   const [error, setError] = useState('');
   const { success: showSuccess, info: showInfo, runWithFeedback } = useFeedback();
   const { user } = useAuth();
+  const { ativa: faseImplantacaoAtiva } = useFaseImplantacao();
   const vendedorBloqueado = isVendedorRestrito(user);
   const meuVendedorId = getVendedorIdUsuario(user);
 
@@ -334,10 +338,19 @@ export default function VendaForm() {
           const updated = { ...item, [field]: value };
           if (field === 'quantidade') {
             const qty = Number(value) || 1;
-            const enc = Number(updated.quantidade_encomenda) || 0;
-            updated.quantidade = qty;
-            updated.quantidade_estoque = Math.max(qty - enc, 0);
-            updated.quantidade_encomenda = Math.min(enc, qty);
+            const pecaLoja = Number(updated.quantidade_peca_loja) || 0;
+            if (pecaLoja > 0 && pecaLoja === Number(item.quantidade)) {
+              updated.quantidade = qty;
+              updated.quantidade_peca_loja = qty;
+              updated.quantidade_estoque = 0;
+              updated.quantidade_encomenda = 0;
+            } else {
+              const enc = Number(updated.quantidade_encomenda) || 0;
+              updated.quantidade = qty;
+              updated.quantidade_estoque = Math.max(qty - enc, 0);
+              updated.quantidade_encomenda = Math.min(enc, qty);
+              updated.quantidade_peca_loja = 0;
+            }
           }
           return updated;
         }),
@@ -355,14 +368,22 @@ export default function VendaForm() {
           const qty = Number(item.quantidade) || 1;
           let estoque = Number(item.quantidade_estoque) || 0;
           let encomenda = Number(item.quantidade_encomenda) || 0;
+          let pecaLoja = Number(item.quantidade_peca_loja) || 0;
           if (field === 'quantidade_estoque') {
             estoque = Math.min(Math.max(Number(value) || 0, 0), qty);
             encomenda = qty - estoque;
+            pecaLoja = 0;
           } else {
             encomenda = Math.min(Math.max(Number(value) || 0, 0), qty);
             estoque = qty - encomenda;
+            pecaLoja = 0;
           }
-          return { ...item, quantidade_estoque: estoque, quantidade_encomenda: encomenda };
+          return {
+            ...item,
+            quantidade_estoque: estoque,
+            quantidade_encomenda: encomenda,
+            quantidade_peca_loja: pecaLoja,
+          };
         }),
       };
     }));
@@ -377,10 +398,28 @@ export default function VendaForm() {
           if (ii !== itemIndex) return item;
           const qty = Number(item.quantidade) || 1;
           if (tipo === 'estoque') {
-            return { ...item, quantidade_estoque: qty, quantidade_encomenda: 0 };
+            return {
+              ...item,
+              quantidade_estoque: qty,
+              quantidade_encomenda: 0,
+              quantidade_peca_loja: 0,
+            };
           }
           if (tipo === 'encomenda') {
-            return { ...item, quantidade_estoque: 0, quantidade_encomenda: qty };
+            return {
+              ...item,
+              quantidade_estoque: 0,
+              quantidade_encomenda: qty,
+              quantidade_peca_loja: 0,
+            };
+          }
+          if (tipo === 'peca_loja') {
+            return {
+              ...item,
+              quantidade_estoque: 0,
+              quantidade_encomenda: 0,
+              quantidade_peca_loja: qty,
+            };
           }
           return item;
         }),
@@ -543,6 +582,7 @@ export default function VendaForm() {
           quantidade: Number(item.quantidade) || 1,
           quantidade_estoque: Number(item.quantidade_estoque) || 0,
           quantidade_encomenda: Number(item.quantidade_encomenda) || 0,
+          quantidade_peca_loja: Number(item.quantidade_peca_loja) || 0,
           preco_unitario: Number(item.preco_unitario) || 0,
           status: item.status || 'efetivo',
           ...(item.preco_unitario_lista != null
@@ -864,9 +904,13 @@ export default function VendaForm() {
                 </thead>
                 <tbody>
                   {ambiente.itens.map((item, itemIndex) => {
-                    const atendimento = (item.quantidade_encomenda || 0) === 0
-                      ? 'estoque'
-                      : (item.quantidade_estoque || 0) === 0 ? 'encomenda' : 'misto';
+                    const qtdPecaLoja = Number(item.quantidade_peca_loja) || 0;
+                    const atendimento = qtdPecaLoja > 0 && qtdPecaLoja === Number(item.quantidade)
+                      ? 'peca_loja'
+                      : (item.quantidade_encomenda || 0) === 0
+                        ? 'estoque'
+                        : (item.quantidade_estoque || 0) === 0 ? 'encomenda' : 'misto';
+                    const isPecaLoja = atendimento === 'peca_loja';
                     return (
                     <tr key={itemIndex}>
                         <td>
@@ -903,10 +947,14 @@ export default function VendaForm() {
                         >
                           <option value="estoque">Estoque</option>
                           <option value="encomenda">Encomenda</option>
+                          {faseImplantacaoAtiva && (
+                            <option value="peca_loja">Peça Loja</option>
+                          )}
                           {atendimento === 'misto' && <option value="misto">Misto</option>}
                         </select>
                       </td>
                       <td>
+                        {!isPecaLoja && (
                         <NumericInput
                           min="0"
                           max={item.quantidade}
@@ -915,8 +963,11 @@ export default function VendaForm() {
                           style={{ width: 70 }}
                           title="Unidades atendidas do estoque físico"
                         />
+                        )}
+                        {isPecaLoja && <span className="hint-text">—</span>}
                       </td>
                       <td>
+                        {!isPecaLoja && (
                         <NumericInput
                           min="0"
                           max={item.quantidade}
@@ -925,6 +976,8 @@ export default function VendaForm() {
                           style={{ width: 70 }}
                           title="Unidades a encomendar ao fornecedor"
                         />
+                        )}
+                        {isPecaLoja && <span className="hint-text">—</span>}
                       </td>
                         <td>
                           <NumericInput

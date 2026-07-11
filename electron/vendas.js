@@ -13,6 +13,7 @@ const { sincronizarComissoesVenda } = require('./comissaoVendas');
 const entregas = require('./entregas');
 const orcamentos = require('./orcamentos');
 const encomendas = require('./encomendas');
+const faseImplantacao = require('./faseImplantacao');
 const formasPagamentoCadastro = require('./formasPagamento');
 const markupVendas = require('./markupVendas');
 const { normalizarStatusItem, itemContaParaTotal } = require('./vendaItemStatus');
@@ -226,6 +227,8 @@ async function salvarVenda(data, id = null) {
       throw new Error('Adicione pelo menos um ambiente à venda.');
     }
 
+    const faseAtiva = await faseImplantacao.isFaseImplantacaoAtiva(client);
+
     const ambientesValidos = data.ambientes
       .map((ambiente) => ({
         nome: (ambiente.nome || '').trim() || AMBIENTE_NOME_PADRAO,
@@ -236,18 +239,32 @@ async function salvarVenda(data, id = null) {
             const status = normalizarStatusItem(item.status || 'efetivo');
             let quantidadeEstoque = item.quantidade_estoque;
             let quantidadeEncomenda = item.quantidade_encomenda;
+            let quantidadePecaLoja = item.quantidade_peca_loja;
             if (!itemContaParaTotal(status)) {
               quantidadeEstoque = 0;
               quantidadeEncomenda = 0;
-            } else if (quantidadeEstoque === undefined && quantidadeEncomenda === undefined) {
+              quantidadePecaLoja = 0;
+            } else if (
+              quantidadeEstoque === undefined
+              && quantidadeEncomenda === undefined
+              && quantidadePecaLoja === undefined
+            ) {
               quantidadeEstoque = quantidade;
               quantidadeEncomenda = 0;
+              quantidadePecaLoja = 0;
             }
             quantidadeEstoque = Number(quantidadeEstoque) || 0;
             quantidadeEncomenda = Number(quantidadeEncomenda) || 0;
-            if (itemContaParaTotal(status) && quantidadeEstoque + quantidadeEncomenda !== quantidade) {
+            quantidadePecaLoja = Number(quantidadePecaLoja) || 0;
+            if (quantidadePecaLoja > 0 && !faseAtiva) {
               throw new Error(
-                `Item "${item.descricao.trim()}": estoque (${quantidadeEstoque}) + encomenda (${quantidadeEncomenda}) deve ser igual à quantidade (${quantidade}).`
+                `Item "${item.descricao.trim()}": peça loja só pode ser usada durante a fase de implantação.`
+              );
+            }
+            if (itemContaParaTotal(status)
+              && quantidadeEstoque + quantidadeEncomenda + quantidadePecaLoja !== quantidade) {
+              throw new Error(
+                `Item "${item.descricao.trim()}": estoque (${quantidadeEstoque}) + encomenda (${quantidadeEncomenda}) + peça loja (${quantidadePecaLoja}) deve ser igual à quantidade (${quantidade}).`
               );
             }
             return {
@@ -256,6 +273,7 @@ async function salvarVenda(data, id = null) {
               quantidade,
               quantidade_estoque: quantidadeEstoque,
               quantidade_encomenda: quantidadeEncomenda,
+              quantidade_peca_loja: quantidadePecaLoja,
               preco_unitario: Number(item.preco_unitario) || 0,
               preco_unitario_lista: item.preco_unitario_lista != null
                 ? Number(item.preco_unitario_lista) || 0
@@ -348,13 +366,14 @@ async function salvarVenda(data, id = null) {
         const itemSubtotal = contaTotal ? Number(item.quantidade) * Number(item.preco_unitario) : 0;
         const qtdEstoque = contaTotal ? item.quantidade_estoque : 0;
         const qtdEncomenda = contaTotal ? item.quantidade_encomenda : 0;
+        const qtdPecaLoja = contaTotal ? item.quantidade_peca_loja : 0;
         const inserted = await client.query(`
           INSERT INTO venda_itens (
             venda_id, ambiente_id, produto_id, descricao, quantidade,
-            quantidade_estoque, quantidade_encomenda,
+            quantidade_estoque, quantidade_encomenda, quantidade_peca_loja,
             preco_unitario_lista, preco_unitario, subtotal, ordem, status
           )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
           RETURNING id
         `, [
           venda.id,
@@ -364,6 +383,7 @@ async function salvarVenda(data, id = null) {
           item.quantidade,
           qtdEstoque,
           qtdEncomenda,
+          qtdPecaLoja,
           item.preco_unitario_lista ?? item.preco_unitario,
           contaTotal ? item.preco_unitario : 0,
           itemSubtotal,

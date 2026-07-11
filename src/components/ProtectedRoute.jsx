@@ -1,28 +1,42 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { userHasAnyPermission, userIsAdministrador } from '../constants/auth';
+import { useOffline } from '../context/OfflineContext';
+import {
+  userHasAnyPermission,
+  userIsAdministrador,
+  canAccessRoute,
+  canAccessRouteOfflineForUser,
+  getDefaultRoute,
+  getDefaultRouteOffline,
+} from '../constants/auth';
 
 export default function ProtectedRoute({ permission, permissions, administrador, children }) {
-  const { user, hasPermission, canAccessPath, defaultRoute } = useAuth();
+  const { user } = useAuth();
+  const { offline } = useOffline();
+  const location = useLocation();
   const required = permissions || (permission ? [permission] : null);
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
+  if (offline) {
+    if (!canAccessRouteOfflineForUser(user, location.pathname)) {
+      return <Navigate to={getDefaultRouteOffline(user)} replace />;
+    }
+    return children;
+  }
+
   if (administrador && !userIsAdministrador(user)) {
-    return <Navigate to={defaultRoute} replace />;
+    return <Navigate to={getDefaultRoute(user)} replace />;
   }
 
   if (required && !userHasAnyPermission(user, required)) {
-    return <Navigate to={defaultRoute} replace />;
+    return <Navigate to={getDefaultRoute(user)} replace />;
   }
 
-  if (!required) {
-    const path = window.location.hash.replace(/^#/, '') || '/';
-    if (!canAccessPath(path)) {
-      return <Navigate to={defaultRoute} replace />;
-    }
+  if (!required && !canAccessRoute(user, location.pathname)) {
+    return <Navigate to={getDefaultRoute(user)} replace />;
   }
 
   return children;

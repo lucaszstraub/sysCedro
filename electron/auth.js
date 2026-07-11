@@ -70,6 +70,9 @@ function requireSession() {
 }
 
 function assertChannelAccess(channel) {
+  const { assertOfflineAllowsChannel } = require('./offlineMode');
+  assertOfflineAllowsChannel(channel);
+
   const { getChannelRequirement } = require('./permissions');
   const requirement = getChannelRequirement(channel);
 

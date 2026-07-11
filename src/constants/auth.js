@@ -77,6 +77,12 @@ export const INICIO_PATH = '/inicio';
 export const ESTOQUE_BASE = '/gestao-estoque';
 export const VENDAS_BASE = '/ferramentas-venda';
 
+export const OFFLINE_ROUTE_PREFIXES = [
+  `${VENDAS_BASE}/orcamentos`,
+  `${VENDAS_BASE}/orcamentos-planejados`,
+  `${ESTOQUE_BASE}/clientes`,
+];
+
 /** Agrupamento visual no hub e separadores na sidebar */
 export const MENU_MACRO_GROUPS = [
   {
@@ -151,8 +157,91 @@ export function shouldUseHubHome(user) {
   return areas.length >= 3;
 }
 
-export function getDefaultRoute(user) {
+export function canAccessRouteOffline(pathname) {
+  if (pathname.startsWith(`${VENDAS_BASE}/orcamentos-planejados`)) return true;
+  if (pathname === `${VENDAS_BASE}/orcamentos` || pathname.startsWith(`${VENDAS_BASE}/orcamentos/`)) {
+    return true;
+  }
+  if (pathname === `${ESTOQUE_BASE}/clientes` || pathname.startsWith(`${ESTOQUE_BASE}/clientes/`)) {
+    return true;
+  }
+  return false;
+}
+
+export function canAccessRouteOfflineForUser(user, pathname) {
+  if (!canAccessRouteOffline(pathname)) return false;
+  if (pathname.startsWith(`${VENDAS_BASE}/orcamentos-planejados`)) {
+    return userHasPermission(user, PERMISSIONS.PLANEJADOS);
+  }
+  if (pathname.startsWith(`${VENDAS_BASE}/orcamentos`)) {
+    return userHasPermission(user, PERMISSIONS.VENDAS);
+  }
+  if (pathname.startsWith(`${ESTOQUE_BASE}/clientes`)) {
+    return userHasAnyPermission(user, [PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS, PERMISSIONS.CADASTROS]);
+  }
+  return false;
+}
+
+export function filterMenuSectionsOffline(user) {
+  const sections = [];
+  if (userHasPermission(user, PERMISSIONS.VENDAS)) {
+    sections.push({
+      id: 'offline-soltos',
+      title: 'Orçamentos — soltos',
+      groups: [{
+        items: [{
+          to: `${VENDAS_BASE}/orcamentos`,
+          label: 'Orçamentos',
+          icon: '📋',
+          keywords: 'proposta kanban offline',
+        }],
+      }],
+    });
+  }
+  if (userHasPermission(user, PERMISSIONS.PLANEJADOS)) {
+    sections.push({
+      id: 'offline-planejados',
+      title: 'Orçamentos — planejados',
+      groups: [{
+        items: [{
+          to: `${VENDAS_BASE}/orcamentos-planejados`,
+          label: 'Orçamentos',
+          icon: '🪚',
+          keywords: 'proposta planejado offline',
+        }],
+      }],
+    });
+  }
+  if (userHasAnyPermission(user, [PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS, PERMISSIONS.CADASTROS])) {
+    sections.push({
+      id: 'offline-clientes',
+      title: 'Clientes',
+      groups: [{
+        items: [{
+          to: `${ESTOQUE_BASE}/clientes`,
+          label: 'Clientes',
+          icon: '👤',
+          keywords: 'cadastro cliente offline',
+        }],
+      }],
+    });
+  }
+  return sections;
+}
+
+export function getDefaultRouteOffline(user) {
   if (!user) return '/login';
+  if (userHasPermission(user, PERMISSIONS.VENDAS)) return `${VENDAS_BASE}/orcamentos`;
+  if (userHasPermission(user, PERMISSIONS.PLANEJADOS)) return `${VENDAS_BASE}/orcamentos-planejados`;
+  if (userHasAnyPermission(user, [PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS, PERMISSIONS.CADASTROS])) {
+    return `${ESTOQUE_BASE}/clientes`;
+  }
+  return INICIO_PATH;
+}
+
+export function getDefaultRoute(user, { offline = false } = {}) {
+  if (!user) return '/login';
+  if (offline) return getDefaultRouteOffline(user);
   if (shouldUseHubHome(user)) return INICIO_PATH;
   if (userHasPermission(user, PERMISSIONS.WMS)) return `${ESTOQUE_BASE}/painel`;
   if (userHasPermission(user, PERMISSIONS.VENDAS)) return `${VENDAS_BASE}/orcamentos`;
@@ -507,7 +596,10 @@ export function getRoutePermission(pathname) {
   return match.permission;
 }
 
-export function canAccessRoute(user, pathname) {
+export function canAccessRoute(user, pathname, { offline = false } = {}) {
+  if (offline) {
+    return canAccessRouteOfflineForUser(user, pathname);
+  }
   const match = ROUTE_PERMISSIONS.find((route) => pathname.startsWith(route.prefix));
   if (!match) return true;
   if (match.administradorOnly) return userIsAdministrador(user);

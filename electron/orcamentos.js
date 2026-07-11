@@ -1,4 +1,6 @@
-const { getPool } = require('./database');
+const { getPool, isHybridMode } = require('./database');
+const { isOfflineMode } = require('./offlineMode');
+const { allocateOfflineId } = require('./dbSync');
 const { loadOrcamentoAmbientesComItens } = require('./ambienteItensLoader');
 const { getSession } = require('./auth');
 const {
@@ -314,33 +316,56 @@ const AMBIENTE_NOME_PADRAO = 'Geral';
     if (id) {
       const atual = await client.query('SELECT criado_em FROM orcamentos WHERE id = $1', [id]);
       const dataValidade = calcularDataValidade(validadeDias, atual.rows[0]?.criado_em || new Date());
+      const pendenteSync = isOfflineMode();
       const updated = await client.query(`
         UPDATE orcamentos SET
           cliente_id = $2, vendedor_id = $3, status = $4, validade = $5, validade_dias = $6,
           observacoes = $7, subtotal = $8, desconto = $9, formas_pagamento = $10,
-          total = $11, atualizado_em = NOW()
+          total = $11, pendente_sync = $12, atualizado_em = NOW()
         WHERE id = $1
         RETURNING *
       `, [
         id, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
         data.observacoes || null, subtotal, descontoExtra, JSON.stringify(formasPagamento), total,
+        pendenteSync,
       ]);
       orcamento = updated.rows[0];
       await client.query('DELETE FROM orcamento_ambientes WHERE orcamento_id = $1', [id]);
     } else {
       const numero = await gerarNumeroOrcamento();
       const dataValidade = calcularDataValidade(validadeDias);
-      const created = await client.query(`
-        INSERT INTO orcamentos (
-          numero, cliente_id, vendedor_id, status, validade, validade_dias, observacoes,
-          subtotal, desconto, formas_pagamento, total
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *
-      `, [
-        numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
-        data.observacoes || null, subtotal, descontoExtra, JSON.stringify(formasPagamento), total,
-      ]);
+      const offline = isOfflineMode();
+      const pendenteSync = isOfflineMode();
+      let newId = null;
+      if (offline) {
+        newId = await allocateOfflineId(client);
+      }
+
+      const created = newId
+        ? await client.query(`
+          INSERT INTO orcamentos (
+            id, numero, cliente_id, vendedor_id, status, validade, validade_dias, observacoes,
+            subtotal, desconto, formas_pagamento, total, pendente_sync
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+          RETURNING *
+        `, [
+          newId, numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
+          data.observacoes || null, subtotal, descontoExtra, JSON.stringify(formasPagamento), total,
+          pendenteSync,
+        ])
+        : await client.query(`
+          INSERT INTO orcamentos (
+            numero, cliente_id, vendedor_id, status, validade, validade_dias, observacoes,
+            subtotal, desconto, formas_pagamento, total, pendente_sync
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+          RETURNING *
+        `, [
+          numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
+          data.observacoes || null, subtotal, descontoExtra, JSON.stringify(formasPagamento), total,
+          pendenteSync,
+        ]);
       orcamento = created.rows[0];
     }
 
@@ -409,6 +434,7 @@ async function updateOrcamentoStatus(id, status, motivoEncerramento = null) {
       status = $2,
       motivo_encerramento = $3,
       encerrado_em = CASE WHEN $4 THEN COALESCE(encerrado_em, NOW()) ELSE NULL END,
+      pendente_sync = $5,
       atualizado_em = NOW()
     WHERE id = $1
     RETURNING *
@@ -417,6 +443,7 @@ async function updateOrcamentoStatus(id, status, motivoEncerramento = null) {
     status,
     encerrado ? (motivoEncerramento || status) : null,
     encerrado,
+    isOfflineMode(),
   ]);
   if (result.rowCount === 0) throw new Error('Orçamento não encontrado.');
   return result.rows[0];

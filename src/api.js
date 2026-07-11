@@ -50,6 +50,7 @@ export const api = {
   getNotaFiscal: (id) => callApi(window.api.getNotaFiscal, id),
   createNotaFiscal: (data) => callApi(window.api.createNotaFiscal, data),
   getDashboard: () => callApi(window.api.getDashboard),
+  getSyncStatus: () => callApi(window.api.getSyncStatus),
   listCategorias: () => callApi(window.api.listCategorias),
   listFornecedores: (busca) => callApi(window.api.listFornecedores, busca),
   getFornecedor: (id) => callApi(window.api.getFornecedor, id),
@@ -179,6 +180,7 @@ export const api = {
   agendarExpedicao: (vendaId, data) => callApi(window.api.agendarExpedicao, vendaId, data),
   criarAssistenciaEntrega: (data) => callApi(window.api.criarAssistenciaEntrega, data),
   registrarEntrega: (id, data) => callApi(window.api.registrarEntrega, id, data),
+  marcarEntregaJaRealizada: (id) => callApi(window.api.marcarEntregaJaRealizada, id),
   gerarPdfEntrega: async (id) => {
     const result = await window.api.gerarPdfEntrega(id);
     if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
@@ -227,4 +229,7 @@ export const api = {
   excluirPagamentoComissaoPlanejado: (id) => callApi(window.api.excluirPagamentoComissaoPlanejado, id),
   onAppCloseRequest: (handler) => window.api.onAppCloseRequest(handler),
   confirmAppClose: () => window.api.confirmAppClose(),
+  getFaseImplantacao: () => callApi(window.api.getFaseImplantacao),
+  setFaseImplantacao: (ativa) => callApi(window.api.setFaseImplantacao, ativa),
+  backfillExpedicoesImplantacao: () => callApi(window.api.backfillExpedicoesImplantacao),
 };

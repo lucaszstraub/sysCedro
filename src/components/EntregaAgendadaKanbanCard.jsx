@@ -10,8 +10,10 @@ import { useFloatingMenu } from '../hooks/useFloatingMenu';
 
 export default function EntregaAgendadaKanbanCard({
   entrega,
+  faseImplantacaoAtiva = false,
   onEditar,
   onConcluir,
+  onMarcarJaRealizada,
   onImprimir,
   onObservacoes,
   onConfirmarCliente,
@@ -117,6 +119,16 @@ export default function EntregaAgendadaKanbanCard({
       <div className="kanban-card-actions entrega-kanban-actions">
         {!concluida && (
           <>
+            {faseImplantacaoAtiva && onMarcarJaRealizada && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => onMarcarJaRealizada(entrega)}
+                title="Para entregas já feitas antes do go-live — sem registrar data"
+              >
+                Entrega já realizada
+              </button>
+            )}
             <button type="button" className="btn btn-primary btn-sm" onClick={() => onConcluir(entrega)}>
               Registrar entrega
             </button>

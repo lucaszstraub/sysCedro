@@ -471,6 +471,67 @@ body {
   font-size: 0.85rem;
 }
 
+.offline-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
+  color: #92400e;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.implantacao-banner {
+  margin: 0 0 1rem;
+  padding: 0.65rem 1rem;
+  border-radius: 8px;
+  background: #ede9fe;
+  border: 1px solid #8b5cf6;
+  color: #5b21b6;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.fase-implantacao-panel {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.fase-implantacao-panel strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.fase-implantacao-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.fase-implantacao-toggle input {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+}
+
+.fase-implantacao-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+}
+
 .sidebar-backdrop {
   display: none;
   position: fixed;

@@ -1,4 +1,6 @@
-const { getPool } = require('./database');
+const { getPool, isHybridMode } = require('./database');
+const { isOfflineMode } = require('./offlineMode');
+const { allocateOfflineId } = require('./dbSync');
 const { getSession } = require('./auth');
 const {
   buildFiltroVendedorSql,
@@ -165,10 +167,11 @@ async function moverOrcamentoPlanejadoKanban(id, data) {
       status = $2,
       motivo_encerramento = $3,
       encerrado_em = $4,
+      pendente_sync = $5,
       atualizado_em = NOW()
     WHERE id = $1
     RETURNING *
-  `, [id, novoStatus, motivoEncerramento, encerradoEm]);
+  `, [id, novoStatus, motivoEncerramento, encerradoEm, isOfflineMode()]);
 
   const row = result.rows[0];
   const lista = await listOrcamentosPlanejados('');
@@ -280,37 +283,59 @@ async function salvarOrcamentoPlanejado(data, id = null) {
     if (id) {
       const atual = await client.query('SELECT criado_em FROM orcamentos_planejados WHERE id = $1', [id]);
       const dataValidade = calcularDataValidade(validadeDias, atual.rows[0]?.criado_em || new Date());
+      const pendenteSync = isOfflineMode();
       const updated = await client.query(`
         UPDATE orcamentos_planejados SET
           cliente_id = $2, vendedor_id = $3, status = $4, validade = $5, validade_dias = $6,
           prazo_entrega_dias = $7, prazo_entrega_outro = $8,
           observacoes = $9, subtotal = $10, desconto = $11, formas_pagamento = $12,
-          total = $13, atualizado_em = NOW()
+          total = $13, pendente_sync = $14, atualizado_em = NOW()
         WHERE id = $1
         RETURNING *
       `, [
         id, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
         prazoEntregaDias, prazoEntregaOutro, data.observacoes || null, subtotal, descontoExtra,
-        JSON.stringify(formasPagamento), total,
+        JSON.stringify(formasPagamento), total, pendenteSync,
       ]);
       orcamento = updated.rows[0];
       await client.query('DELETE FROM orcamento_planejado_ambientes WHERE orcamento_planejado_id = $1', [id]);
     } else {
       const numero = await gerarNumeroOrcamentoPlanejado();
       const dataValidade = calcularDataValidade(validadeDias);
-      const created = await client.query(`
-        INSERT INTO orcamentos_planejados (
-          numero, cliente_id, vendedor_id, status, validade, validade_dias,
-          prazo_entrega_dias, prazo_entrega_outro, observacoes,
-          subtotal, desconto, formas_pagamento, total
-        )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
-        RETURNING *
-      `, [
-        numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
-        prazoEntregaDias, prazoEntregaOutro, data.observacoes || null, subtotal, descontoExtra,
-        JSON.stringify(formasPagamento), total,
-      ]);
+      const offline = isOfflineMode();
+      const pendenteSync = isOfflineMode();
+      let newId = null;
+      if (offline) {
+        newId = await allocateOfflineId(client);
+      }
+
+      const created = newId
+        ? await client.query(`
+          INSERT INTO orcamentos_planejados (
+            id, numero, cliente_id, vendedor_id, status, validade, validade_dias,
+            prazo_entrega_dias, prazo_entrega_outro, observacoes,
+            subtotal, desconto, formas_pagamento, total, pendente_sync
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          RETURNING *
+        `, [
+          newId, numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
+          prazoEntregaDias, prazoEntregaOutro, data.observacoes || null, subtotal, descontoExtra,
+          JSON.stringify(formasPagamento), total, pendenteSync,
+        ])
+        : await client.query(`
+          INSERT INTO orcamentos_planejados (
+            numero, cliente_id, vendedor_id, status, validade, validade_dias,
+            prazo_entrega_dias, prazo_entrega_outro, observacoes,
+            subtotal, desconto, formas_pagamento, total, pendente_sync
+          )
+          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          RETURNING *
+        `, [
+          numero, data.cliente_id, data.vendedor_id || null, data.status || 'rascunho', dataValidade, validadeDias,
+          prazoEntregaDias, prazoEntregaOutro, data.observacoes || null, subtotal, descontoExtra,
+          JSON.stringify(formasPagamento), total, pendenteSync,
+        ]);
       orcamento = created.rows[0];
     }
 

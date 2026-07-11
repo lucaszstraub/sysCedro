@@ -47,6 +47,13 @@ const api = {
   getNotaFiscal: (id) => ipcRenderer.invoke('notasFiscais:get', id),
   createNotaFiscal: (data) => ipcRenderer.invoke('notasFiscais:create', data),
   getDashboard: () => ipcRenderer.invoke('dashboard:get'),
+  getSyncStatus: () => ipcRenderer.invoke('sync:status'),
+  onSyncCompleted: (handler) => {
+    ipcRenderer.on('sync:completed', (_, data) => handler(data));
+  },
+  onConnectivityChanged: (handler) => {
+    ipcRenderer.on('connectivity:changed', (_, data) => handler(data));
+  },
   listCategorias: () => ipcRenderer.invoke('categorias:list'),
   listFornecedores: (busca) => ipcRenderer.invoke('fornecedores:list', busca),
   getFornecedor: (id) => ipcRenderer.invoke('fornecedores:get', id),
@@ -146,6 +153,7 @@ const api = {
   agendarExpedicao: (vendaId, data) => ipcRenderer.invoke('entregas:agendar', vendaId, data),
   criarAssistenciaEntrega: (data) => ipcRenderer.invoke('entregas:assistencia', data),
   registrarEntrega: (id, data) => ipcRenderer.invoke('entregas:registrar', id, data),
+  marcarEntregaJaRealizada: (id) => ipcRenderer.invoke('entregas:marcarJaRealizada', id),
   gerarPdfEntrega: (id) => ipcRenderer.invoke('entregas:pdf', id),
   listEncomendasFornecedor: (busca) => ipcRenderer.invoke('encomendas:list', busca),
   getEncomendaFornecedor: (id) => ipcRenderer.invoke('encomendas:get', id),
@@ -189,6 +197,9 @@ const api = {
     closeRequestHandler = handler;
   },
   confirmAppClose: () => ipcRenderer.send('app:close-confirmed'),
+  getFaseImplantacao: () => ipcRenderer.invoke('faseImplantacao:get'),
+  setFaseImplantacao: (ativa) => ipcRenderer.invoke('faseImplantacao:set', ativa),
+  backfillExpedicoesImplantacao: () => ipcRenderer.invoke('faseImplantacao:backfill'),
 };
 
 contextBridge.exposeInMainWorld('api', api);

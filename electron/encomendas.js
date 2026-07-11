@@ -2,6 +2,7 @@ const { getPool } = require('./database');
 const { getSession } = require('./auth');
 const entregas = require('./entregas');
 const markupVendas = require('./markupVendas');
+const faseImplantacao = require('./faseImplantacao');
 const FRETE_PADRAO = 10;
 const IPI_PADRAO = 3.25;
 const PRAZO_PADRAO = 30;
@@ -552,11 +553,22 @@ async function confirmarItemEfetivo(client, vendaId, item) {
   const qtdEntregue = Number(item.quantidade_entregue) || 0;
   const qtdEstoque = Number(item.quantidade_estoque) || 0;
   const qtdEncomenda = Number(item.quantidade_encomenda) || 0;
+  const qtdPecaLoja = Number(item.quantidade_peca_loja) || 0;
 
-  if (qtdEstoque + qtdEncomenda !== qtdTotal) {
+  if (qtdPecaLoja > 0 && !await faseImplantacao.isFaseImplantacaoAtiva(client)) {
     throw new Error(
-      `Item "${item.descricao}": a soma de estoque (${qtdEstoque}) e encomenda (${qtdEncomenda}) deve ser igual à quantidade (${qtdTotal}).`
+      `Item "${item.descricao}": peça loja só pode ser usada durante a fase de implantação.`
     );
+  }
+
+  if (qtdEstoque + qtdEncomenda + qtdPecaLoja !== qtdTotal) {
+    throw new Error(
+      `Item "${item.descricao}": estoque (${qtdEstoque}) + encomenda (${qtdEncomenda}) + peça loja (${qtdPecaLoja}) deve ser igual à quantidade (${qtdTotal}).`
+    );
+  }
+
+  if (qtdPecaLoja > 0) {
+    await processarPecaLojaImplantacao(client, item, qtdPecaLoja);
   }
 
   const qtdReservar = Math.max(qtdEstoque - qtdEntregue, 0);
@@ -679,6 +691,42 @@ async function upsertEstoqueTx(client, produtoId, localizacaoId, quantidade) {
     ON CONFLICT (produto_id, localizacao_id)
     DO UPDATE SET quantidade = estoque.quantidade + $3, atualizado_em = NOW()
   `, [produtoId, localizacaoId, quantidade]);
+}
+
+async function processarPecaLojaImplantacao(client, item, quantidade) {
+  if (quantidade <= 0) return;
+
+  const jaProcessado = await client.query(`
+    SELECT 1 FROM movimentacoes
+    WHERE referencia_tipo = 'peca_loja_implantacao' AND referencia_id = $1
+    LIMIT 1
+  `, [item.id]);
+  if (jaProcessado.rowCount > 0) return;
+
+  if (!item.produto_id) {
+    throw new Error(`Item "${item.descricao}" (peça loja) precisa ter produto vinculado.`);
+  }
+
+  const naoAlocId = await obterLocalizacaoNaoAlocados(client);
+  const motivo = `Peça loja — venda histórica (${item.descricao})`;
+
+  await upsertEstoqueTx(client, item.produto_id, naoAlocId, quantidade);
+  await client.query(`
+    INSERT INTO movimentacoes (
+      produto_id, localizacao_destino_id, tipo, quantidade, motivo, usuario,
+      referencia_tipo, referencia_id
+    )
+    VALUES ($1, $2, 'entrada', $3, $4, 'sistema', 'peca_loja_implantacao', $5)
+  `, [item.produto_id, naoAlocId, quantidade, motivo, item.id]);
+
+  await reduzirEstoqueTx(client, item.produto_id, naoAlocId, quantidade);
+  await client.query(`
+    INSERT INTO movimentacoes (
+      produto_id, localizacao_origem_id, tipo, quantidade, motivo, usuario,
+      referencia_tipo, referencia_id
+    )
+    VALUES ($1, $2, 'saida', $3, $4, 'sistema', 'peca_loja_implantacao', $5)
+  `, [item.produto_id, naoAlocId, quantidade, motivo, item.id]);
 }
 
 async function calcularStatusItemRecebimento(quantidadePedida, quantidadeRecebida) {

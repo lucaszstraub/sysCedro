@@ -1,5 +1,6 @@
 const { getPool } = require('./database');
 const { normalizarStatusItem } = require('./vendaItemStatus');
+const faseImplantacao = require('./faseImplantacao');
 
 const TIPO_LIBERACAO = new Set(['parcial', 'completa']);
 const TIPO_EXPEDICAO = new Set(['entrega', 'assistencia']);
@@ -512,6 +513,7 @@ function calcularDisponibilidadeItemSync(vendaItem, maps) {
 
   const qtdEstoque = Number(vendaItem.quantidade_estoque) || 0;
   const qtdEncomenda = Number(vendaItem.quantidade_encomenda) || 0;
+  const qtdPecaLoja = Number(vendaItem.quantidade_peca_loja) || 0;
 
   let disponivelEstoque = 0;
   if (qtdEstoque > 0 && pendente > 0) {
@@ -529,7 +531,13 @@ function calcularDisponibilidadeItemSync(vendaItem, maps) {
     );
   }
 
-  const disponivel = Math.min(pendente, disponivelEstoque + disponivelEncomenda);
+  let disponivelPecaLoja = 0;
+  if (qtdPecaLoja > 0 && pendente > 0) {
+    const jaEntreguePecaLoja = Math.min(entregue, qtdPecaLoja);
+    disponivelPecaLoja = Math.max(0, qtdPecaLoja - jaEntreguePecaLoja);
+  }
+
+  const disponivel = Math.min(pendente, disponivelEstoque + disponivelEncomenda + disponivelPecaLoja);
 
   return {
     total,
@@ -566,6 +574,7 @@ async function montarItensEntrega(client, entregaId) {
       vi.quantidade AS quantidade_venda,
       vi.quantidade_estoque,
       vi.quantidade_encomenda,
+      vi.quantidade_peca_loja,
       vi.quantidade_entregue AS quantidade_entregue_venda,
       vi.status AS item_status,
       p.sku AS produto_sku,
@@ -591,6 +600,7 @@ async function montarItensEntrega(client, entregaId) {
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
+      quantidade_peca_loja: row.quantidade_peca_loja,
       quantidade_entregue: entregueVenda,
       status: row.item_status,
     }, dispMaps);
@@ -749,7 +759,36 @@ async function criarEntregaInicial(client, vendaId, tipoLiberacao = 'parcial') {
   return entrega.rows[0];
 }
 
+async function garantirEntregasVendaImplantacao(client, vendaId, tipoLiberacao = 'parcial') {
+  const tipo = TIPO_LIBERACAO.has(tipoLiberacao) ? tipoLiberacao : 'parcial';
+  const master = await client.query(
+    'SELECT id FROM entregas WHERE venda_id = $1 AND numero = 1 LIMIT 1',
+    [vendaId]
+  );
+
+  if (master.rowCount === 0) {
+    await criarEntregaInicial(client, vendaId, tipo);
+  } else {
+    await sincronizarItensFaltantesEntrega(client, vendaId);
+    await client.query(`
+      UPDATE entregas SET tipo_liberacao = $2, atualizado_em = NOW()
+      WHERE venda_id = $1
+    `, [vendaId, tipo]);
+    const entregasVenda = await client.query('SELECT id FROM entregas WHERE venda_id = $1', [vendaId]);
+    for (const e of entregasVenda.rows) {
+      await atualizarStatusEntrega(client, e.id);
+    }
+  }
+
+  await criarExpedicaoImplantacao(client, vendaId);
+}
+
 async function sincronizarEntregasVenda(client, vendaId, tipoLiberacao = 'parcial') {
+  if (await faseImplantacao.isFaseImplantacaoAtiva(client)) {
+    await garantirEntregasVendaImplantacao(client, vendaId, tipoLiberacao);
+    return;
+  }
+
   const emAndamento = await client.query(`
     SELECT 1
     FROM entrega_itens ei
@@ -764,8 +803,8 @@ async function sincronizarEntregasVenda(client, vendaId, tipoLiberacao = 'parcia
       UPDATE entregas SET tipo_liberacao = $2, atualizado_em = NOW()
       WHERE venda_id = $1
     `, [vendaId, TIPO_LIBERACAO.has(tipoLiberacao) ? tipoLiberacao : 'parcial']);
-    const entregas = await client.query('SELECT id FROM entregas WHERE venda_id = $1', [vendaId]);
-    for (const e of entregas.rows) {
+    const entregasVenda = await client.query('SELECT id FROM entregas WHERE venda_id = $1', [vendaId]);
+    for (const e of entregasVenda.rows) {
       await atualizarStatusEntrega(client, e.id);
     }
     return;
@@ -869,17 +908,25 @@ async function baixarItemEntrega(client, entrega, entregaItem, vendaItem, quanti
     throw new Error(`Item "${vendaItem.descricao}" não possui produto vinculado para baixa de estoque.`);
   }
 
-  await validarBaixaItemEntrega(client, vendaItem, quantidade);
+  const qtdPecaLoja = Number(vendaItem.quantidade_peca_loja) || 0;
+  const entregueVenda = Number(vendaItem.quantidade_entregue) || 0;
+  const jaEntreguePecaLoja = Math.min(entregueVenda, qtdPecaLoja);
+  const pecaLojaRestante = Math.max(0, qtdPecaLoja - jaEntreguePecaLoja);
+  const qtdBaixaEstoque = Math.max(0, quantidade - Math.min(quantidade, pecaLojaRestante));
+
+  if (qtdBaixaEstoque <= 0) return;
+
+  await validarBaixaItemEntrega(client, vendaItem, qtdBaixaEstoque);
 
   await reduzirEstoqueFisico(
     client,
     vendaItem.produto_id,
-    quantidade,
+    qtdBaixaEstoque,
     `Entrega expedição ${entrega.numero}`,
     entrega.id
   );
 
-  await reduzirReservaAtiva(client, vendaItem.id, quantidade);
+  await reduzirReservaAtiva(client, vendaItem.id, qtdBaixaEstoque);
 }
 
 async function obterResumoExpedicoes(client, vendaId) {
@@ -1011,6 +1058,7 @@ function montarItensEntregaFromRows(rows, entregaNumero, dispMaps) {
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
+      quantidade_peca_loja: row.quantidade_peca_loja,
       quantidade_entregue: entregueVenda,
       status: row.item_status,
     }, dispMaps);
@@ -1047,6 +1095,7 @@ async function calcularResumosEntregaLista(client, entregasRows) {
       vi.quantidade AS quantidade_venda,
       vi.quantidade_estoque,
       vi.quantidade_encomenda,
+      vi.quantidade_peca_loja,
       vi.quantidade_entregue AS quantidade_entregue_venda,
       vi.status AS item_status,
       p.sku AS produto_sku,
@@ -1278,6 +1327,7 @@ async function agendarExpedicao(vendaId, data = {}) {
 
     const resumoMaster = await calcularResumoEntrega(client, masterRow);
     const mapItensMaster = new Map(resumoMaster.itens.map((i) => [i.id, i]));
+    const faseAtiva = await faseImplantacao.isFaseImplantacaoAtiva(client);
 
     for (const linha of itensPayload) {
       const qtd = Number(linha.quantidade) || 0;
@@ -1287,7 +1337,7 @@ async function agendarExpedicao(vendaId, data = {}) {
       if (qtd > item.pendente_entrega) {
         throw new Error(`Quantidade inválida para "${item.descricao}".`);
       }
-      if (tipo !== 'assistencia' && qtd > item.disponivel_agora) {
+      if (!faseAtiva && tipo !== 'assistencia' && qtd > item.disponivel_agora) {
         throw new Error(`"${item.descricao}" ainda não está disponível (${item.disponivel_agora} disponível).`);
       }
     }
@@ -1637,6 +1687,7 @@ async function registrarEntrega(id, data) {
     const mapItens = new Map(resumo.itens.map((i) => [i.id, i]));
     let totalEntregar = 0;
     const vendaItemIdsAtualizados = [];
+    const faseAtiva = await faseImplantacao.isFaseImplantacaoAtiva(client);
 
     for (const linha of itensPayload) {
       const qtd = Number(linha.quantidade) || 0;
@@ -1646,7 +1697,7 @@ async function registrarEntrega(id, data) {
       if (qtd > item.pendente_entrega) {
         throw new Error(`Quantidade inválida para "${item.descricao}".`);
       }
-      if (qtd > item.disponivel_agora) {
+      if (!faseAtiva && qtd > item.disponivel_agora) {
         throw new Error(`"${item.descricao}" ainda não está disponível para entrega (${item.disponivel_agora} disponível).`);
       }
       totalEntregar += qtd;
@@ -1772,6 +1823,190 @@ async function registrarEntrega(id, data) {
   }
 }
 
+async function criarExpedicaoImplantacao(client, vendaId) {
+  if (!await faseImplantacao.isFaseImplantacaoAtiva(client)) return;
+
+  const existente = await client.query(
+    'SELECT 1 FROM entregas WHERE venda_id = $1 AND numero > 1 LIMIT 1',
+    [vendaId]
+  );
+  if (existente.rowCount > 0) return;
+
+  const masterResult = await client.query(
+    'SELECT * FROM entregas WHERE venda_id = $1 AND numero = 1 LIMIT 1',
+    [vendaId]
+  );
+  if (masterResult.rowCount === 0) return;
+  const masterRow = masterResult.rows[0];
+
+  const resumo = await calcularResumoEntrega(client, masterRow);
+  const itensPendentes = resumo.itens.filter((i) => Number(i.pendente_entrega) > 0);
+  if (itensPendentes.length === 0) return;
+
+  const venda = await client.query(`
+    SELECT v.*, c.endereco, c.cidade, c.estado, c.cep
+    FROM vendas v
+    JOIN clientes c ON c.id = v.cliente_id
+    WHERE v.id = $1
+  `, [vendaId]);
+  if (venda.rowCount === 0) return;
+
+  const maxNum = await client.query(
+    'SELECT COALESCE(MAX(numero), 0)::int AS max_num FROM entregas WHERE venda_id = $1',
+    [vendaId]
+  );
+  const numero = (maxNum.rows[0]?.max_num || 0) + 1;
+
+  const entregaInsert = await client.query(`
+    INSERT INTO entregas (
+      venda_id, numero, tipo_liberacao, status, tipo,
+      endereco_entrega, cidade_entrega, estado_entrega, cep_entrega,
+      data_prevista, periodo_entrega, confirmacao_cliente,
+      observacoes, observacoes_kanban,
+      flag_urgencia, flag_assistencia_tecnica, descricao_assistencia,
+      quantidade_volumes
+    )
+    VALUES ($1, $2, $3, 'agendada', 'entrega', $4, $5, $6, $7, NULL, 'matutino', 'confirmada', NULL, $8, false, false, NULL, 1)
+    RETURNING id
+  `, [
+    vendaId,
+    numero,
+    masterRow.tipo_liberacao,
+    venda.rows[0].endereco,
+    venda.rows[0].cidade,
+    venda.rows[0].estado,
+    venda.rows[0].cep,
+    'Implantação — aguardando registro de entrega histórica',
+  ]);
+
+  const entregaId = entregaInsert.rows[0].id;
+
+  for (const item of itensPendentes) {
+    await client.query(`
+      INSERT INTO entrega_itens (entrega_id, venda_item_id, quantidade, quantidade_entregue)
+      VALUES ($1, $2, $3, 0)
+    `, [entregaId, item.venda_item_id, item.pendente_entrega]);
+  }
+
+  await recalcularIndicesEntrega(client, vendaId);
+}
+
+async function backfillExpedicoesImplantacao() {
+  if (!await faseImplantacao.isFaseImplantacaoAtiva()) {
+    return { processadas: 0 };
+  }
+
+  const db = getPool();
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+    const vendas = await client.query(`
+      SELECT v.id
+      FROM vendas v
+      WHERE COALESCE(v.desativada, false) = false
+        AND NOT EXISTS (
+          SELECT 1 FROM entregas e WHERE e.venda_id = v.id AND e.numero > 1
+        )
+      ORDER BY v.id
+    `);
+
+    for (const row of vendas.rows) {
+      const master = await client.query(
+        'SELECT 1 FROM entregas WHERE venda_id = $1 AND numero = 1 LIMIT 1',
+        [row.id]
+      );
+      if (master.rowCount === 0) {
+        await criarEntregaInicial(client, row.id, 'parcial');
+      }
+      await criarExpedicaoImplantacao(client, row.id);
+    }
+
+    await client.query('COMMIT');
+    return { processadas: vendas.rowCount };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
+async function marcarEntregaJaRealizadaImplantacao(id) {
+  if (!await faseImplantacao.isFaseImplantacaoAtiva()) {
+    throw new Error('Disponível apenas durante a fase de implantação.');
+  }
+
+  const db = getPool();
+  const client = await db.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const entregaResult = await client.query('SELECT * FROM entregas WHERE id = $1 FOR UPDATE', [id]);
+    if (entregaResult.rowCount === 0) throw new Error('Entrega não encontrada.');
+    const entrega = entregaResult.rows[0];
+
+    if (entrega.numero <= 1) {
+      throw new Error('Use esta ação apenas em expedições do kanban.');
+    }
+    if (entrega.status === 'entregue') throw new Error('Esta entrega já foi concluída.');
+    if (entrega.status === 'cancelada') throw new Error('Esta entrega está cancelada.');
+    if (entrega.status !== 'agendada') {
+      throw new Error('Esta expedição não está aguardando registro.');
+    }
+
+    const itensResult = await client.query(`
+      SELECT
+        ei.id AS entrega_item_id,
+        ei.quantidade AS quantidade_expedicao,
+        ei.quantidade_entregue AS quantidade_entregue_expedicao,
+        vi.id AS venda_item_id,
+        vi.quantidade_entregue AS quantidade_entregue_venda
+      FROM entrega_itens ei
+      JOIN venda_itens vi ON vi.id = ei.venda_item_id
+      WHERE ei.entrega_id = $1
+      FOR UPDATE OF ei, vi
+    `, [id]);
+
+    for (const row of itensResult.rows) {
+      const pendente = Math.max(
+        0,
+        Number(row.quantidade_expedicao) - Number(row.quantidade_entregue_expedicao)
+      );
+      if (pendente <= 0) continue;
+
+      await client.query(
+        'UPDATE entrega_itens SET quantidade_entregue = quantidade WHERE id = $1',
+        [row.entrega_item_id]
+      );
+      await client.query(`
+        UPDATE venda_itens
+        SET quantidade_entregue = quantidade_entregue + $2
+        WHERE id = $1
+      `, [row.venda_item_id, pendente]);
+    }
+
+    await sincronizarEntregaMasterItens(client, entrega.venda_id);
+
+    await client.query(`
+      UPDATE entregas
+      SET status = 'entregue', data_realizada = NULL, atualizado_em = NOW()
+      WHERE id = $1
+    `, [id]);
+
+    await atualizarStatusEntregaMaster(client, entrega.venda_id);
+    await recalcularIndicesEntrega(client, entrega.venda_id);
+    await client.query('COMMIT');
+    return getEntrega(id);
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
+
 async function getDadosTicketEntrega(id) {
   const entrega = await getEntrega(id);
   if (!entrega) throw new Error('Entrega não encontrada.');
@@ -1793,6 +2028,8 @@ module.exports = {
   criarEntregaInicial,
   sincronizarItensFaltantesEntrega,
   sincronizarEntregasVenda,
+  criarExpedicaoImplantacao,
+  backfillExpedicoesImplantacao,
   backfillEntregasExistentes,
   listEntregas,
   listEntregasAgendadas,
@@ -1803,6 +2040,7 @@ module.exports = {
   getEntrega,
   atualizarEntrega,
   registrarEntrega,
+  marcarEntregaJaRealizadaImplantacao,
   getDadosTicketEntrega,
   atualizarStatusEntrega,
   recalcularIndicesEntrega,
