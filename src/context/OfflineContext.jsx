@@ -3,7 +3,19 @@ import { api } from '../api';
 
 const OfflineContext = createContext(null);
 
+// TEMPORÁRIO (apresentação): UI nunca entra em modo offline.
+// Remover junto com FORCE_CLOUD_ONLY em electron/dbSync.js.
+const FORCE_ONLINE_UI = true;
+
 function applyStatus(data) {
+  if (FORCE_ONLINE_UI) {
+    return {
+      hybrid: false,
+      cloud: true,
+      offline: false,
+      last: data?.last || null,
+    };
+  }
   return {
     hybrid: Boolean(data?.hybrid),
     cloud: Boolean(data?.cloud),

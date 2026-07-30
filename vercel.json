@@ -1,0 +1,21 @@
+{
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "dist",
+  "installCommand": "npm ci",
+  "framework": null,
+  "rewrites": [
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ],
+  "functions": {
+    "api/invoke.js": {
+      "memory": 1024,
+      "maxDuration": 60,
+      "includeFiles": "{electron/**,server/**,database/**}"
+    },
+    "api/health.js": {
+      "memory": 512,
+      "maxDuration": 30,
+      "includeFiles": "{electron/**,server/**,database/**}"
+    }
+  }
+}

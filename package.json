@@ -5,7 +5,11 @@
   "main": "electron/main.js",
   "scripts": {
     "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && nodemon --watch electron --ext js --exec \\\"electron .\\\"\"",
+    "web": "concurrently -k \"npm run web:api\" \"npm run web:ui\"",
+    "web:ui": "VITE_WEB=1 vite",
+    "web:api": "SYS_CEDRO_WEB=1 nodemon --watch server --watch electron --ext js --exec \"node server/local.js\"",
     "build": "vite build",
+    "build:web": "VITE_WEB=1 vite build",
     "start": "npm run build && electron .",
     "db:setup": "node scripts/setup-db.js",
     "db:import-referencia": "node scripts/importar-dados-referencia.js",
@@ -15,11 +19,13 @@
     "wms",
     "electron",
     "react",
-    "postgresql"
+    "postgresql",
+    "vercel"
   ],
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "express": "^4.21.2",
     "pdf-lib": "^1.17.1",
     "pdfkit": "^0.15.2",
     "pg": "^8.13.1",

@@ -1,235 +1,299 @@
-export async function callApi(fn, ...args) {
+/**
+ * Cliente da API — Electron (window.api) ou Web (POST /api/invoke).
+ */
+let sessionToken = null;
+
+export function setSessionToken(token) {
+  sessionToken = token || null;
+  if (token) localStorage.setItem('syscedro_session_token', token);
+  else localStorage.removeItem('syscedro_session_token');
+}
+
+export function loadStoredSessionToken() {
+  if (sessionToken) return sessionToken;
+  try {
+    sessionToken = localStorage.getItem('syscedro_session_token');
+  } catch {
+    sessionToken = null;
+  }
+  return sessionToken;
+}
+
+function isElectron() {
+  return typeof window !== 'undefined' && typeof window.api?.login === 'function';
+}
+
+function apiBase() {
+  const base = import.meta.env.VITE_API_BASE;
+  if (base != null && String(base).length) return String(base).replace(/\/$/, '');
+  return '';
+}
+
+function downloadPdf(data) {
+  if (!data || data.cancelled) return data;
+  if (data.pdfBase64) {
+    const fileName = data.fileName || 'documento.pdf';
+    const bin = atob(data.pdfBase64);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i += 1) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: data.mimeType || 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    return { cancelled: false, downloaded: true, fileName };
+  }
+  return data;
+}
+
+async function invokeElectron(method, args) {
+  const fn = window.api?.[method];
   if (typeof fn !== 'function') {
-    throw new Error('API indisponível. Reinicie o aplicativo Electron (feche e abra novamente).');
+    throw new Error(`API Electron indisponível (${method}). Reinicie o aplicativo.`);
   }
   const result = await fn(...args);
+  if (result && typeof result === 'object' && 'success' in result) {
+    if (!result.success) throw new Error(result.error || 'Erro desconhecido');
+    return result.data;
+  }
+  return result;
+}
+
+async function invokeWeb(method, args) {
+  loadStoredSessionToken();
+  const res = await fetch(`${apiBase()}/api/invoke`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(sessionToken ? { Authorization: `Bearer ${sessionToken}` } : {}),
+    },
+    body: JSON.stringify({ method, args }),
+  });
+  let result;
+  try {
+    result = await res.json();
+  } catch {
+    throw new Error(`Falha na API (${res.status}). Verifique se o backend está no ar.`);
+  }
   if (!result.success) {
     throw new Error(result.error || 'Erro desconhecido');
   }
-  return result.data;
+  const data = result.data;
+  if (data?.token && (method === 'login' || method === 'restoreSession')) {
+    setSessionToken(data.token);
+  }
+  if (method === 'logout') setSessionToken(null);
+  return data;
+}
+
+async function invoke(method, args = []) {
+  if (isElectron()) return invokeElectron(method, args);
+  return invokeWeb(method, args);
+}
+
+/** Compat: callApi(fn, ...args) ainda usado? Preferir api.* */
+export async function callApi(fn, ...args) {
+  if (typeof fn === 'function') {
+    const result = await fn(...args);
+    if (result && typeof result === 'object' && 'success' in result) {
+      if (!result.success) throw new Error(result.error || 'Erro desconhecido');
+      return result.data;
+    }
+    return result;
+  }
+  throw new Error('API indisponível.');
 }
 
 export const api = {
-  login: (login, senha) => callApi(window.api.login, { login, senha }),
-  logout: () => callApi(window.api.logout),
-  getSession: () => callApi(window.api.getSession),
-  restoreSession: (userId) => callApi(window.api.restoreSession, userId),
-  listUsuarios: (busca) => callApi(window.api.listUsuarios, busca),
-  getUsuario: (id) => callApi(window.api.getUsuario, id),
-  createUsuario: (data) => callApi(window.api.createUsuario, data),
-  updateUsuario: (id, data) => callApi(window.api.updateUsuario, id, data),
-  deleteUsuario: (id) => callApi(window.api.deleteUsuario, id),
-  listColaboradores: (busca) => callApi(window.api.listColaboradores, busca),
-  getColaborador: (id) => callApi(window.api.getColaborador, id),
-  listUsuariosParaColaborador: (colaboradorId) => callApi(window.api.listUsuariosParaColaborador, colaboradorId),
-  createColaborador: (data) => callApi(window.api.createColaborador, data),
-  updateColaborador: (id, data) => callApi(window.api.updateColaborador, id, data),
-  deleteColaborador: (id) => callApi(window.api.deleteColaborador, id),
-  listCustosFixosTemplate: () => callApi(window.api.listCustosFixosTemplate),
-  createCustoFixoTemplate: (data) => callApi(window.api.createCustoFixoTemplate, data),
-  updateCustoFixoTemplate: (id, data) => callApi(window.api.updateCustoFixoTemplate, id, data),
-  deleteCustoFixoTemplate: (id) => callApi(window.api.deleteCustoFixoTemplate, id),
-  getExercicioCustosFixos: (ano) => callApi(window.api.getExercicioCustosFixos, ano),
-  getMesCustosFixos: (ano, mes) => callApi(window.api.getMesCustosFixos, ano, mes),
-  updateCustoFixoMensal: (id, data) => callApi(window.api.updateCustoFixoMensal, id, data),
-  createCustoFixoExtra: (data) => callApi(window.api.createCustoFixoExtra, data),
-  deleteCustoFixoMensal: (id) => callApi(window.api.deleteCustoFixoMensal, id),
-  aplicarPadroesCustosFixosMes: (ano, mes) => callApi(window.api.aplicarPadroesCustosFixosMes, ano, mes),
-  aplicarPadroesCustosFixosExercicio: (ano) => callApi(window.api.aplicarPadroesCustosFixosExercicio, ano),
-  listCentrosCusto: (busca, opts) => callApi(window.api.listCentrosCusto, busca, opts),
-  getCentroCusto: (id) => callApi(window.api.getCentroCusto, id),
-  createCentroCusto: (data) => callApi(window.api.createCentroCusto, data),
-  updateCentroCusto: (id, data) => callApi(window.api.updateCentroCusto, id, data),
-  deleteCentroCusto: (id) => callApi(window.api.deleteCentroCusto, id),
-  listPagamentosFinanceiros: (filtros) => callApi(window.api.listPagamentosFinanceiros, filtros),
-  getPagamentoFinanceiro: (id) => callApi(window.api.getPagamentoFinanceiro, id),
-  createPagamentoFinanceiro: (data) => callApi(window.api.createPagamentoFinanceiro, data),
-  updatePagamentoFinanceiro: (id, data) => callApi(window.api.updatePagamentoFinanceiro, id, data),
-  deletePagamentoFinanceiro: (id) => callApi(window.api.deletePagamentoFinanceiro, id),
-  listNotasFiscais: (busca, fornecedorId) => callApi(window.api.listNotasFiscais, busca, fornecedorId),
-  getNotaFiscal: (id) => callApi(window.api.getNotaFiscal, id),
-  createNotaFiscal: (data) => callApi(window.api.createNotaFiscal, data),
-  getDashboard: () => callApi(window.api.getDashboard),
-  getSyncStatus: () => callApi(window.api.getSyncStatus),
-  listCategorias: () => callApi(window.api.listCategorias),
-  listFornecedores: (busca) => callApi(window.api.listFornecedores, busca),
-  getFornecedor: (id) => callApi(window.api.getFornecedor, id),
-  createFornecedor: (data) => callApi(window.api.createFornecedor, data),
-  updateFornecedor: (id, data) => callApi(window.api.updateFornecedor, id, data),
-  deleteFornecedor: (id) => callApi(window.api.deleteFornecedor, id),
-  listParceiros: (busca) => callApi(window.api.listParceiros, busca),
-  getParceiro: (id) => callApi(window.api.getParceiro, id),
-  createParceiro: (data) => callApi(window.api.createParceiro, data),
-  updateParceiro: (id, data) => callApi(window.api.updateParceiro, id, data),
-  deleteParceiro: (id) => callApi(window.api.deleteParceiro, id),
-  listIncentivosParceiro: (filtros) => callApi(window.api.listIncentivosParceiro, filtros),
-  buscarVendasParaNovoIncentivo: (busca) => callApi(window.api.buscarVendasParaNovoIncentivo, busca),
-  getIncentivoParceiro: (vendaId) => callApi(window.api.getIncentivoParceiro, vendaId),
-  saveIncentivoParceiro: (data) => callApi(window.api.saveIncentivoParceiro, data),
-  deleteIncentivoParceiro: (vendaId) => callApi(window.api.deleteIncentivoParceiro, vendaId),
-  listFormasPagamento: (busca) => callApi(window.api.listFormasPagamento, busca),
-  listFormasPagamentoAll: (busca) => callApi(window.api.listFormasPagamentoAll, busca),
-  getFormaPagamento: (id) => callApi(window.api.getFormaPagamento, id),
-  createFormaPagamento: (data) => callApi(window.api.createFormaPagamento, data),
-  updateFormaPagamento: (id, data) => callApi(window.api.updateFormaPagamento, id, data),
-  deleteFormaPagamento: (id) => callApi(window.api.deleteFormaPagamento, id),
-  listProdutosPlanejados: (busca) => callApi(window.api.listProdutosPlanejados, busca),
-  listProdutosPlanejadosAll: (busca) => callApi(window.api.listProdutosPlanejadosAll, busca),
-  getProdutoPlanejado: (id) => callApi(window.api.getProdutoPlanejado, id),
-  createProdutoPlanejado: (data) => callApi(window.api.createProdutoPlanejado, data),
-  updateProdutoPlanejado: (id, data) => callApi(window.api.updateProdutoPlanejado, id, data),
-  deleteProdutoPlanejado: (id) => callApi(window.api.deleteProdutoPlanejado, id),
-  listLocalizacoes: () => callApi(window.api.listLocalizacoes),
-  createLocalizacao: (data) => callApi(window.api.createLocalizacao, data),
-  updateLocalizacao: (id, data) => callApi(window.api.updateLocalizacao, id, data),
-  deleteLocalizacao: (id) => callApi(window.api.deleteLocalizacao, id),
-  listProdutos: (busca) => callApi(window.api.listProdutos, busca),
-  getProduto: (id) => callApi(window.api.getProduto, id),
-  createProduto: (data) => callApi(window.api.createProduto, data),
-  updateProduto: (id, data) => callApi(window.api.updateProduto, id, data),
-  deleteProduto: (id) => callApi(window.api.deleteProduto, id),
-  getProdutoFoto: (id) => callApi(window.api.getProdutoFoto, id),
-  gerarPdfEtiquetaProduto: async (data) => {
-    const result = await window.api.gerarPdfEtiquetaProduto(data);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar etiqueta');
-    if (result.data?.cancelled) return { cancelled: true };
-    return result.data;
-  },
-  listRecebimentosParaEtiquetas: (busca) => callApi(window.api.listRecebimentosParaEtiquetas, busca),
-  gerarPdfFolhasEtiquetas: async (data) => {
-    const result = await window.api.gerarPdfFolhasEtiquetas(data);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar folhas de etiquetas');
-    if (result.data?.cancelled) return { cancelled: true };
-    return result.data;
-  },
-  listEstoque: (busca) => callApi(window.api.listEstoque, busca),
-  listPendenciasAlocacao: (busca) => callApi(window.api.listPendenciasAlocacao, busca),
-  alocarProduto: (data) => callApi(window.api.alocarProduto, data),
-  listMovimentacoes: (limite) => callApi(window.api.listMovimentacoes, limite),
-  createMovimentacao: (data) => callApi(window.api.createMovimentacao, data),
-  listClientes: (busca) => callApi(window.api.listClientes, busca),
-  getCliente: (id) => callApi(window.api.getCliente, id),
-  createCliente: (data) => callApi(window.api.createCliente, data),
-  updateCliente: (id, data) => callApi(window.api.updateCliente, id, data),
-  listOrcamentos: (busca) => callApi(window.api.listOrcamentos, busca),
-  getOrcamento: (id) => callApi(window.api.getOrcamento, id),
-  saveOrcamento: (data, id) => callApi(window.api.saveOrcamento, data, id),
-  updateOrcamentoStatus: (id, status, motivo) => callApi(window.api.updateOrcamentoStatus, id, status, motivo),
-  moverOrcamentoKanban: (id, data) => callApi(window.api.moverOrcamentoKanban, id, data),
-  listClientesMarketingOrcamento: (motivo) => callApi(window.api.listClientesMarketingOrcamento, motivo),
-  deleteOrcamento: (id) => callApi(window.api.deleteOrcamento, id),
-  gerarPdfOrcamento: async (id) => {
-    const result = await window.api.gerarPdfOrcamento(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listOrcamentosPlanejados: (busca) => callApi(window.api.listOrcamentosPlanejados, busca),
-  getOrcamentoPlanejado: (id) => callApi(window.api.getOrcamentoPlanejado, id),
-  saveOrcamentoPlanejado: (data, id) => callApi(window.api.saveOrcamentoPlanejado, data, id),
-  moverOrcamentoPlanejadoKanban: (id, data) => callApi(window.api.moverOrcamentoPlanejadoKanban, id, data),
-  deleteOrcamentoPlanejado: (id) => callApi(window.api.deleteOrcamentoPlanejado, id),
-  gerarPdfOrcamentoPlanejado: async (id) => {
-    const result = await window.api.gerarPdfOrcamentoPlanejado(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listVendasPlanejados: (busca) => callApi(window.api.listVendasPlanejados, busca),
-  getVendaPlanejado: (id) => callApi(window.api.getVendaPlanejado, id),
-  saveVendaPlanejado: (data, id) => callApi(window.api.saveVendaPlanejado, data, id),
-  deleteVendaPlanejado: (id) => callApi(window.api.deleteVendaPlanejado, id),
-  abrirAnexoVendaPlanejado: (vendaId, anexoId) => callApi(window.api.abrirAnexoVendaPlanejado, vendaId, anexoId),
-  gerarPdfVendaPlanejado: async (id) => {
-    const result = await window.api.gerarPdfVendaPlanejado(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listAcompanhamentoPedidosPlanejados: (busca) => callApi(window.api.listAcompanhamentoPedidosPlanejados, busca),
-  moverAcompanhamentoPedidoKanban: (id, data) => callApi(window.api.moverAcompanhamentoPedidoKanban, id, data),
-  criarAssistenciaTecnicaPlanejada: (data) => callApi(window.api.criarAssistenciaTecnicaPlanejada, data),
-  listAcompanhamentoPedidoAnotacoes: (id) => callApi(window.api.listAcompanhamentoPedidoAnotacoes, id),
-  adicionarAcompanhamentoPedidoAnotacao: (id, texto) => callApi(window.api.adicionarAcompanhamentoPedidoAnotacao, id, texto),
-  atualizarAcompanhamentoPedidoAnotacao: (id, texto) => callApi(window.api.atualizarAcompanhamentoPedidoAnotacao, id, texto),
-  excluirAcompanhamentoPedidoAnotacao: (id) => callApi(window.api.excluirAcompanhamentoPedidoAnotacao, id),
-  getVisaoGeralVendas: (filtros) => callApi(window.api.getVisaoGeralVendas, filtros),
-  getVendaAnaliseMarkup: (id) => callApi(window.api.getVendaAnaliseMarkup, id),
-  listAjustesComissao: (filtros) => callApi(window.api.listAjustesComissao, filtros),
-  listVendas: (busca) => callApi(window.api.listVendas, busca),
-  listVendasDesativadas: (busca) => callApi(window.api.listVendasDesativadas, busca),
-  getVenda: (id) => callApi(window.api.getVenda, id),
-  saveVenda: (data, id) => callApi(window.api.saveVenda, data, id),
-  editarVenda: (id, data) => callApi(window.api.editarVenda, id, data),
-  listAlteracoesVenda: (id) => callApi(window.api.listAlteracoesVenda, id),
-  deleteVenda: (id) => callApi(window.api.deleteVenda, id),
-  restaurarVenda: (id) => callApi(window.api.restaurarVenda, id),
-  gerarPdfVenda: async (id) => {
-    const result = await window.api.gerarPdfVenda(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  gerarPdfAlteracaoVenda: async (id) => {
-    const result = await window.api.gerarPdfAlteracaoVenda(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listEntregas: (filtro, busca) => callApi(window.api.listEntregas, filtro, busca),
-  listEntregasAgendadas: (busca) => callApi(window.api.listEntregasAgendadas, busca),
-  getEntrega: (id) => callApi(window.api.getEntrega, id),
-  updateEntrega: (id, data) => callApi(window.api.updateEntrega, id, data),
-  updateEntregaKanban: (id, data) => callApi(window.api.updateEntregaKanban, id, data),
-  confirmarAgendamentoCliente: (id) => callApi(window.api.confirmarAgendamentoCliente, id),
-  agendarExpedicao: (vendaId, data) => callApi(window.api.agendarExpedicao, vendaId, data),
-  criarAssistenciaEntrega: (data) => callApi(window.api.criarAssistenciaEntrega, data),
-  registrarEntrega: (id, data) => callApi(window.api.registrarEntrega, id, data),
-  marcarEntregaJaRealizada: (id) => callApi(window.api.marcarEntregaJaRealizada, id),
-  gerarPdfEntrega: async (id) => {
-    const result = await window.api.gerarPdfEntrega(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listEncomendasFornecedor: (busca) => callApi(window.api.listEncomendasFornecedor, busca),
-  getEncomendaFornecedor: (id) => callApi(window.api.getEncomendaFornecedor, id),
-  saveEncomendaFornecedor: (data, id) => callApi(window.api.saveEncomendaFornecedor, data, id),
-  deleteEncomendaFornecedor: (id) => callApi(window.api.deleteEncomendaFornecedor, id),
-  updateEncomendaFornecedorStatus: (id, status) => callApi(window.api.updateEncomendaFornecedorStatus, id, status),
-  listPendenciasEncomenda: (fornecedorId, busca) => callApi(window.api.listPendenciasEncomenda, fornecedorId, busca),
-  getResumoPendenciasEncomenda: () => callApi(window.api.getResumoPendenciasEncomenda),
-  listItensPendentesRecebimento: (busca) => callApi(window.api.listItensPendentesRecebimento, busca),
-  listItensControleRecebimento: (filtro, busca) => callApi(window.api.listItensControleRecebimento, filtro, busca),
-  listHistoricoRecebimentos: (busca) => callApi(window.api.listHistoricoRecebimentos, busca),
-  estornarRecebimento: (id) => callApi(window.api.estornarRecebimento, id),
-  receberEncomendaItem: (data) => callApi(window.api.receberEncomendaItem, data),
-  getDisponibilidadeProduto: (produtoId) => callApi(window.api.getDisponibilidadeProduto, produtoId),
-  gerarPdfEncomendaFornecedor: async (id) => {
-    const result = await window.api.gerarPdfEncomendaFornecedor(id);
-    if (!result.success) throw new Error(result.error || 'Erro ao gerar PDF');
-    return result.data;
-  },
-  listVendedores: (busca, classificacao) => callApi(window.api.listVendedores, busca, classificacao),
-  getVendedor: (id) => callApi(window.api.getVendedor, id),
-  createVendedor: (data) => callApi(window.api.createVendedor, data),
-  updateVendedor: (id, data) => callApi(window.api.updateVendedor, id, data),
-  deleteVendedor: (id) => callApi(window.api.deleteVendedor, id),
-  listArquivoRegistros: (filtros) => callApi(window.api.listArquivoRegistros, filtros),
-  getArquivoRegistro: (id) => callApi(window.api.getArquivoRegistro, id),
-  restaurarArquivoRegistro: (id) => callApi(window.api.restaurarArquivoRegistro, id),
-  listComissaoRegras: () => callApi(window.api.listComissaoRegras),
-  getComissaoRegra: (perfil) => callApi(window.api.getComissaoRegra, perfil),
-  saveComissaoRegra: (data) => callApi(window.api.saveComissaoRegra, data),
-  listControleComissoes: (filtros) => callApi(window.api.listControleComissoes, filtros),
-  sincronizarComissoes: () => callApi(window.api.sincronizarComissoes),
-  getControleMensalComissoes: (filtros) => callApi(window.api.getControleMensalComissoes, filtros),
-  listAjustesComissaoMes: (filtros) => callApi(window.api.listAjustesComissaoMes, filtros),
-  salvarPagamentoComissao: (data) => callApi(window.api.salvarPagamentoComissao, data),
-  excluirPagamentoComissao: (id) => callApi(window.api.excluirPagamentoComissao, id),
-  getComissaoRegraPlanejados: () => callApi(window.api.getComissaoRegraPlanejados),
-  saveComissaoRegraPlanejados: (data) => callApi(window.api.saveComissaoRegraPlanejados, data),
-  getControleMensalPlanejados: (filtros) => callApi(window.api.getControleMensalPlanejados, filtros),
-  sincronizarComissoesPlanejados: (ano) => callApi(window.api.sincronizarComissoesPlanejados, ano),
-  salvarPagamentoComissaoPlanejado: (data) => callApi(window.api.salvarPagamentoComissaoPlanejado, data),
-  excluirPagamentoComissaoPlanejado: (id) => callApi(window.api.excluirPagamentoComissaoPlanejado, id),
-  onAppCloseRequest: (handler) => window.api.onAppCloseRequest(handler),
-  confirmAppClose: () => window.api.confirmAppClose(),
-  getFaseImplantacao: () => callApi(window.api.getFaseImplantacao),
-  setFaseImplantacao: (ativa) => callApi(window.api.setFaseImplantacao, ativa),
-  backfillExpedicoesImplantacao: () => callApi(window.api.backfillExpedicoesImplantacao),
+  abrirAnexoVendaPlanejado: (...args) => invoke('abrirAnexoVendaPlanejado', args),
+  adicionarAcompanhamentoPedidoAnotacao: (...args) => invoke('adicionarAcompanhamentoPedidoAnotacao', args),
+  agendarExpedicao: (...args) => invoke('agendarExpedicao', args),
+  alocarProduto: (...args) => invoke('alocarProduto', args),
+  aplicarPadroesCustosFixosExercicio: (...args) => invoke('aplicarPadroesCustosFixosExercicio', args),
+  aplicarPadroesCustosFixosMes: (...args) => invoke('aplicarPadroesCustosFixosMes', args),
+  atualizarAcompanhamentoPedidoAnotacao: (...args) => invoke('atualizarAcompanhamentoPedidoAnotacao', args),
+  backfillExpedicoesImplantacao: (...args) => invoke('backfillExpedicoesImplantacao', args),
+  buscarVendasParaNovoIncentivo: (...args) => invoke('buscarVendasParaNovoIncentivo', args),
+  confirmarAgendamentoCliente: (...args) => invoke('confirmarAgendamentoCliente', args),
+  createCentroCusto: (...args) => invoke('createCentroCusto', args),
+  createCliente: (...args) => invoke('createCliente', args),
+  createColaborador: (...args) => invoke('createColaborador', args),
+  createCustoFixoExtra: (...args) => invoke('createCustoFixoExtra', args),
+  createCustoFixoTemplate: (...args) => invoke('createCustoFixoTemplate', args),
+  createFormaPagamento: (...args) => invoke('createFormaPagamento', args),
+  createFornecedor: (...args) => invoke('createFornecedor', args),
+  createLocalizacao: (...args) => invoke('createLocalizacao', args),
+  createMovimentacao: (...args) => invoke('createMovimentacao', args),
+  createNotaFiscal: (...args) => invoke('createNotaFiscal', args),
+  createPagamentoFinanceiro: (...args) => invoke('createPagamentoFinanceiro', args),
+  createParceiro: (...args) => invoke('createParceiro', args),
+  createProduto: (...args) => invoke('createProduto', args),
+  createProdutoPlanejado: (...args) => invoke('createProdutoPlanejado', args),
+  createUsuario: (...args) => invoke('createUsuario', args),
+  createVendedor: (...args) => invoke('createVendedor', args),
+  criarAssistenciaEntrega: (...args) => invoke('criarAssistenciaEntrega', args),
+  criarAssistenciaTecnicaPlanejada: (...args) => invoke('criarAssistenciaTecnicaPlanejada', args),
+  deleteCentroCusto: (...args) => invoke('deleteCentroCusto', args),
+  deleteColaborador: (...args) => invoke('deleteColaborador', args),
+  deleteCustoFixoMensal: (...args) => invoke('deleteCustoFixoMensal', args),
+  deleteCustoFixoTemplate: (...args) => invoke('deleteCustoFixoTemplate', args),
+  deleteEncomendaFornecedor: (...args) => invoke('deleteEncomendaFornecedor', args),
+  deleteFormaPagamento: (...args) => invoke('deleteFormaPagamento', args),
+  deleteFornecedor: (...args) => invoke('deleteFornecedor', args),
+  deleteIncentivoParceiro: (...args) => invoke('deleteIncentivoParceiro', args),
+  deleteLocalizacao: (...args) => invoke('deleteLocalizacao', args),
+  deleteOrcamento: (...args) => invoke('deleteOrcamento', args),
+  deleteOrcamentoPlanejado: (...args) => invoke('deleteOrcamentoPlanejado', args),
+  deletePagamentoFinanceiro: (...args) => invoke('deletePagamentoFinanceiro', args),
+  deleteParceiro: (...args) => invoke('deleteParceiro', args),
+  deleteProduto: (...args) => invoke('deleteProduto', args),
+  deleteProdutoPlanejado: (...args) => invoke('deleteProdutoPlanejado', args),
+  deleteUsuario: (...args) => invoke('deleteUsuario', args),
+  deleteVenda: (...args) => invoke('deleteVenda', args),
+  deleteVendaPlanejado: (...args) => invoke('deleteVendaPlanejado', args),
+  deleteVendedor: (...args) => invoke('deleteVendedor', args),
+  editarVenda: (...args) => invoke('editarVenda', args),
+  estornarRecebimento: (...args) => invoke('estornarRecebimento', args),
+  excluirAcompanhamentoPedidoAnotacao: (...args) => invoke('excluirAcompanhamentoPedidoAnotacao', args),
+  excluirPagamentoComissao: (...args) => invoke('excluirPagamentoComissao', args),
+  excluirPagamentoComissaoPlanejado: (...args) => invoke('excluirPagamentoComissaoPlanejado', args),
+  gerarPdfAlteracaoVenda: async (id) => downloadPdf(await invoke('gerarPdfAlteracaoVenda', [id])),
+  gerarPdfEncomendaFornecedor: async (id) => downloadPdf(await invoke('gerarPdfEncomendaFornecedor', [id])),
+  gerarPdfEntrega: async (id) => downloadPdf(await invoke('gerarPdfEntrega', [id])),
+  gerarPdfEtiquetaProduto: async (data) => downloadPdf(await invoke('gerarPdfEtiquetaProduto', [data])),
+  gerarPdfFolhasEtiquetas: async (data) => downloadPdf(await invoke('gerarPdfFolhasEtiquetas', [data])),
+  gerarPdfOrcamento: async (id) => downloadPdf(await invoke('gerarPdfOrcamento', [id])),
+  gerarPdfOrcamentoPlanejado: async (id) => downloadPdf(await invoke('gerarPdfOrcamentoPlanejado', [id])),
+  gerarPdfVenda: async (id) => downloadPdf(await invoke('gerarPdfVenda', [id])),
+  gerarPdfVendaPlanejado: async (id) => downloadPdf(await invoke('gerarPdfVendaPlanejado', [id])),
+  getArquivoRegistro: (...args) => invoke('getArquivoRegistro', args),
+  getCentroCusto: (...args) => invoke('getCentroCusto', args),
+  getCliente: (...args) => invoke('getCliente', args),
+  getColaborador: (...args) => invoke('getColaborador', args),
+  getComissaoRegra: (...args) => invoke('getComissaoRegra', args),
+  getComissaoRegraPlanejados: (...args) => invoke('getComissaoRegraPlanejados', args),
+  getControleMensalComissoes: (...args) => invoke('getControleMensalComissoes', args),
+  getControleMensalPlanejados: (...args) => invoke('getControleMensalPlanejados', args),
+  getDashboard: (...args) => invoke('getDashboard', args),
+  getDisponibilidadeProduto: (...args) => invoke('getDisponibilidadeProduto', args),
+  getEncomendaFornecedor: (...args) => invoke('getEncomendaFornecedor', args),
+  getEntrega: (...args) => invoke('getEntrega', args),
+  getExercicioCustosFixos: (...args) => invoke('getExercicioCustosFixos', args),
+  getFaseImplantacao: (...args) => invoke('getFaseImplantacao', args),
+  getFormaPagamento: (...args) => invoke('getFormaPagamento', args),
+  getFornecedor: (...args) => invoke('getFornecedor', args),
+  getIncentivoParceiro: (...args) => invoke('getIncentivoParceiro', args),
+  getMesCustosFixos: (...args) => invoke('getMesCustosFixos', args),
+  getNotaFiscal: (...args) => invoke('getNotaFiscal', args),
+  getOrcamento: (...args) => invoke('getOrcamento', args),
+  getOrcamentoPlanejado: (...args) => invoke('getOrcamentoPlanejado', args),
+  getPagamentoFinanceiro: (...args) => invoke('getPagamentoFinanceiro', args),
+  getParceiro: (...args) => invoke('getParceiro', args),
+  getProduto: (...args) => invoke('getProduto', args),
+  getProdutoFoto: (...args) => invoke('getProdutoFoto', args),
+  getProdutoPlanejado: (...args) => invoke('getProdutoPlanejado', args),
+  getResumoPendenciasEncomenda: (...args) => invoke('getResumoPendenciasEncomenda', args),
+  getSession: (...args) => invoke('getSession', args),
+  getSyncStatus: () => invoke('getSyncStatus', []),
+  getUsuario: (...args) => invoke('getUsuario', args),
+  getVenda: (...args) => invoke('getVenda', args),
+  getVendaAnaliseMarkup: (...args) => invoke('getVendaAnaliseMarkup', args),
+  getVendaPlanejado: (...args) => invoke('getVendaPlanejado', args),
+  getVendedor: (...args) => invoke('getVendedor', args),
+  getVisaoGeralVendas: (...args) => invoke('getVisaoGeralVendas', args),
+  listAcompanhamentoPedidoAnotacoes: (...args) => invoke('listAcompanhamentoPedidoAnotacoes', args),
+  listAcompanhamentoPedidosPlanejados: (...args) => invoke('listAcompanhamentoPedidosPlanejados', args),
+  listAjustesComissao: (...args) => invoke('listAjustesComissao', args),
+  listAjustesComissaoMes: (...args) => invoke('listAjustesComissaoMes', args),
+  listAlteracoesVenda: (...args) => invoke('listAlteracoesVenda', args),
+  listArquivoRegistros: (...args) => invoke('listArquivoRegistros', args),
+  listCategorias: (...args) => invoke('listCategorias', args),
+  listCentrosCusto: (...args) => invoke('listCentrosCusto', args),
+  listClientes: (...args) => invoke('listClientes', args),
+  listClientesMarketingOrcamento: (...args) => invoke('listClientesMarketingOrcamento', args),
+  listColaboradores: (...args) => invoke('listColaboradores', args),
+  listComissaoRegras: (...args) => invoke('listComissaoRegras', args),
+  listControleComissoes: (...args) => invoke('listControleComissoes', args),
+  listCustosFixosTemplate: (...args) => invoke('listCustosFixosTemplate', args),
+  listEncomendasFornecedor: (...args) => invoke('listEncomendasFornecedor', args),
+  listEntregas: (...args) => invoke('listEntregas', args),
+  listEntregasAgendadas: (...args) => invoke('listEntregasAgendadas', args),
+  listEstoque: (...args) => invoke('listEstoque', args),
+  listFormasPagamento: (...args) => invoke('listFormasPagamento', args),
+  listFormasPagamentoAll: (...args) => invoke('listFormasPagamentoAll', args),
+  listFornecedores: (...args) => invoke('listFornecedores', args),
+  listHistoricoRecebimentos: (...args) => invoke('listHistoricoRecebimentos', args),
+  listIncentivosParceiro: (...args) => invoke('listIncentivosParceiro', args),
+  listItensControleRecebimento: (...args) => invoke('listItensControleRecebimento', args),
+  listItensPendentesRecebimento: (...args) => invoke('listItensPendentesRecebimento', args),
+  listLocalizacoes: (...args) => invoke('listLocalizacoes', args),
+  listMovimentacoes: (...args) => invoke('listMovimentacoes', args),
+  listNotasFiscais: (...args) => invoke('listNotasFiscais', args),
+  listOrcamentos: (...args) => invoke('listOrcamentos', args),
+  listOrcamentosPlanejados: (...args) => invoke('listOrcamentosPlanejados', args),
+  listPagamentosFinanceiros: (...args) => invoke('listPagamentosFinanceiros', args),
+  listParceiros: (...args) => invoke('listParceiros', args),
+  listPendenciasAlocacao: (...args) => invoke('listPendenciasAlocacao', args),
+  listPendenciasEncomenda: (...args) => invoke('listPendenciasEncomenda', args),
+  listProdutos: (...args) => invoke('listProdutos', args),
+  listProdutosPlanejados: (...args) => invoke('listProdutosPlanejados', args),
+  listProdutosPlanejadosAll: (...args) => invoke('listProdutosPlanejadosAll', args),
+  listRecebimentosParaEtiquetas: (...args) => invoke('listRecebimentosParaEtiquetas', args),
+  listUsuarios: (...args) => invoke('listUsuarios', args),
+  listUsuariosParaColaborador: (...args) => invoke('listUsuariosParaColaborador', args),
+  listVendas: (...args) => invoke('listVendas', args),
+  listVendasDesativadas: (...args) => invoke('listVendasDesativadas', args),
+  listVendasPlanejados: (...args) => invoke('listVendasPlanejados', args),
+  listVendedores: (...args) => invoke('listVendedores', args),
+  login: (login, senha) => invoke('login', [{ login, senha }]),
+  logout: (...args) => invoke('logout', args),
+  marcarEntregaJaRealizada: (...args) => invoke('marcarEntregaJaRealizada', args),
+  moverAcompanhamentoPedidoKanban: (...args) => invoke('moverAcompanhamentoPedidoKanban', args),
+  moverOrcamentoKanban: (...args) => invoke('moverOrcamentoKanban', args),
+  moverOrcamentoPlanejadoKanban: (...args) => invoke('moverOrcamentoPlanejadoKanban', args),
+  openExternalUrl: (...args) => invoke('openExternalUrl', args),
+  receberEncomendaItem: (...args) => invoke('receberEncomendaItem', args),
+  registrarEntrega: (...args) => invoke('registrarEntrega', args),
+  restaurarArquivoRegistro: (...args) => invoke('restaurarArquivoRegistro', args),
+  restaurarVenda: (...args) => invoke('restaurarVenda', args),
+  restoreSession: (userId) => invoke('restoreSession', [userId]),
+  salvarPagamentoComissao: (...args) => invoke('salvarPagamentoComissao', args),
+  salvarPagamentoComissaoPlanejado: (...args) => invoke('salvarPagamentoComissaoPlanejado', args),
+  saveComissaoRegra: (...args) => invoke('saveComissaoRegra', args),
+  saveComissaoRegraPlanejados: (...args) => invoke('saveComissaoRegraPlanejados', args),
+  saveEncomendaFornecedor: (...args) => invoke('saveEncomendaFornecedor', args),
+  saveIncentivoParceiro: (...args) => invoke('saveIncentivoParceiro', args),
+  saveOrcamento: (...args) => invoke('saveOrcamento', args),
+  saveOrcamentoPlanejado: (...args) => invoke('saveOrcamentoPlanejado', args),
+  saveVenda: (...args) => invoke('saveVenda', args),
+  saveVendaPlanejado: (...args) => invoke('saveVendaPlanejado', args),
+  setFaseImplantacao: (...args) => invoke('setFaseImplantacao', args),
+  sincronizarComissoes: (...args) => invoke('sincronizarComissoes', args),
+  sincronizarComissoesPlanejados: (...args) => invoke('sincronizarComissoesPlanejados', args),
+  updateCentroCusto: (...args) => invoke('updateCentroCusto', args),
+  updateCliente: (...args) => invoke('updateCliente', args),
+  updateColaborador: (...args) => invoke('updateColaborador', args),
+  updateCustoFixoMensal: (...args) => invoke('updateCustoFixoMensal', args),
+  updateCustoFixoTemplate: (...args) => invoke('updateCustoFixoTemplate', args),
+  updateEncomendaFornecedorStatus: (...args) => invoke('updateEncomendaFornecedorStatus', args),
+  updateEntrega: (...args) => invoke('updateEntrega', args),
+  updateEntregaKanban: (...args) => invoke('updateEntregaKanban', args),
+  updateFormaPagamento: (...args) => invoke('updateFormaPagamento', args),
+  updateFornecedor: (...args) => invoke('updateFornecedor', args),
+  updateLocalizacao: (...args) => invoke('updateLocalizacao', args),
+  updateOrcamentoStatus: (...args) => invoke('updateOrcamentoStatus', args),
+  updatePagamentoFinanceiro: (...args) => invoke('updatePagamentoFinanceiro', args),
+  updateParceiro: (...args) => invoke('updateParceiro', args),
+  updateProduto: (...args) => invoke('updateProduto', args),
+  updateProdutoPlanejado: (...args) => invoke('updateProdutoPlanejado', args),
+  updateUsuario: (...args) => invoke('updateUsuario', args),
+  updateVendedor: (...args) => invoke('updateVendedor', args),
+  onAppCloseRequest: (handler) => { if (window.api?.onAppCloseRequest) window.api.onAppCloseRequest(handler); },
+  confirmAppClose: () => { if (window.api?.confirmAppClose) window.api.confirmAppClose(); },
+  onSyncCompleted: (handler) => { if (window.api?.onSyncCompleted) window.api.onSyncCompleted(handler); },
+  onConnectivityChanged: (handler) => { if (window.api?.onConnectivityChanged) window.api.onConnectivityChanged(handler); },
 };

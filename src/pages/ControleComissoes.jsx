@@ -5,7 +5,7 @@ import { VENDAS_BASE } from '../constants/auth';
 import { formatCurrency, formatDate } from '../utils/format';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
-import { SaldoValor } from './ControleComissoesShared';
+import { AjusteDiferencaValor, SaldoValor } from './ControleComissoesShared';
 import ControleComissoesPlanejadosTab from './ControleComissoesPlanejadosTab';
 
 const PERFIL_LABEL = {
@@ -279,7 +279,11 @@ function PeriodoRow({
                 </div>
               )}
               <div className="comissao-ajustes-lista">
-                <h4>Ajustes que alteraram o total devido</h4>
+                <h4>Ajustes pós-pagamento / recálculo</h4>
+                <p className="hint-text">
+                  Se a comissão caiu depois de um pagamento, a diferença vira crédito a abater no próximo mês.
+                  Se subiu, vira débito a pagar.
+                </p>
                 {loadingAjustes ? (
                   <p className="hint-text">Carregando ajustes...</p>
                 ) : ajustes.length === 0 ? (
@@ -300,8 +304,8 @@ function PeriodoRow({
                           <td>{formatDate(a.criado_em)}</td>
                           <td>{MOTIVO_LABEL[a.motivo] || a.motivo}</td>
                           <td>{a.descricao}</td>
-                          <td className={a.diferenca < 0 ? 'comissao-saldo-debito' : a.diferenca > 0 ? 'comissao-saldo-credito' : ''}>
-                            {formatCurrency(a.diferenca)}
+                          <td>
+                            <AjusteDiferencaValor diferenca={a.diferenca} />
                           </td>
                         </tr>
                       ))}
@@ -522,21 +526,31 @@ export default function ControleComissoes() {
               )}
             <div className="comissao-saldo-total-card">
               <div className="comissao-saldo-total-header">
-                <h3>Saldo total a corrigir</h3>
-                <span className={saldoEmDia ? 'comissao-saldo-zerado' : 'comissao-saldo-pendente'}>
-                  {saldoEmDia ? 'Comissões em dia' : 'Ajuste necessário'}
+                <h3>Saldo acumulado de comissões</h3>
+                <span className={
+                  saldoEmDia
+                    ? 'comissao-saldo-zerado'
+                    : (resumo.saldo_vendedor > 0.01 || resumo.saldo_gerente > 0.01)
+                      ? 'comissao-saldo-credito'
+                      : 'comissao-saldo-pendente'
+                }>
+                  {saldoEmDia
+                    ? 'Comissões em dia'
+                    : (resumo.saldo_vendedor > 0.01 || resumo.saldo_gerente > 0.01)
+                      ? 'Há crédito a abater'
+                      : 'Há débito a pagar'}
                 </span>
               </div>
               <div className="stats-grid visao-vendas-stats comissao-saldo-total-grid">
                 <div className={`stat-card ${Math.abs(resumo.saldo_vendedor) >= 0.01 ? 'stat-card-priority' : ''}`}>
                   <div className="label">Saldo total — Vendedores</div>
                   <div className="value"><SaldoValor valor={resumo.saldo_vendedor} showLabel={false} /></div>
-                  <div className="hint-text">Pago − devido (acumulado no ano)</div>
+                  <div className="hint-text">Pago − devido (crédito abate o próximo mês)</div>
                 </div>
                 <div className={`stat-card ${Math.abs(resumo.saldo_gerente) >= 0.01 ? 'stat-card-priority' : ''}`}>
                   <div className="label">Saldo total — Gerência</div>
                   <div className="value"><SaldoValor valor={resumo.saldo_gerente} showLabel={false} /></div>
-                  <div className="hint-text">Pago − devido (acumulado no ano)</div>
+                  <div className="hint-text">Pago − devido (crédito abate o próximo mês)</div>
                 </div>
                 <div className="stat-card">
                   <div className="label">Devido — Gerência (ano)</div>

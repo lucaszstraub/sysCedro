@@ -1,5 +1,6 @@
-const { scrypt, randomBytes, timingSafeEqual } = require('crypto');
+const { scrypt, randomBytes, timingSafeEqual, createHmac } = require('crypto');
 const { promisify } = require('util');
+const { AsyncLocalStorage } = require('async_hooks');
 const { getPool } = require('./database');
 const {
   userHasPermission,
@@ -9,8 +10,22 @@ const {
 } = require('./permissions');
 
 const scryptAsync = promisify(scrypt);
+const sessionAls = new AsyncLocalStorage();
 
+/** Sessão única do processo Electron (desktop). */
 let currentSession = null;
+
+const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+function isWebRuntime() {
+  return process.env.SYS_CEDRO_WEB === '1' || process.env.VERCEL === '1';
+}
+
+function getSessionSecret() {
+  return process.env.SESSION_SECRET
+    || process.env.SYS_CEDRO_SESSION_SECRET
+    || 'syscedro-dev-secret-change-me';
+}
 
 function sanitizeUser(row) {
   if (!row) return null;
@@ -59,12 +74,45 @@ async function ensureMasterUser() {
   `, [senhaHash, ATRIBUICOES.ADMINISTRACAO]);
 }
 
+function signSessionToken(user) {
+  const payload = Buffer.from(JSON.stringify({
+    user,
+    exp: Date.now() + SESSION_TTL_MS,
+  })).toString('base64url');
+  const sig = createHmac('sha256', getSessionSecret()).update(payload).digest('base64url');
+  return `${payload}.${sig}`;
+}
+
+function verifySessionToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [payload, sig] = token.split('.');
+  const expected = createHmac('sha256', getSessionSecret()).update(payload).digest('base64url');
+  const a = Buffer.from(sig);
+  const b = Buffer.from(expected);
+  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
+  try {
+    const data = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    if (!data?.user?.id || !data.exp || data.exp < Date.now()) return null;
+    return sanitizeUser(data.user);
+  } catch {
+    return null;
+  }
+}
+
 function getSession() {
+  const store = sessionAls.getStore();
+  if (store && Object.prototype.hasOwnProperty.call(store, 'session')) {
+    return store.session;
+  }
   return currentSession;
 }
 
+function runWithSession(session, fn) {
+  return sessionAls.run({ session }, fn);
+}
+
 function requireSession() {
-  if (!currentSession) {
+  if (!getSession()) {
     throw new Error('Faça login para continuar.');
   }
 }
@@ -83,14 +131,14 @@ function assertChannelAccess(channel) {
   if (requirement.type === 'session') return;
 
   if (requirement.type === 'single') {
-    if (!userHasPermission(currentSession, requirement.permission)) {
+    if (!userHasPermission(getSession(), requirement.permission)) {
       throw new Error('Você não tem permissão para esta ação.');
     }
     return;
   }
 
   if (requirement.type === 'any') {
-    if (!userHasAnyPermission(currentSession, requirement.permissions)) {
+    if (!userHasAnyPermission(getSession(), requirement.permissions)) {
       throw new Error('Você não tem permissão para esta ação.');
     }
     return;
@@ -98,7 +146,7 @@ function assertChannelAccess(channel) {
 
   if (requirement.type === 'administracao') {
     const { userIsAdministrador } = require('./permissions');
-    if (!userIsAdministrador(currentSession)) {
+    if (!userIsAdministrador(getSession())) {
       throw new Error('Acesso restrito à administração do sistema.');
     }
   }
@@ -125,11 +173,30 @@ async function login(login, senha) {
     throw new Error('Login ou senha inválidos.');
   }
 
-  currentSession = await finalizeSession(user);
+  const sessionUser = await finalizeSession(user);
+
+  if (isWebRuntime()) {
+    const token = signSessionToken(sessionUser);
+    return { ...sessionUser, token };
+  }
+
+  currentSession = sessionUser;
   return currentSession;
 }
 
-async function restoreSession(userId) {
+async function restoreSession(userId, token) {
+  if (token) {
+    const fromToken = verifySessionToken(token);
+    if (fromToken && Number(fromToken.id) === Number(userId)) {
+      if (isWebRuntime()) {
+        const refreshed = signSessionToken(fromToken);
+        return { ...fromToken, token: refreshed };
+      }
+      currentSession = fromToken;
+      return currentSession;
+    }
+  }
+
   const db = getPool();
   const result = await db.query(
     'SELECT * FROM usuarios WHERE id = $1 AND ativo = true',
@@ -139,11 +206,20 @@ async function restoreSession(userId) {
     throw new Error('Sessão inválida.');
   }
 
-  currentSession = await finalizeSession(result.rows[0]);
+  const sessionUser = await finalizeSession(result.rows[0]);
+
+  if (isWebRuntime()) {
+    const newToken = signSessionToken(sessionUser);
+    return { ...sessionUser, token: newToken };
+  }
+
+  currentSession = sessionUser;
   return currentSession;
 }
 
 function logout() {
+  const store = sessionAls.getStore();
+  if (store) store.session = null;
   currentSession = null;
   return { success: true };
 }
@@ -162,4 +238,8 @@ module.exports = {
   userHasPermission,
   userHasAnyPermission,
   isAtribuicaoValida,
+  runWithSession,
+  verifySessionToken,
+  signSessionToken,
+  isWebRuntime,
 };

@@ -1,6 +1,22 @@
-const { dialog, shell } = require('electron');
+const { dialog, shell } = (() => {
+  try {
+    return require('electron');
+  } catch {
+    return { dialog: null, shell: null };
+  }
+})();
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 
 const PDF_FILTER = [{ name: 'PDF', extensions: ['pdf'] }];
+
+function isWebRuntime() {
+  return process.env.SYS_CEDRO_WEB === '1'
+    || process.env.VERCEL === '1'
+    || !dialog
+    || typeof dialog.showSaveDialog !== 'function';
+}
 
 function pdfTimestamp() {
   const d = new Date();
@@ -25,7 +41,28 @@ function pdfDefaultFileName(...parts) {
   return `${base || 'documento'}-${pdfTimestamp()}.pdf`;
 }
 
+async function salvarPdfWeb(defaultPath, gerarFn) {
+  const fileName = defaultPath?.endsWith('.pdf') ? defaultPath : `${defaultPath || 'documento'}.pdf`;
+  const tmp = path.join(os.tmpdir(), `syscedro-${Date.now()}-${path.basename(fileName)}`);
+  try {
+    await gerarFn(tmp);
+    const buf = fs.readFileSync(tmp);
+    return {
+      cancelled: false,
+      fileName,
+      pdfBase64: buf.toString('base64'),
+      mimeType: 'application/pdf',
+    };
+  } finally {
+    try { fs.unlinkSync(tmp); } catch { /* ignore */ }
+  }
+}
+
 async function salvarEAbrirPdf(browserWindow, { title, defaultPath }, gerarFn) {
+  if (isWebRuntime() || !browserWindow) {
+    return salvarPdfWeb(defaultPath, gerarFn);
+  }
+
   const { canceled, filePath } = await dialog.showSaveDialog(browserWindow, {
     title,
     defaultPath,
@@ -47,4 +84,5 @@ module.exports = {
   salvarEAbrirPdf,
   pdfDefaultFileName,
   sanitizeFilePart,
+  isWebRuntime,
 };

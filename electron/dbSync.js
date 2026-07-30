@@ -31,11 +31,16 @@ const ORCAMENTO_TABLES = [
 let cloudAvailable = false;
 let lastSyncSummary = null;
 
+// TEMPORÁRIO (apresentação): força só a versão padrão (nuvem), sem híbrido/offline.
+// Para reativar o offline depois: defina como false (ou remova) e reinicie o app.
+const FORCE_CLOUD_ONLY = true;
+
 function setCloudAvailable(value) {
   cloudAvailable = Boolean(value);
 }
 
 function isHybridMode() {
+  if (FORCE_CLOUD_ONLY) return false;
   const flag = String(process.env.DB_HYBRID || '').toLowerCase();
   if (['0', 'false', 'no', 'off'].includes(flag)) return false;
   if (['1', 'true', 'yes', 'on'].includes(flag)) return true;

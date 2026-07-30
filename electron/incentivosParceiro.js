@@ -423,13 +423,22 @@ async function salvarIncentivoParceiro(data) {
     }
 
     await client.query('COMMIT');
-    return getIncentivoParceiro(vendaId);
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
   } finally {
     client.release();
   }
+
+  // Recalcula comissões: redução após pagamento gera crédito no painel.
+  try {
+    const { sincronizarComissoesVenda } = require('./comissaoVendas');
+    await sincronizarComissoesVenda(vendaId);
+  } catch (err) {
+    console.error('Erro ao sincronizar comissões após incentivo:', err);
+  }
+
+  return getIncentivoParceiro(vendaId);
 }
 
 async function removerIncentivoParceiro(vendaId) {
@@ -440,6 +449,14 @@ async function removerIncentivoParceiro(vendaId) {
     [vendaId]
   );
   if (result.rowCount === 0) throw new Error('Nenhum incentivo registrado para este pedido.');
+
+  try {
+    const { sincronizarComissoesVenda } = require('./comissaoVendas');
+    await sincronizarComissoesVenda(Number(vendaId));
+  } catch (err) {
+    console.error('Erro ao sincronizar comissões após remover incentivo:', err);
+  }
+
   return { success: true };
 }
 

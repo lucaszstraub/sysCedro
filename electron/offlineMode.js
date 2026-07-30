@@ -44,7 +44,9 @@ function isHybridMode() {
 }
 
 function isOfflineMode() {
-  return dbSync.isHybridMode() && !dbSync.isCloudAvailable();
+  // TEMPORÁRIO (apresentação): nunca entra em modo offline restrito.
+  // Ver também FORCE_CLOUD_ONLY em electron/dbSync.js.
+  return false;
 }
 
 function assertOfflineAllowsChannel(channel) {

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../api';
+import { api, loadStoredSessionToken, setSessionToken } from '../api';
 import {
   SESSION_STORAGE_KEY,
   getDefaultRoute,
@@ -16,14 +16,17 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     (async () => {
       try {
+        loadStoredSessionToken();
         const stored = localStorage.getItem(SESSION_STORAGE_KEY);
         if (stored) {
           const { id } = JSON.parse(stored);
           const restored = await api.restoreSession(id);
+          if (restored?.token) setSessionToken(restored.token);
           setUser(restored);
         }
       } catch {
         localStorage.removeItem(SESSION_STORAGE_KEY);
+        setSessionToken(null);
         setUser(null);
       } finally {
         setLoading(false);
@@ -33,6 +36,7 @@ export function AuthProvider({ children }) {
 
   const login = useCallback(async (loginValue, senha) => {
     const loggedUser = await api.login(loginValue, senha);
+    if (loggedUser?.token) setSessionToken(loggedUser.token);
     localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify({ id: loggedUser.id }));
     setUser(loggedUser);
     return loggedUser;
@@ -43,6 +47,7 @@ export function AuthProvider({ children }) {
       await api.logout();
     } finally {
       localStorage.removeItem(SESSION_STORAGE_KEY);
+      setSessionToken(null);
       setUser(null);
     }
   }, []);

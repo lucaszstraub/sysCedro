@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter, HashRouter } from 'react-router-dom';
 import { FeedbackProvider } from './context/FeedbackContext';
 import { AuthProvider } from './context/AuthContext';
 import { OfflineProvider } from './context/OfflineContext';
@@ -8,9 +8,12 @@ import { FaseImplantacaoProvider } from './context/FaseImplantacaoContext';
 import App from './App';
 import './styles/global.css';
 
+const isElectron = typeof window !== 'undefined' && typeof window.api?.login === 'function';
+const Router = isElectron ? HashRouter : BrowserRouter;
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <HashRouter>
+    <Router>
       <FeedbackProvider>
         <AuthProvider>
           <OfflineProvider>
@@ -20,6 +23,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
           </OfflineProvider>
         </AuthProvider>
       </FeedbackProvider>
-    </HashRouter>
+    </Router>
   </React.StrictMode>
 );
