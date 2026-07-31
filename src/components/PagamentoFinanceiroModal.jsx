@@ -68,7 +68,6 @@ export default function PagamentoFinanceiroModal({
   return (
     <div
       className="modal-overlay"
-      onClick={onClose}
       role="presentation"
     >
       <div

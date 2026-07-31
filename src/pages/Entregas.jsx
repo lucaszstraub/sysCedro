@@ -40,7 +40,7 @@ function EntregaObservacoesModal({ entrega, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Observações — {entrega.numero_pedido || entrega.venda_numero}</h3>

@@ -4,6 +4,7 @@ import { InlineAlert } from './PageAlert';
 import NumericInput from './NumericInput';
 import {
   calcularSomaBoletos,
+  criarBoletosVazios,
   dividirValorEntreBoletos,
   normalizarNumeroNotaFiscal,
   TOLERANCIA_BOLETOS,
@@ -32,14 +33,6 @@ export default function NotaFiscalModal({
     api.listFornecedores('').then(setFornecedores).catch(() => setFornecedores([]));
   }, []);
 
-  useEffect(() => {
-    if (!cadastrarBoletos) {
-      setBoletos([]);
-      return;
-    }
-    setBoletos(dividirValorEntreBoletos(valorTotal, quantidadeBoletos));
-  }, [cadastrarBoletos, quantidadeBoletos, valorTotal]);
-
   const somaBoletos = useMemo(() => calcularSomaBoletos(boletos), [boletos]);
   const erroBoletos = useMemo(
     () => (cadastrarBoletos ? validarSomaBoletos(valorTotal, boletos) : null),
@@ -49,14 +42,29 @@ export default function NotaFiscalModal({
   const fornecedorSelecionado = fornecedores.find((f) => String(f.id) === fornecedorId);
   const fornecedorLabel = fornecedorSelecionado?.nome || fornecedorNomeInicial || '';
 
+  const handleToggleBoletos = (checked) => {
+    setCadastrarBoletos(checked);
+    if (!checked) {
+      setBoletos([]);
+      return;
+    }
+    setBoletos((prev) => criarBoletosVazios(quantidadeBoletos, prev));
+  };
+
+  const handleQuantidadeBoletos = (value) => {
+    const qtd = Math.max(1, Number(value) || 1);
+    setQuantidadeBoletos(qtd);
+    setBoletos((prev) => criarBoletosVazios(qtd, prev));
+  };
+
   const atualizarBoleto = (index, field, value) => {
     setBoletos((prev) => prev.map((boleto, i) => (
       i === index ? { ...boleto, [field]: value } : boleto
     )));
   };
 
-  const redistribuirBoletos = () => {
-    setBoletos(dividirValorEntreBoletos(valorTotal, quantidadeBoletos));
+  const distribuirIgualmente = () => {
+    setBoletos((prev) => dividirValorEntreBoletos(valorTotal, quantidadeBoletos, prev));
   };
 
   const handleSubmit = async (e) => {
@@ -88,7 +96,7 @@ export default function NotaFiscalModal({
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Cadastrar nota fiscal</h3>
@@ -165,7 +173,7 @@ export default function NotaFiscalModal({
                   <input
                     type="checkbox"
                     checked={cadastrarBoletos}
-                    onChange={(e) => setCadastrarBoletos(e.target.checked)}
+                    onChange={(e) => handleToggleBoletos(e.target.checked)}
                   />
                   {' '}Cadastrar boletos vinculados a esta nota
                 </label>
@@ -181,16 +189,16 @@ export default function NotaFiscalModal({
                           min="1"
                           max="60"
                           value={quantidadeBoletos}
-                          onChange={(e) => setQuantidadeBoletos(Math.max(1, Number(e.target.value) || 1))}
+                          onChange={(e) => handleQuantidadeBoletos(e.target.value)}
                         />
                       </div>
                       <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
                         <button
                           type="button"
                           className="btn btn-secondary btn-sm"
-                          onClick={redistribuirBoletos}
+                          onClick={distribuirIgualmente}
                         >
-                          Redistribuir valor igualmente
+                          Distribuir igualmente
                         </button>
                       </div>
                     </div>

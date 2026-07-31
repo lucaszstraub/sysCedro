@@ -15,7 +15,7 @@ export default function VisaoVendasPedidoModal({ detalhe, onClose }) {
   const { venda, pedido, itens, incentivo_parceiro: incentivo } = detalhe;
 
   return (
-    <div className="modal-overlay analise-modal-overlay" onClick={onClose}>
+    <div className="modal-overlay analise-modal-overlay">
       <div className="modal modal-lg analise-pedido-modal" onClick={(e) => e.stopPropagation()}>
         <div className="analise-pedido-modal-header">
           <div>

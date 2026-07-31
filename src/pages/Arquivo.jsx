@@ -290,7 +290,7 @@ export default function Arquivo() {
       </div>
 
       {(detalhe || detalheLoading) && (
-        <div className="modal-overlay" onClick={fecharDetalhe}>
+        <div className="modal-overlay">
           <div
             className="modal modal-lg arquivo-detalhe-modal"
             onClick={(e) => e.stopPropagation()}

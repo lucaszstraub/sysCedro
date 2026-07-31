@@ -97,7 +97,7 @@ export default function SelecionarProdutoModal({
 
   return (
     <>
-      <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-overlay">
         <div className="modal modal-xl picker-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <div>

@@ -146,7 +146,7 @@ export default function EtiquetaProdutoModal({
   const tamanhoEtiqueta = descricaoTamanhoEtiquetaTermica();
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal modal-lg etiqueta-modal" onClick={(ev) => ev.stopPropagation()}>
         <div className="modal-header">
           <div>

@@ -40,7 +40,7 @@ export default function ParceiroModal({ parceiro, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{parceiro ? 'Editar parceiro' : 'Novo parceiro'}</h3>

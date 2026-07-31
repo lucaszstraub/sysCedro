@@ -75,7 +75,7 @@ export default function ClienteModal({ cliente, onClose, onSave, context = 'cada
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{cliente ? 'Editar cliente' : 'Novo cliente'}</h3>

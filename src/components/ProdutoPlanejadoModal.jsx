@@ -54,7 +54,7 @@ export default function ProdutoPlanejadoModal({ produto, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal modal-xl" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{produto ? 'Editar produto planejado' : 'Novo produto planejado'}</h3>

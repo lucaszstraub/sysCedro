@@ -48,7 +48,7 @@ function PagamentoModalPlanejado({ open, periodo, formasPagamento, onClose, onSa
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>

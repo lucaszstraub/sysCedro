@@ -8,7 +8,19 @@ export function normalizarNumeroNotaFiscal(valor) {
   return numero;
 }
 
-export function dividirValorEntreBoletos(valorTotal, quantidade) {
+export function criarBoletosVazios(quantidade, existentes = []) {
+  const qtd = Math.max(1, Number(quantidade) || 1);
+  return Array.from({ length: qtd }, (_, index) => {
+    const atual = existentes[index];
+    return {
+      parcela: index + 1,
+      valor: Number(atual?.valor) || 0,
+      data_vencimento: atual?.data_vencimento || '',
+    };
+  });
+}
+
+export function dividirValorEntreBoletos(valorTotal, quantidade, existentes = []) {
   const qtd = Math.max(1, Number(quantidade) || 1);
   const totalCents = Math.round((Number(valorTotal) || 0) * 100);
   const base = Math.floor(totalCents / qtd);
@@ -19,7 +31,8 @@ export function dividirValorEntreBoletos(valorTotal, quantidade) {
     return {
       parcela: index + 1,
       valor: cents / 100,
-      data_vencimento: '',
+      // Mantém vencimentos já preenchidos ao redistribuir só o valor
+      data_vencimento: existentes[index]?.data_vencimento || '',
     };
   });
 }

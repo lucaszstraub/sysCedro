@@ -72,7 +72,7 @@ function ConfirmDialog({
   onCancel,
 }) {
   return (
-    <div className="modal-overlay confirm-dialog-overlay" onClick={onCancel}>
+    <div className="modal-overlay confirm-dialog-overlay">
       <div
         className="modal confirm-dialog-modal"
         onClick={(e) => e.stopPropagation()}

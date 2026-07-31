@@ -32,7 +32,7 @@ export default function AlocarProdutoModal({ item, localizacoesDestino, onClose,
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Alocar produto no estoque</h3>

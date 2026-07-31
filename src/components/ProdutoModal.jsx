@@ -130,7 +130,7 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
 
   return (
     <>
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{produto ? 'Editar produto' : 'Novo produto'}</h3>

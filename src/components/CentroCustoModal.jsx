@@ -36,7 +36,7 @@ export default function CentroCustoModal({ centro, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{centro ? 'Editar centro de custo' : 'Novo centro de custo'}</h3>

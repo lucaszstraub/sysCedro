@@ -56,7 +56,7 @@ export default function LocalizacaoModal({ localizacao, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{isEdit ? 'Editar localização' : 'Nova localização'}</h3>

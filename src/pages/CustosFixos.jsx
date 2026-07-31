@@ -40,7 +40,7 @@ function TemplateModal({ item, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{item ? 'Editar item do template' : 'Novo item do template'}</h3>
@@ -134,7 +134,7 @@ function ExtraModal({ ano, mes, mesLabel, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>Custo extra — {mesLabel}/{ano}</h3>

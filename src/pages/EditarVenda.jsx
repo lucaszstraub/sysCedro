@@ -839,7 +839,7 @@ export default function EditarVenda() {
       </div>
 
       {motivoModal && (
-        <div className="modal-overlay" onClick={() => setMotivoModal(null)}>
+        <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Justificativa obrigatória</h3>
@@ -863,7 +863,7 @@ export default function EditarVenda() {
       )}
 
       {recebimentoModal && (
-        <div className="modal-overlay" onClick={() => setRecebimentoModal(null)}>
+        <div className="modal-overlay">
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Registrar pagamento recebido</h3>

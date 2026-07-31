@@ -36,7 +36,7 @@ export default function FornecedorModal({ fornecedor, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{fornecedor ? 'Editar fornecedor' : 'Novo fornecedor'}</h3>

@@ -42,7 +42,7 @@ export default function UsuarioModal({ usuario, onClose, onSave }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay">
       <div className="modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h3>{usuario ? 'Editar usuário' : 'Novo usuário'}</h3>
