@@ -141,8 +141,8 @@ async function listEncomendasFornecedor(busca = '') {
   return result.rows;
 }
 
-async function getEncomendaFornecedor(id) {
-  const db = getPool();
+async function getEncomendaFornecedor(id, dbOrClient = null) {
+  const db = dbOrClient || getPool();
   const header = await db.query(`
     SELECT ef.*, f.nome AS fornecedor_nome, f.telefone AS fornecedor_telefone,
            f.email AS fornecedor_email
@@ -274,11 +274,15 @@ async function getResumoPendenciasEncomenda() {
 async function deleteEncomendaFornecedor(id) {
   const db = getPool();
   const client = await db.connect();
+  let snapshot = null;
+  let numero = null;
+
   try {
     await client.query('BEGIN');
 
     const enc = await client.query('SELECT id, numero FROM encomendas_fornecedor WHERE id = $1', [id]);
     if (enc.rowCount === 0) throw new Error('Encomenda não encontrada.');
+    numero = enc.rows[0].numero;
 
     const recebidos = await client.query(`
       SELECT 1 FROM encomenda_fornecedor_itens
@@ -289,26 +293,28 @@ async function deleteEncomendaFornecedor(id) {
       throw new Error('Não é possível excluir: há produtos já recebidos nesta encomenda.');
     }
 
-    const snapshot = await getEncomendaFornecedor(id);
-    if (snapshot) {
-      const arquivo = require('./arquivo');
-      await arquivo.registrarExclusao('encomenda_fornecedor', id, snapshot, getSession());
-    }
-
+    snapshot = await getEncomendaFornecedor(id, client);
     await client.query('DELETE FROM encomendas_fornecedor WHERE id = $1', [id]);
     await client.query('COMMIT');
-    return { success: true, numero: enc.rows[0].numero };
   } catch (err) {
-    await client.query('ROLLBACK');
+    try { await client.query('ROLLBACK'); } catch (_) { /* ignore */ }
     throw err;
   } finally {
     client.release();
   }
+
+  if (snapshot) {
+    const arquivo = require('./arquivo');
+    await arquivo.registrarExclusao('encomenda_fornecedor', id, snapshot, getSession());
+  }
+  return { success: true, numero };
 }
 
 async function salvarEncomendaFornecedor(data, id = null) {
   const db = getPool();
   const client = await db.connect();
+  let encomendaId = null;
+  let anteriorSnapshot = null;
 
   try {
     await client.query('BEGIN');
@@ -375,9 +381,8 @@ async function salvarEncomendaFornecedor(data, id = null) {
     );
 
     let encomenda;
-    let anteriorSnapshot = null;
     if (id) {
-      anteriorSnapshot = await getEncomendaFornecedor(id);
+      anteriorSnapshot = await getEncomendaFornecedor(id, client);
 
       const updated = await client.query(`
         UPDATE encomendas_fornecedor SET
@@ -400,7 +405,7 @@ async function salvarEncomendaFornecedor(data, id = null) {
         WHERE encomenda_id = $1 AND venda_item_id IS NULL
       `, [id]);
     } else {
-      const numero = await gerarNumeroEncomenda();
+      const numero = await gerarNumeroEncomendaInTransaction(client);
       const created = await client.query(`
         INSERT INTO encomendas_fornecedor (
           numero, fornecedor_id, status, data_pedido, previsao_entrega, previsao_entrega_dias,
@@ -496,24 +501,26 @@ async function salvarEncomendaFornecedor(data, id = null) {
     }
 
     await client.query('COMMIT');
-    const salva = await getEncomendaFornecedor(encomenda.id);
-    if (id && anteriorSnapshot) {
-      const arquivo = require('./arquivo');
-      await arquivo.registrarAlteracao(
-        'encomenda_fornecedor',
-        id,
-        anteriorSnapshot,
-        salva,
-        getSession()
-      );
-    }
-    return salva;
+    encomendaId = encomenda.id;
   } catch (err) {
-    await client.query('ROLLBACK');
+    try { await client.query('ROLLBACK'); } catch (_) { /* ignore */ }
     throw err;
   } finally {
     client.release();
   }
+
+  const salva = await getEncomendaFornecedor(encomendaId);
+  if (id && anteriorSnapshot) {
+    const arquivo = require('./arquivo');
+    await arquivo.registrarAlteracao(
+      'encomenda_fornecedor',
+      id,
+      anteriorSnapshot,
+      salva,
+      getSession()
+    );
+  }
+  return salva;
 }
 
 async function updateEncomendaFornecedorStatus(id, status) {

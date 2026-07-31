@@ -145,7 +145,6 @@ async function createCustoFixoTemplate(data) {
 async function updateCustoFixoTemplate(id, data) {
   assertAcesso();
   const db = getPool();
-  const client = await db.connect();
 
   const existente = await db.query('SELECT * FROM custos_fixos_template WHERE id = $1', [id]);
   if (existente.rowCount === 0) throw new Error('Item do template não encontrado.');
@@ -157,6 +156,8 @@ async function updateCustoFixoTemplate(id, data) {
 
   if (!nome) throw new Error('Informe o nome do custo fixo.');
   if (valorPadrao < 0) throw new Error('O valor padrão não pode ser negativo.');
+
+  const client = await db.connect();
 
   try {
     await client.query('BEGIN');

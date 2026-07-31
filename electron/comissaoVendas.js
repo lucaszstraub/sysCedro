@@ -307,8 +307,8 @@ async function repararPrecosVendasInconsistentes(client) {
 async function sincronizarComissoes() {
   assertAcessoComissaoVendas();
   const db = getPool();
-  const client = await db.connect();
   const regras = await getRegrasMap();
+  const client = await db.connect();
 
   try {
     await client.query('BEGIN');
@@ -367,8 +367,8 @@ async function sincronizarComissoes() {
 
 async function sincronizarComissoesVenda(vendaId) {
   const db = getPool();
-  const client = await db.connect();
   const regras = await getRegrasMap();
+  const client = await db.connect();
 
   try {
     await client.query('BEGIN');

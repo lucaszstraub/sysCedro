@@ -9,7 +9,7 @@
     "DB_HYBRID": "false",
     "DB_CLOUD": "true",
     "DB_SSL": "true",
-    "DB_POOL_MAX": "1"
+    "DB_POOL_MAX": "3"
   },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }

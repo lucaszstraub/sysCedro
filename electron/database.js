@@ -307,7 +307,7 @@ function getDbEnvDiagnostics() {
         return null;
       }
     })(),
-    dbPoolMax: Number(process.env.DB_POOL_MAX) || (isWebRuntime() ? 1 : 8),
+    dbPoolMax: Number(process.env.DB_POOL_MAX) || (isWebRuntime() ? 3 : 8),
     dbCloud: process.env.DB_CLOUD || null,
     dbHybrid: process.env.DB_HYBRID || null,
   };
@@ -394,14 +394,16 @@ async function shouldRunSchema(db) {
 
 function createPoolFromConfig(config) {
   const { _debug, ...poolOptions } = config || {};
-  // Serverless: 1 conexão por instância. Session pooler (15) estoura com max>1 × N lambdas.
-  const defaultMax = isWebRuntime() ? 1 : 8;
+  // Transaction pooler (6543) aguenta algumas conexões por lambda.
+  // max=1 causava deadlock: connect() + getPool().query() na mesma request.
+  const defaultMax = isWebRuntime() ? 3 : 8;
   const max = Number(process.env.DB_POOL_MAX) || defaultMax;
   return new Pool({
     ...poolOptions,
     max,
-    idleTimeoutMillis: isWebRuntime() ? 5000 : 30000,
-    connectionTimeoutMillis: isWebRuntime() ? 10000 : 15000,
+    idleTimeoutMillis: isWebRuntime() ? 10000 : 30000,
+    connectionTimeoutMillis: Number(process.env.DB_CONNECT_TIMEOUT_MS)
+      || (isWebRuntime() ? 20000 : 15000),
     allowExitOnIdle: isWebRuntime(),
   });
 }
@@ -723,7 +725,15 @@ async function initDatabase(options = {}) {
         + 'Session pooler (porta 5432) tem poucas conexões (~15). '
         + 'Na Vercel use Transaction pooler (porta 6543). '
         + 'Ex.: ...@aws-....pooler.supabase.com:6543/postgres '
-        + 'e DB_POOL_MAX=1. O app já força 6543 + pool 1 no runtime web — faça Redeploy.'
+        + 'e DB_POOL_MAX=3. O app já força 6543 no runtime web — faça Redeploy.'
+      );
+    }
+    if (/timeout exceeded when trying to connect/i.test(msg)) {
+      throw new Error(
+        `${msg}\n\n`
+        + 'O pool não conseguiu obter conexão a tempo. '
+        + 'Confirme DATABASE_POOLER_URL na porta 6543 (Transaction) e Redeploy. '
+        + 'Se persistir, aguarde ~1 min (conexões ociosas liberando) e tente de novo.'
       );
     }
     if (help) {
