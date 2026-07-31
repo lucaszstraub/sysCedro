@@ -111,8 +111,23 @@ async function removerAnexoArquivo(caminho) {
 async function abrirAnexo(caminho) {
   const full = await getAnexoPath(caminho);
   if (!full) throw new Error('Arquivo anexo não encontrado.');
-  const { shell } = require('electron');
-  return shell.openPath(full);
+
+  if (process.env.SYS_CEDRO_WEB === '1' || process.env.VERCEL === '1') {
+    const buffer = fs.readFileSync(full);
+    return {
+      opened: false,
+      fileName: path.basename(full),
+      mimeType: 'application/octet-stream',
+      base64: buffer.toString('base64'),
+    };
+  }
+
+  try {
+    const { shell } = require('electron');
+    return shell.openPath(full);
+  } catch {
+    throw new Error('Não foi possível abrir o anexo neste ambiente.');
+  }
 }
 
 module.exports = {

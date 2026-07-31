@@ -1,0 +1,15 @@
+# Reduz upload e evita artefatos locais no deploy
+.vercel
+.env
+.env.*
+!.env.example
+node_modules
+dist
+data
+DadosReferencia
+*.dmg
+*.log
+.DS_Store
+coverage
+release
+out

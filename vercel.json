@@ -1,7 +1,8 @@
 {
+  "version": 2,
   "buildCommand": "npm run build:web",
   "outputDirectory": "dist",
-  "installCommand": "npm ci",
+  "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci",
   "framework": null,
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
@@ -10,12 +11,24 @@
     "api/invoke.js": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": "{electron/**,server/**,database/**}"
+      "includeFiles": [
+        "database/**",
+        "electron/**",
+        "server/**",
+        "assets/**",
+        "public/**"
+      ]
     },
     "api/health.js": {
       "memory": 512,
       "maxDuration": 30,
-      "includeFiles": "{electron/**,server/**,database/**}"
+      "includeFiles": [
+        "database/**",
+        "electron/**",
+        "server/**",
+        "assets/**",
+        "public/**"
+      ]
     }
   }
 }
