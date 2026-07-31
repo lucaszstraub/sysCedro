@@ -142,6 +142,12 @@ async function discoverPoolerConfig() {
   );
 }
 
+function isWebRuntime() {
+  return process.env.SYS_CEDRO_WEB === '1'
+    || process.env.VERCEL === '1'
+    || Boolean(process.env.VERCEL_ENV);
+}
+
 function buildPoolConfig() {
   const poolerUrl = process.env.DATABASE_POOLER_URL;
   if (poolerUrl) {
@@ -167,12 +173,21 @@ function buildPoolConfig() {
       user: process.env.DB_USER || 'postgres',
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'postgres',
-      ssl: isTruthy(process.env.DB_SSL) ? { rejectUnauthorized: false } : undefined,
+      ssl: isTruthy(process.env.DB_SSL) || isWebRuntime()
+        ? { rejectUnauthorized: false }
+        : undefined,
     };
   }
 
   if (isCloudDatabase()) {
     return null;
+  }
+
+  if (isWebRuntime()) {
+    throw new Error(
+      'Banco não configurado na Vercel. Defina DATABASE_POOLER_URL '
+      + '(Session pooler do Supabase) em Project Settings → Environment Variables e faça Redeploy.'
+    );
   }
 
   return {

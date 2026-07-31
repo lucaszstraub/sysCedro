@@ -3,8 +3,18 @@
  * Força modo nuvem (sem híbrido/offline Electron).
  */
 process.env.SYS_CEDRO_WEB = '1';
-if (!process.env.DB_HYBRID) process.env.DB_HYBRID = 'false';
+process.env.DB_HYBRID = process.env.DB_HYBRID || 'false';
+process.env.DB_CLOUD = process.env.DB_CLOUD || 'true';
+process.env.DB_SSL = process.env.DB_SSL || 'true';
 
+if (process.env.VERCEL === '1' || process.env.VERCEL_ENV) {
+  // Em serverless nunca usar Postgres local.
+  delete process.env.DB_LOCAL_HOST;
+  delete process.env.DB_LOCAL_PORT;
+  delete process.env.DB_LOCAL_USER;
+  delete process.env.DB_LOCAL_PASSWORD;
+  delete process.env.DB_LOCAL_NAME;
+}
 const path = require('path');
 
 // Garante load do .env via database.js

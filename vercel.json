@@ -4,6 +4,12 @@
   "outputDirectory": "dist",
   "installCommand": "ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci",
   "framework": null,
+  "env": {
+    "SYS_CEDRO_WEB": "1",
+    "DB_HYBRID": "false",
+    "DB_CLOUD": "true",
+    "DB_SSL": "true"
+  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ],
