@@ -205,9 +205,18 @@ function configFromConnectionUrl(rawUrl, source) {
     );
   }
 
+  // Na Vercel/serverless: Session mode (5432) tem ~15 slots e estoura fácil.
+  // Transaction mode (6543) é o recomendado; reescreve automaticamente.
+  let effectivePort = port;
+  let poolMode = port === 6543 ? 'transaction' : (host.includes('pooler.supabase.com') ? 'session' : 'direct');
+  if (isWebRuntime() && host.includes('pooler.supabase.com') && port !== 6543) {
+    effectivePort = 6543;
+    poolMode = 'transaction';
+  }
+
   return {
     host,
-    port,
+    port: effectivePort,
     user,
     password,
     database,
@@ -215,7 +224,9 @@ function configFromConnectionUrl(rawUrl, source) {
     _debug: {
       source,
       host,
-      port,
+      port: effectivePort,
+      originalPort: port,
+      poolMode,
       user,
       database,
       passwordSource: passwordFromEnv ? 'DB_PASSWORD' : 'URI',
@@ -283,6 +294,20 @@ function getDbEnvDiagnostics() {
         return null;
       }
     })(),
+    poolerPort: (() => {
+      if (!resolved?.url) return null;
+      try {
+        const u = new URL(resolved.url);
+        const port = Number(u.port) || 5432;
+        if (isWebRuntime() && u.hostname.includes('pooler.supabase.com') && port !== 6543) {
+          return 6543;
+        }
+        return port;
+      } catch {
+        return null;
+      }
+    })(),
+    dbPoolMax: Number(process.env.DB_POOL_MAX) || (isWebRuntime() ? 1 : 8),
     dbCloud: process.env.DB_CLOUD || null,
     dbHybrid: process.env.DB_HYBRID || null,
   };
@@ -369,11 +394,15 @@ async function shouldRunSchema(db) {
 
 function createPoolFromConfig(config) {
   const { _debug, ...poolOptions } = config || {};
+  // Serverless: 1 conexão por instância. Session pooler (15) estoura com max>1 × N lambdas.
+  const defaultMax = isWebRuntime() ? 1 : 8;
+  const max = Number(process.env.DB_POOL_MAX) || defaultMax;
   return new Pool({
     ...poolOptions,
-    max: Number(process.env.DB_POOL_MAX) || 8,
-    idleTimeoutMillis: 30000,
-    connectionTimeoutMillis: 15000,
+    max,
+    idleTimeoutMillis: isWebRuntime() ? 5000 : 30000,
+    connectionTimeoutMillis: isWebRuntime() ? 10000 : 15000,
+    allowExitOnIdle: isWebRuntime(),
   });
 }
 
@@ -686,6 +715,15 @@ async function initDatabase(options = {}) {
         + '(comum com %21). Defina DB_PASSWORD com a senha em texto puro e '
         + 'DATABASE_POOLER_URL com a URI (user postgres.<ref>). '
         + 'passLen esperado: 11. Remova DATABASE_URL / DB_USER / DB_HOST. Redeploy.'
+      );
+    }
+    if (/EMAXCONNSESSION|max clients reached/i.test(msg)) {
+      throw new Error(
+        `${msg}\n\n`
+        + 'Session pooler (porta 5432) tem poucas conexões (~15). '
+        + 'Na Vercel use Transaction pooler (porta 6543). '
+        + 'Ex.: ...@aws-....pooler.supabase.com:6543/postgres '
+        + 'e DB_POOL_MAX=1. O app já força 6543 + pool 1 no runtime web — faça Redeploy.'
       );
     }
     if (help) {
