@@ -156,8 +156,71 @@ function trimEnv(value) {
   return String(value).trim().replace(/^['"]|['"]$/g, '');
 }
 
-/** Resolve URI do banco a partir de várias chaves possíveis na Vercel. */
+/**
+ * Session/Transaction pooler exige user "postgres.<project-ref>".
+ * Se vier só "postgres", corrige automaticamente.
+ */
+function normalizePoolerUsername(user, host) {
+  const u = trimEnv(user) || 'postgres';
+  const h = trimEnv(host);
+  if (!h.includes('pooler.supabase.com')) return u;
+  if (u.includes('.')) return u;
+  if (u !== 'postgres' && !u.startsWith('postgres')) return u;
+  // "postgres" puro no pooler → postgres.<ref>
+  if (u === 'postgres') {
+    const ref = getProjectRef();
+    return ref ? `postgres.${ref}` : u;
+  }
+  return u;
+}
+
+/** Converte URI em config discreta (mais confiável que connectionString no pg). */
+function configFromConnectionUrl(rawUrl, source) {
+  const raw = trimEnv(rawUrl);
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw new Error(`URI de banco inválida (${source}).`);
+  }
+
+  const host = parsed.hostname;
+  const port = Number(parsed.port) || 5432;
+  const user = normalizePoolerUsername(
+    decodeURIComponent(parsed.username || 'postgres'),
+    host
+  );
+  const password = decodeURIComponent(parsed.password || '');
+  const database = decodeURIComponent((parsed.pathname || '/postgres').replace(/^\//, '')) || 'postgres';
+
+  if (!password) {
+    throw new Error(
+      `Senha ausente na URI (${source}). Use a Database Password do Supabase `
+      + 'em Settings → Database.'
+    );
+  }
+
+  return {
+    host,
+    port,
+    user,
+    password,
+    database,
+    ssl: { rejectUnauthorized: false },
+    _debug: { source, host, port, user, database },
+  };
+}
+
 function resolveDatabaseUrl() {
+  // Na Vercel/web usamos APENAS DATABASE_POOLER_URL para evitar conflito com
+  // DATABASE_URL / DB_USER=postgres / integrações automáticas.
+  if (isWebRuntime()) {
+    const pooler = trimEnv(process.env.DATABASE_POOLER_URL);
+    if (pooler) return { url: pooler, source: 'DATABASE_POOLER_URL' };
+    return null;
+  }
+
   const keys = [
     'DATABASE_POOLER_URL',
     'DATABASE_URL',
@@ -170,20 +233,22 @@ function resolveDatabaseUrl() {
     const value = trimEnv(process.env[key]);
     if (value) return { url: value, source: key };
   }
-
-  // Match case-insensitive (typos / UI)
-  for (const [key, raw] of Object.entries(process.env)) {
-    if (!/database|postgres|pooler/i.test(key)) continue;
-    if (/password|user|host|port|name|ssl|cloud|hybrid|local/i.test(key)) continue;
-    const value = trimEnv(raw);
-    if (value.startsWith('postgres')) return { url: value, source: key };
-  }
-
   return null;
 }
 
 function getDbEnvDiagnostics() {
   const resolved = resolveDatabaseUrl();
+  let parsedUser = null;
+  let parsedHost = null;
+  let effectiveUser = null;
+  if (resolved?.url) {
+    try {
+      const u = new URL(resolved.url);
+      parsedUser = decodeURIComponent(u.username || '');
+      parsedHost = u.hostname;
+      effectiveUser = normalizePoolerUsername(parsedUser, parsedHost);
+    } catch { /* ignore */ }
+  }
   return {
     vercel: process.env.VERCEL === '1',
     vercelEnv: process.env.VERCEL_ENV || null,
@@ -192,67 +257,40 @@ function getDbEnvDiagnostics() {
     hasDbHost: Boolean(trimEnv(process.env.DB_HOST)),
     hasDbPassword: Boolean(trimEnv(process.env.DB_PASSWORD)),
     hasDbUser: Boolean(trimEnv(process.env.DB_USER)),
+    dbUserEnv: trimEnv(process.env.DB_USER) || null,
     resolvedSource: resolved?.source || null,
+    parsedUser,
+    effectiveUser,
+    parsedHost,
     dbCloud: process.env.DB_CLOUD || null,
     dbHybrid: process.env.DB_HYBRID || null,
   };
 }
 
-/**
- * Session/Transaction pooler exige user "postgres.<project-ref>".
- * Se vier só "postgres", corrige automaticamente.
- */
-function normalizePoolerUsername(user, host) {
-  const u = trimEnv(user) || 'postgres';
-  const h = trimEnv(host);
-  if (!h.includes('pooler.supabase.com')) return u;
-  if (u.includes('.')) return u;
-  if (u !== 'postgres') return u;
-  const ref = getProjectRef();
-  if (!ref) return u;
-  return `postgres.${ref}`;
-}
-
-function normalizeConnectionString(connectionString) {
-  const raw = trimEnv(connectionString);
-  if (!raw) return raw;
-  try {
-    const url = new URL(raw);
-    if (!url.hostname.includes('pooler.supabase.com')) return raw;
-    const currentUser = decodeURIComponent(url.username || 'postgres');
-    const fixedUser = normalizePoolerUsername(currentUser, url.hostname);
-    if (fixedUser === currentUser) return raw;
-    const password = url.password || '';
-    const encodedAuth = password
-      ? `${encodeURIComponent(fixedUser)}:${password}`
-      : encodeURIComponent(fixedUser);
-    return `${url.protocol}//${encodedAuth}@${url.host}${url.pathname}${url.search}`;
-  } catch {
-    return raw;
-  }
-}
-
 function buildPoolConfig() {
   const resolved = resolveDatabaseUrl();
   if (resolved?.url) {
-    return {
-      connectionString: normalizeConnectionString(resolved.url),
-      ssl: { rejectUnauthorized: false },
-    };
+    const cfg = configFromConnectionUrl(resolved.url, resolved.source);
+    if (cfg) {
+      const { _debug, ...poolCfg } = cfg;
+      poolCfg._debug = _debug;
+      return poolCfg;
+    }
   }
 
-  const dbHost = trimEnv(process.env.DB_HOST);
-  if (dbHost) {
-    return {
-      host: dbHost,
-      port: Number(trimEnv(process.env.DB_PORT)) || 5432,
-      user: normalizePoolerUsername(process.env.DB_USER, dbHost),
-      password: trimEnv(process.env.DB_PASSWORD) || '',
-      database: trimEnv(process.env.DB_NAME) || 'postgres',
-      ssl: isTruthy(process.env.DB_SSL) || isWebRuntime()
-        ? { rejectUnauthorized: false }
-        : undefined,
-    };
+  // Fora da Vercel, ainda aceita DB_HOST_* .
+  if (!isWebRuntime()) {
+    const dbHost = trimEnv(process.env.DB_HOST);
+    if (dbHost) {
+      return {
+        host: dbHost,
+        port: Number(trimEnv(process.env.DB_PORT)) || 5432,
+        user: normalizePoolerUsername(process.env.DB_USER, dbHost),
+        password: trimEnv(process.env.DB_PASSWORD) || '',
+        database: trimEnv(process.env.DB_NAME) || 'postgres',
+        ssl: isTruthy(process.env.DB_SSL) ? { rejectUnauthorized: false } : undefined,
+      };
+    }
   }
 
   if (isCloudDatabase()) {
@@ -262,9 +300,10 @@ function buildPoolConfig() {
   if (isWebRuntime()) {
     const diag = getDbEnvDiagnostics();
     throw new Error(
-      'Banco não configurado na Vercel. Defina DATABASE_POOLER_URL '
-      + '(Session pooler do Supabase) em Project Settings → Environment Variables '
-      + `para Production e faça Redeploy. Diagnóstico: ${JSON.stringify(diag)}`
+      'Banco não configurado na Vercel. Defina somente DATABASE_POOLER_URL '
+      + '(Session pooler do Supabase) em Environment Variables → Production. '
+      + 'Remova DATABASE_URL / DB_USER / DB_HOST se existirem. '
+      + `Diagnóstico: ${JSON.stringify(diag)}`
     );
   }
 
@@ -308,8 +347,9 @@ async function shouldRunSchema(db) {
 }
 
 function createPoolFromConfig(config) {
+  const { _debug, ...poolOptions } = config || {};
   return new Pool({
-    ...config,
+    ...poolOptions,
     max: Number(process.env.DB_POOL_MAX) || 8,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 15000,
@@ -609,12 +649,21 @@ async function initDatabase(options = {}) {
     const help = cloudConnectionHelp(error);
     const msg = String(error?.message || '');
     if (/password authentication failed/i.test(msg)) {
+      const cfg = resolvedConfig || buildPoolConfig() || {};
+      const debug = cfg._debug || {
+        host: cfg.host,
+        user: cfg.user,
+        database: cfg.database,
+        port: cfg.port,
+      };
       throw new Error(
         `${msg}\n\n`
-        + 'No Session pooler do Supabase o usuário deve ser postgres.<project-ref> '
-        + '(ex.: postgres.gzveuamcqokfbgyvxbed), não apenas "postgres". '
-        + 'A senha é a Database Password do painel Supabase (Settings → Database), '
-        + 'não a chave API. Atualize DATABASE_POOLER_URL e faça Redeploy.'
+        + `Conexão usada: host=${debug.host || '?'} user=${debug.user || '?'} `
+        + `db=${debug.database || '?'} port=${debug.port || '?'}\n`
+        + 'No Session pooler o user deve ser postgres.<project-ref> '
+        + '(ex.: postgres.gzveuamcqokfbgyvxbed).\n'
+        + 'Na Vercel: mantenha SÓ DATABASE_POOLER_URL (apague DATABASE_URL, DB_USER, DB_HOST, DB_PASSWORD). '
+        + 'A senha é a Database Password (Supabase → Settings → Database), não a API key. Redeploy em seguida.'
       );
     }
     if (help) {
