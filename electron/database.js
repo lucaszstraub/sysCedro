@@ -97,7 +97,10 @@ async function discoverPoolerConfig() {
   const ref = getProjectRef();
   const password = getDatabasePassword();
   if (!password) {
-    throw new Error('Defina DB_PASSWORD no .env com a senha do banco Supabase.');
+    throw new Error(
+      'Defina DATABASE_POOLER_URL (recomendado) ou DB_PASSWORD no ambiente. '
+      + 'No Supabase: Connect → Session pooler → copie a URI.'
+    );
   }
 
   const user = `postgres.${ref}`;
@@ -299,6 +302,17 @@ function getCloudPool() {
 async function ensureCloudPoolConfig() {
   if (resolvedConfig || buildPoolConfig()) return;
   if (!isCloudDatabase()) return;
+
+  // Em Vercel/web a URI completa é obrigatória (não faz discovery de pooler).
+  if (isWebRuntime()) {
+    throw new Error(
+      'Configure na Vercel (Settings → Environment Variables) a variável '
+      + 'DATABASE_POOLER_URL com a URI do Session pooler do Supabase '
+      + '(Project → Connect → Session pooler). Depois faça Redeploy. '
+      + 'Ex.: postgresql://postgres.REF:SENHA@aws-0-REGIAO.pooler.supabase.com:5432/postgres'
+    );
+  }
+
   resolvedConfig = await discoverPoolerConfig();
   if (pool) {
     await pool.end();
