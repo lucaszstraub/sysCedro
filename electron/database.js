@@ -191,7 +191,11 @@ function configFromConnectionUrl(rawUrl, source) {
     decodeURIComponent(parsed.username || 'postgres'),
     host
   );
-  const password = decodeURIComponent(parsed.password || '');
+  // URL.password às vezes já vem decodificado; decodeURIComponent é idempotente p/ "!!".
+  // DB_PASSWORD (texto puro) tem prioridade — evita %21/% corrompido no painel da Vercel.
+  const passwordFromEnv = trimEnv(process.env.DB_PASSWORD);
+  const passwordFromUrl = decodeURIComponent(parsed.password || '');
+  const password = passwordFromEnv || passwordFromUrl;
   const database = decodeURIComponent((parsed.pathname || '/postgres').replace(/^\//, '')) || 'postgres';
 
   if (!password) {
@@ -208,7 +212,15 @@ function configFromConnectionUrl(rawUrl, source) {
     password,
     database,
     ssl: { rejectUnauthorized: false },
-    _debug: { source, host, port, user, database },
+    _debug: {
+      source,
+      host,
+      port,
+      user,
+      database,
+      passwordSource: passwordFromEnv ? 'DB_PASSWORD' : 'URI',
+      passwordLength: password.length,
+    },
   };
 }
 
@@ -256,12 +268,21 @@ function getDbEnvDiagnostics() {
     hasDatabaseUrl: Boolean(trimEnv(process.env.DATABASE_URL)),
     hasDbHost: Boolean(trimEnv(process.env.DB_HOST)),
     hasDbPassword: Boolean(trimEnv(process.env.DB_PASSWORD)),
+    dbPasswordLength: trimEnv(process.env.DB_PASSWORD).length || null,
     hasDbUser: Boolean(trimEnv(process.env.DB_USER)),
     dbUserEnv: trimEnv(process.env.DB_USER) || null,
     resolvedSource: resolved?.source || null,
     parsedUser,
     effectiveUser,
     parsedHost,
+    uriPasswordLength: (() => {
+      if (!resolved?.url) return null;
+      try {
+        return decodeURIComponent(new URL(resolved.url).password || '').length;
+      } catch {
+        return null;
+      }
+    })(),
     dbCloud: process.env.DB_CLOUD || null,
     dbHybrid: process.env.DB_HYBRID || null,
   };
@@ -659,11 +680,12 @@ async function initDatabase(options = {}) {
       throw new Error(
         `${msg}\n\n`
         + `Conexão usada: host=${debug.host || '?'} user=${debug.user || '?'} `
-        + `db=${debug.database || '?'} port=${debug.port || '?'}\n`
-        + 'No Session pooler o user deve ser postgres.<project-ref> '
-        + '(ex.: postgres.gzveuamcqokfbgyvxbed).\n'
-        + 'Na Vercel: mantenha SÓ DATABASE_POOLER_URL (apague DATABASE_URL, DB_USER, DB_HOST, DB_PASSWORD). '
-        + 'A senha é a Database Password (Supabase → Settings → Database), não a API key. Redeploy em seguida.'
+        + `db=${debug.database || '?'} port=${debug.port || '?'} `
+        + `passLen=${debug.passwordLength ?? '?'} passFrom=${debug.passwordSource || '?'}\n`
+        + 'A URI local autentica; se falhar na Vercel, a senha no painel está diferente/corrompida '
+        + '(comum com %21). Defina DB_PASSWORD com a senha em texto puro e '
+        + 'DATABASE_POOLER_URL com a URI (user postgres.<ref>). '
+        + 'passLen esperado: 11. Remova DATABASE_URL / DB_USER / DB_HOST. Redeploy.'
       );
     }
     if (help) {
