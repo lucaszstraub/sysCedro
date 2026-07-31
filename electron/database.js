@@ -151,31 +151,104 @@ function isWebRuntime() {
     || Boolean(process.env.VERCEL_ENV);
 }
 
+function trimEnv(value) {
+  if (value == null) return '';
+  return String(value).trim().replace(/^['"]|['"]$/g, '');
+}
+
+/** Resolve URI do banco a partir de várias chaves possíveis na Vercel. */
+function resolveDatabaseUrl() {
+  const keys = [
+    'DATABASE_POOLER_URL',
+    'DATABASE_URL',
+    'POSTGRES_URL',
+    'POSTGRES_PRISMA_URL',
+    'POSTGRES_URL_NON_POOLING',
+    'SUPABASE_DB_URL',
+  ];
+  for (const key of keys) {
+    const value = trimEnv(process.env[key]);
+    if (value) return { url: value, source: key };
+  }
+
+  // Match case-insensitive (typos / UI)
+  for (const [key, raw] of Object.entries(process.env)) {
+    if (!/database|postgres|pooler/i.test(key)) continue;
+    if (/password|user|host|port|name|ssl|cloud|hybrid|local/i.test(key)) continue;
+    const value = trimEnv(raw);
+    if (value.startsWith('postgres')) return { url: value, source: key };
+  }
+
+  return null;
+}
+
+function getDbEnvDiagnostics() {
+  const resolved = resolveDatabaseUrl();
+  return {
+    vercel: process.env.VERCEL === '1',
+    vercelEnv: process.env.VERCEL_ENV || null,
+    hasDatabasePoolerUrl: Boolean(trimEnv(process.env.DATABASE_POOLER_URL)),
+    hasDatabaseUrl: Boolean(trimEnv(process.env.DATABASE_URL)),
+    hasDbHost: Boolean(trimEnv(process.env.DB_HOST)),
+    hasDbPassword: Boolean(trimEnv(process.env.DB_PASSWORD)),
+    hasDbUser: Boolean(trimEnv(process.env.DB_USER)),
+    resolvedSource: resolved?.source || null,
+    dbCloud: process.env.DB_CLOUD || null,
+    dbHybrid: process.env.DB_HYBRID || null,
+  };
+}
+
+/**
+ * Session/Transaction pooler exige user "postgres.<project-ref>".
+ * Se vier só "postgres", corrige automaticamente.
+ */
+function normalizePoolerUsername(user, host) {
+  const u = trimEnv(user) || 'postgres';
+  const h = trimEnv(host);
+  if (!h.includes('pooler.supabase.com')) return u;
+  if (u.includes('.')) return u;
+  if (u !== 'postgres') return u;
+  const ref = getProjectRef();
+  if (!ref) return u;
+  return `postgres.${ref}`;
+}
+
+function normalizeConnectionString(connectionString) {
+  const raw = trimEnv(connectionString);
+  if (!raw) return raw;
+  try {
+    const url = new URL(raw);
+    if (!url.hostname.includes('pooler.supabase.com')) return raw;
+    const currentUser = decodeURIComponent(url.username || 'postgres');
+    const fixedUser = normalizePoolerUsername(currentUser, url.hostname);
+    if (fixedUser === currentUser) return raw;
+    const password = url.password || '';
+    const encodedAuth = password
+      ? `${encodeURIComponent(fixedUser)}:${password}`
+      : encodeURIComponent(fixedUser);
+    return `${url.protocol}//${encodedAuth}@${url.host}${url.pathname}${url.search}`;
+  } catch {
+    return raw;
+  }
+}
+
 function buildPoolConfig() {
-  const poolerUrl = process.env.DATABASE_POOLER_URL;
-  if (poolerUrl) {
+  const resolved = resolveDatabaseUrl();
+  if (resolved?.url) {
     return {
-      connectionString: poolerUrl,
+      connectionString: normalizeConnectionString(resolved.url),
       ssl: { rejectUnauthorized: false },
     };
   }
 
-  if (process.env.DATABASE_URL) {
+  const dbHost = trimEnv(process.env.DB_HOST);
+  if (dbHost) {
     return {
-      connectionString: process.env.DATABASE_URL,
-      ssl: isTruthy(process.env.DB_SSL) || process.env.DATABASE_URL.includes('supabase')
-        ? { rejectUnauthorized: false }
-        : undefined,
-    };
-  }
-
-  if (process.env.DB_HOST) {
-    return {
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT) || 5432,
-      user: process.env.DB_USER || 'postgres',
-      password: process.env.DB_PASSWORD || '',
-      database: process.env.DB_NAME || 'postgres',
+      host: dbHost,
+      port: Number(trimEnv(process.env.DB_PORT)) || 5432,
+      user: normalizePoolerUsername(process.env.DB_USER, dbHost),
+      password: trimEnv(process.env.DB_PASSWORD) || '',
+      database: trimEnv(process.env.DB_NAME) || 'postgres',
       ssl: isTruthy(process.env.DB_SSL) || isWebRuntime()
         ? { rejectUnauthorized: false }
         : undefined,
@@ -187,9 +260,11 @@ function buildPoolConfig() {
   }
 
   if (isWebRuntime()) {
+    const diag = getDbEnvDiagnostics();
     throw new Error(
       'Banco não configurado na Vercel. Defina DATABASE_POOLER_URL '
-      + '(Session pooler do Supabase) em Project Settings → Environment Variables e faça Redeploy.'
+      + '(Session pooler do Supabase) em Project Settings → Environment Variables '
+      + `para Production e faça Redeploy. Diagnóstico: ${JSON.stringify(diag)}`
     );
   }
 
@@ -305,11 +380,12 @@ async function ensureCloudPoolConfig() {
 
   // Em Vercel/web a URI completa é obrigatória (não faz discovery de pooler).
   if (isWebRuntime()) {
+    const diag = getDbEnvDiagnostics();
     throw new Error(
-      'Configure na Vercel (Settings → Environment Variables) a variável '
-      + 'DATABASE_POOLER_URL com a URI do Session pooler do Supabase '
-      + '(Project → Connect → Session pooler). Depois faça Redeploy. '
-      + 'Ex.: postgresql://postgres.REF:SENHA@aws-0-REGIAO.pooler.supabase.com:5432/postgres'
+      'DATABASE_POOLER_URL não chegou na function. '
+      + 'Confira se a variável está em Environment = Production (ou Preview, se for preview), '
+      + 'sem espaços no nome, e faça Redeploy do deployment mais recente. '
+      + `Diagnóstico: ${JSON.stringify(diag)}`
     );
   }
 
@@ -531,6 +607,16 @@ async function initDatabase(options = {}) {
     await db.query('SELECT 1');
   } catch (error) {
     const help = cloudConnectionHelp(error);
+    const msg = String(error?.message || '');
+    if (/password authentication failed/i.test(msg)) {
+      throw new Error(
+        `${msg}\n\n`
+        + 'No Session pooler do Supabase o usuário deve ser postgres.<project-ref> '
+        + '(ex.: postgres.gzveuamcqokfbgyvxbed), não apenas "postgres". '
+        + 'A senha é a Database Password do painel Supabase (Settings → Database), '
+        + 'não a chave API. Atualize DATABASE_POOLER_URL e faça Redeploy.'
+      );
+    }
     if (help) {
       throw new Error(`${error.message}${help}`);
     }
@@ -557,4 +643,6 @@ module.exports = {
   isCloudAvailable,
   getSyncStatus,
   buildPoolConfig,
+  getDbEnvDiagnostics,
+  resolveDatabaseUrl,
 };
