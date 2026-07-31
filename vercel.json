@@ -11,24 +11,12 @@
     "api/invoke.js": {
       "memory": 1024,
       "maxDuration": 60,
-      "includeFiles": [
-        "database/**",
-        "electron/**",
-        "server/**",
-        "assets/**",
-        "public/**"
-      ]
+      "includeFiles": "{database/**,electron/**,server/**,assets/**,public/**}"
     },
     "api/health.js": {
       "memory": 512,
       "maxDuration": 30,
-      "includeFiles": [
-        "database/**",
-        "electron/**",
-        "server/**",
-        "assets/**",
-        "public/**"
-      ]
+      "includeFiles": "{database/**,electron/**,server/**,assets/**,public/**}"
     }
   }
 }
