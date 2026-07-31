@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { isCloudDatabase } = require('./database');
+const { getWritableSubdir } = require('./runtimePaths');
 
 const BUCKETS = {
   PRODUTOS_FOTOS: 'produtos-fotos',
@@ -40,17 +41,7 @@ function apiHeaders(contentType) {
 }
 
 function getCacheDir(bucket) {
-  let base = null;
-  try {
-    const { app } = require('electron');
-    if (app?.getPath) base = app.getPath('userData');
-  } catch (_) {
-    // ambiente sem Electron
-  }
-  if (!base) base = path.join(__dirname, '..', 'data');
-  const dir = path.join(base, 'storage-cache', bucket);
-  fs.mkdirSync(dir, { recursive: true });
-  return dir;
+  return getWritableSubdir('storage-cache', bucket);
 }
 
 async function uploadObject(bucket, objectPath, buffer, contentType) {

@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { isAnexoPermitido } = require('./pdfAnexosMerge');
 const storage = require('./supabaseStorage');
+const { getWritableSubdir, isWebRuntime } = require('./runtimePaths');
 
 let anexosDir = null;
 
@@ -10,21 +11,9 @@ function getAnexosDir() {
   if (!anexosDir) {
     if (storage.isCloudStorage()) {
       anexosDir = storage.getCacheDir(storage.BUCKETS.VENDAS_PLANEJADOS_ANEXOS);
-      return anexosDir;
+    } else {
+      anexosDir = getWritableSubdir('vendas-planejados-anexos');
     }
-
-    try {
-      const { app } = require('electron');
-      if (app?.getPath) {
-        anexosDir = path.join(app.getPath('userData'), 'vendas-planejados-anexos');
-      }
-    } catch (_) {
-      // ambiente sem Electron
-    }
-    if (!anexosDir) {
-      anexosDir = path.join(__dirname, '..', 'data', 'vendas-planejados-anexos');
-    }
-    fs.mkdirSync(anexosDir, { recursive: true });
   }
   return anexosDir;
 }
@@ -61,6 +50,11 @@ async function salvarAnexoArquivo(vendaPlanejadoId, { nome_original, base64 }) {
       filename,
       buffer,
       mimeType
+    );
+  } else if (isWebRuntime()) {
+    throw new Error(
+      'Anexos na web exigem Storage na nuvem. '
+      + 'Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY) na Vercel.'
     );
   } else {
     const filepath = path.join(getAnexosDir(), filename);
@@ -112,7 +106,7 @@ async function abrirAnexo(caminho) {
   const full = await getAnexoPath(caminho);
   if (!full) throw new Error('Arquivo anexo não encontrado.');
 
-  if (process.env.SYS_CEDRO_WEB === '1' || process.env.VERCEL === '1') {
+  if (process.env.SYS_CEDRO_WEB === '1' || process.env.VERCEL === '1' || isWebRuntime()) {
     const buffer = fs.readFileSync(full);
     return {
       opened: false,

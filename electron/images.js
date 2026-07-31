@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
 const storage = require('./supabaseStorage');
+const { getWritableSubdir, isWebRuntime } = require('./runtimePaths');
 
 const STORAGE_MAX = 1200;
 const STORAGE_SIZE = 800;
@@ -10,26 +11,15 @@ const PLACEHOLDER_NAME = 'placeholder-produto.jpg';
 
 let fotosDir = null;
 let placeholderPath = null;
+let placeholderBufferMem = null;
 
 function getFotosDir() {
   if (!fotosDir) {
     if (storage.isCloudStorage()) {
       fotosDir = storage.getCacheDir(storage.BUCKETS.PRODUTOS_FOTOS);
-      return fotosDir;
+    } else {
+      fotosDir = getWritableSubdir('produtos-fotos');
     }
-
-    try {
-      const { app } = require('electron');
-      if (app?.getPath) {
-        fotosDir = path.join(app.getPath('userData'), 'produtos-fotos');
-      }
-    } catch (_) {
-      // ambiente sem Electron (scripts de teste)
-    }
-    if (!fotosDir) {
-      fotosDir = path.join(__dirname, '..', 'data', 'produtos-fotos');
-    }
-    fs.mkdirSync(fotosDir, { recursive: true });
   }
   return fotosDir;
 }
@@ -52,36 +42,50 @@ async function processFotoBuffer(base64Data) {
     .toBuffer();
 }
 
+async function buildPlaceholderBuffer() {
+  if (placeholderBufferMem) return placeholderBufferMem;
+
+  const svg = `
+    <svg width="${STORAGE_SIZE}" height="${STORAGE_SIZE}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="100%" height="100%" fill="#e6e0d8"/>
+      <rect x="120" y="100" width="160" height="120" rx="8" fill="#d4cdc4"/>
+      <circle cx="170" cy="145" r="18" fill="#b8afa3"/>
+      <path d="M130 210 L200 150 L270 210 Z" fill="#b8afa3"/>
+      <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#4a2e1f">Sem foto</text>
+    </svg>
+  `;
+  placeholderBufferMem = await sharp(Buffer.from(svg))
+    .resize(STORAGE_SIZE, STORAGE_SIZE)
+    .jpeg({ quality: 90 })
+    .toBuffer();
+  return placeholderBufferMem;
+}
+
 async function ensurePlaceholder() {
   if (placeholderPath && fs.existsSync(placeholderPath)) return placeholderPath;
 
   const dir = getFotosDir();
   placeholderPath = path.join(dir, PLACEHOLDER_NAME);
+  const placeholderBuffer = await buildPlaceholderBuffer();
 
   if (!fs.existsSync(placeholderPath)) {
-    const svg = `
-      <svg width="${STORAGE_SIZE}" height="${STORAGE_SIZE}" xmlns="http://www.w3.org/2000/svg">
-        <rect width="100%" height="100%" fill="#e6e0d8"/>
-        <rect x="120" y="100" width="160" height="120" rx="8" fill="#d4cdc4"/>
-        <circle cx="170" cy="145" r="18" fill="#b8afa3"/>
-        <path d="M130 210 L200 150 L270 210 Z" fill="#b8afa3"/>
-        <text x="200" y="260" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" fill="#4a2e1f">Sem foto</text>
-      </svg>
-    `;
-    const placeholderBuffer = await sharp(Buffer.from(svg))
-      .resize(STORAGE_SIZE, STORAGE_SIZE)
-      .jpeg({ quality: 90 })
-      .toBuffer();
-
     if (storage.isCloudStorage()) {
-      await storage.uploadObject(
-        storage.BUCKETS.PRODUTOS_FOTOS,
-        PLACEHOLDER_NAME,
-        placeholderBuffer,
-        'image/jpeg'
-      );
+      try {
+        await storage.uploadObject(
+          storage.BUCKETS.PRODUTOS_FOTOS,
+          PLACEHOLDER_NAME,
+          placeholderBuffer,
+          'image/jpeg'
+        );
+      } catch (err) {
+        console.warn('[images] upload placeholder:', err.message);
+      }
     }
-    fs.writeFileSync(placeholderPath, placeholderBuffer);
+    try {
+      fs.writeFileSync(placeholderPath, placeholderBuffer);
+    } catch (err) {
+      console.warn('[images] write placeholder:', err.message);
+    }
   }
 
   return placeholderPath;
@@ -107,7 +111,12 @@ async function resolveFotoLocalPath(fotoPath) {
     }
   }
 
-  return placeholderPath || path.join(getFotosDir(), PLACEHOLDER_NAME);
+  if (placeholderPath && fs.existsSync(placeholderPath)) return placeholderPath;
+  const fallback = path.join(getFotosDir(), PLACEHOLDER_NAME);
+  if (!fs.existsSync(fallback)) {
+    fs.writeFileSync(fallback, await buildPlaceholderBuffer());
+  }
+  return fallback;
 }
 
 function getProdutoFotoPath(fotoPath) {
@@ -115,7 +124,8 @@ function getProdutoFotoPath(fotoPath) {
     const full = path.join(getFotosDir(), fotoPath);
     if (fs.existsSync(full)) return full;
   }
-  return placeholderPath || path.join(getFotosDir(), PLACEHOLDER_NAME);
+  if (placeholderPath && fs.existsSync(placeholderPath)) return placeholderPath;
+  return path.join(getFotosDir(), PLACEHOLDER_NAME);
 }
 
 async function salvarFotoProduto(produtoId, base64Data) {
@@ -133,6 +143,13 @@ async function salvarFotoProduto(produtoId, base64Data) {
     const pdfCache = path.join(getFotosDir(), `pdf-${path.basename(filename, '.jpg')}-hq.jpg`);
     if (fs.existsSync(pdfCache)) fs.unlinkSync(pdfCache);
     return filename;
+  }
+
+  if (isWebRuntime()) {
+    throw new Error(
+      'Upload de foto exige Storage na nuvem. '
+      + 'Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY (ou SUPABASE_SECRET_KEY) na Vercel.'
+    );
   }
 
   const filepath = path.join(getFotosDir(), filename);
@@ -155,40 +172,43 @@ async function removerFotoProduto(fotoPath) {
   if (fs.existsSync(full)) fs.unlinkSync(full);
 }
 
-async function getProdutoFotoDataUrl(fotoPath) {
+async function loadFotoBuffer(fotoPath) {
   if (storage.isCloudStorage() && fotoPath) {
     try {
-      const buffer = await storage.downloadObject(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
-      return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+      return await storage.downloadObject(storage.BUCKETS.PRODUTOS_FOTOS, fotoPath);
     } catch (_) {
       // placeholder abaixo
     }
   }
 
-  const imagePath = storage.isCloudStorage()
-    ? await resolveFotoLocalPath(fotoPath)
-    : getProdutoFotoPath(fotoPath);
-  await ensurePlaceholder();
-  const buffer = fs.readFileSync(imagePath);
+  if (fotoPath && !storage.isCloudStorage()) {
+    const full = path.join(getFotosDir(), fotoPath);
+    if (fs.existsSync(full)) return fs.readFileSync(full);
+  }
+
+  if (placeholderPath && fs.existsSync(placeholderPath)) {
+    return fs.readFileSync(placeholderPath);
+  }
+
+  return buildPlaceholderBuffer();
+}
+
+async function getProdutoFotoDataUrl(fotoPath) {
+  const buffer = await loadFotoBuffer(fotoPath);
   return `data:image/jpeg;base64,${buffer.toString('base64')}`;
 }
 
 async function getPdfImagePath(fotoPath) {
-  await ensurePlaceholder();
-  const source = storage.isCloudStorage()
-    ? await resolveFotoLocalPath(fotoPath)
-    : getProdutoFotoPath(fotoPath);
-  const cacheName = `pdf-${path.basename(source, path.extname(source))}-hq.jpg`;
-  const cachePath = path.join(getFotosDir(), cacheName);
-  const sourceStat = fs.existsSync(source) ? fs.statSync(source) : null;
-  const cacheStat = fs.existsSync(cachePath) ? fs.statSync(cachePath) : null;
+  const sourceBuffer = await loadFotoBuffer(fotoPath);
+  const key = fotoPath
+    ? `pdf-${path.basename(fotoPath, path.extname(fotoPath))}-hq.jpg`
+    : 'pdf-placeholder-hq.jpg';
+  const cachePath = path.join(getFotosDir(), key);
 
-  if (!cacheStat || !sourceStat || cacheStat.mtimeMs < sourceStat.mtimeMs) {
-    await sharp(source)
-      .resize(PDF_IMAGE_SIZE, PDF_IMAGE_SIZE, { fit: 'cover', position: 'centre' })
-      .jpeg({ quality: 88 })
-      .toFile(cachePath);
-  }
+  await sharp(sourceBuffer)
+    .resize(PDF_IMAGE_SIZE, PDF_IMAGE_SIZE, { fit: 'cover', position: 'centre' })
+    .jpeg({ quality: 88 })
+    .toFile(cachePath);
 
   return cachePath;
 }
