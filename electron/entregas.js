@@ -455,12 +455,18 @@ async function obterQuantidadeRecebidaEncomenda(client, vendaItemId) {
 async function preloadDisponibilidadeMaps(client, vendaItemIds) {
   const ids = [...new Set((vendaItemIds || []).filter(Boolean))];
   if (!ids.length) {
-    return { reservas: new Map(), recebidos: new Map() };
+    return {
+      reservas: new Map(),
+      recebidos: new Map(),
+      produtoPorVendaItem: new Map(),
+      fisicoPorProduto: new Map(),
+      reservadoPorProduto: new Map(),
+    };
   }
 
-  const [reservasResult, recebidosResult] = await Promise.all([
+  const [reservasResult, recebidosResult, produtosResult] = await Promise.all([
     client.query(`
-      SELECT DISTINCT ON (venda_item_id) venda_item_id, quantidade
+      SELECT DISTINCT ON (venda_item_id) venda_item_id, quantidade, produto_id
       FROM estoque_reservas
       WHERE venda_item_id = ANY($1::int[]) AND status = 'ativa'
       ORDER BY venda_item_id, id DESC
@@ -471,12 +477,68 @@ async function preloadDisponibilidadeMaps(client, vendaItemIds) {
       WHERE venda_item_id = ANY($1::int[]) AND status != 'cancelado'
       GROUP BY venda_item_id
     `, [ids]),
+    client.query(`
+      SELECT id AS venda_item_id, produto_id
+      FROM venda_itens
+      WHERE id = ANY($1::int[])
+    `, [ids]),
   ]);
+
+  const produtoPorVendaItem = new Map(
+    produtosResult.rows.map((r) => [r.venda_item_id, r.produto_id])
+  );
+  const produtoIds = [...new Set(
+    produtosResult.rows.map((r) => r.produto_id).filter(Boolean)
+  )];
+
+  let fisicoPorProduto = new Map();
+  let reservadoPorProduto = new Map();
+  if (produtoIds.length) {
+    const [fisicoResult, reservadoResult] = await Promise.all([
+      client.query(`
+        SELECT produto_id, COALESCE(SUM(quantidade), 0)::int AS fisico
+        FROM estoque
+        WHERE produto_id = ANY($1::int[])
+        GROUP BY produto_id
+      `, [produtoIds]),
+      client.query(`
+        SELECT produto_id, COALESCE(SUM(quantidade), 0)::int AS reservado
+        FROM estoque_reservas
+        WHERE produto_id = ANY($1::int[]) AND status = 'ativa'
+        GROUP BY produto_id
+      `, [produtoIds]),
+    ]);
+    fisicoPorProduto = new Map(
+      fisicoResult.rows.map((r) => [r.produto_id, Number(r.fisico) || 0])
+    );
+    reservadoPorProduto = new Map(
+      reservadoResult.rows.map((r) => [r.produto_id, Number(r.reservado) || 0])
+    );
+  }
 
   return {
     reservas: new Map(reservasResult.rows.map((r) => [r.venda_item_id, r])),
     recebidos: new Map(recebidosResult.rows.map((r) => [r.venda_item_id, Number(r.qtd)])),
+    produtoPorVendaItem,
+    fisicoPorProduto,
+    reservadoPorProduto,
   };
+}
+
+/** Limita disponibilidade lógica ao estoque físico realmente baixável. */
+function capDisponivelPorFisico(disponivelLogico, vendaItem, maps) {
+  const desejado = Math.max(0, Number(disponivelLogico) || 0);
+  if (desejado <= 0) return 0;
+
+  const produtoId = vendaItem.produto_id || maps.produtoPorVendaItem?.get(vendaItem.id);
+  if (!produtoId) return desejado;
+
+  const fisico = Number(maps.fisicoPorProduto?.get(produtoId)) || 0;
+  const reservadoTotal = Number(maps.reservadoPorProduto?.get(produtoId)) || 0;
+  const estaReserva = Number(maps.reservas?.get(vendaItem.id)?.quantidade) || 0;
+  const reservadoOutros = Math.max(0, reservadoTotal - estaReserva);
+  const fisicoParaItem = Math.max(0, fisico - reservadoOutros);
+  return Math.min(desejado, fisicoParaItem);
 }
 
 function calcularDisponibilidadeItemSync(vendaItem, maps) {
@@ -500,14 +562,15 @@ function calcularDisponibilidadeItemSync(vendaItem, maps) {
   const reserva = maps.reservas.get(vendaItem.id);
   if (reserva && pendente > 0) {
     const disponivelReserva = Math.max(0, Math.min(Number(reserva.quantidade), pendente));
+    const disponivel = capDisponivelPorFisico(disponivelReserva, vendaItem, maps);
     return {
       total,
       entregue,
       pendente,
-      disponivel: disponivelReserva,
-      disponivel_estoque: disponivelReserva,
+      disponivel,
+      disponivel_estoque: disponivel,
       disponivel_encomenda: 0,
-      pronto: disponivelReserva >= pendente && pendente > 0,
+      pronto: disponivel >= pendente && pendente > 0,
     };
   }
 
@@ -537,15 +600,20 @@ function calcularDisponibilidadeItemSync(vendaItem, maps) {
     disponivelPecaLoja = Math.max(0, qtdPecaLoja - jaEntreguePecaLoja);
   }
 
-  const disponivel = Math.min(pendente, disponivelEstoque + disponivelEncomenda + disponivelPecaLoja);
+  const disponivelEstoqueFisico = capDisponivelPorFisico(
+    disponivelEstoque + disponivelEncomenda,
+    vendaItem,
+    maps
+  );
+  const disponivel = Math.min(pendente, disponivelEstoqueFisico + disponivelPecaLoja);
 
   return {
     total,
     entregue,
     pendente,
     disponivel,
-    disponivel_estoque: disponivelEstoque,
-    disponivel_encomenda: disponivelEncomenda,
+    disponivel_estoque: Math.min(disponivelEstoque, disponivelEstoqueFisico),
+    disponivel_encomenda: Math.max(0, disponivelEstoqueFisico - Math.min(disponivelEstoque, disponivelEstoqueFisico)),
     pronto: disponivel >= pendente && pendente > 0,
   };
 }
@@ -597,6 +665,7 @@ async function montarItensEntrega(client, entregaId) {
 
     const disp = calcularDisponibilidadeItemSync({
       id: row.venda_item_id,
+      produto_id: row.produto_id,
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
@@ -814,19 +883,29 @@ async function sincronizarEntregasVenda(client, vendaId, tipoLiberacao = 'parcia
   await criarEntregaInicial(client, vendaId, tipoLiberacao);
 }
 
-async function reduzirEstoqueFisico(client, produtoId, quantidade, motivo, referenciaId) {
-  let restante = quantidade;
+async function reduzirEstoqueFisico(client, produtoId, quantidade, motivo, referenciaId, descricao = '') {
+  let restante = Number(quantidade) || 0;
+  if (restante <= 0) return;
+
+  // Inclui localizações inativas (fallback): a disponibilidade contabiliza todo o físico,
+  // e a baixa antes só via ativa gerava falso "estoque insuficiente".
   const locs = await client.query(`
-    SELECT e.localizacao_id, e.quantidade, l.codigo
+    SELECT e.localizacao_id, e.quantidade, l.codigo, COALESCE(l.ativo, true) AS ativo
     FROM estoque e
-    JOIN localizacoes l ON l.id = e.localizacao_id
-    WHERE e.produto_id = $1 AND e.quantidade > 0 AND l.ativo = true
-    ORDER BY CASE WHEN l.codigo = 'NAO-ALOC' THEN 1 ELSE 0 END, e.quantidade DESC
+    LEFT JOIN localizacoes l ON l.id = e.localizacao_id
+    WHERE e.produto_id = $1 AND e.quantidade > 0
+    ORDER BY
+      CASE WHEN COALESCE(l.ativo, true) THEN 0 ELSE 1 END,
+      CASE WHEN l.codigo = 'NAO-ALOC' THEN 1 ELSE 0 END,
+      e.quantidade DESC
+    FOR UPDATE OF e
   `, [produtoId]);
 
   for (const loc of locs.rows) {
     if (restante <= 0) break;
-    const baixa = Math.min(restante, Number(loc.quantidade));
+    const baixa = Math.min(restante, Number(loc.quantidade) || 0);
+    if (baixa <= 0) continue;
+
     await client.query(`
       UPDATE estoque SET quantidade = quantidade - $3, atualizado_em = NOW()
       WHERE produto_id = $1 AND localizacao_id = $2
@@ -844,7 +923,12 @@ async function reduzirEstoqueFisico(client, produtoId, quantidade, motivo, refer
   }
 
   if (restante > 0) {
-    throw new Error('Estoque físico insuficiente para concluir a entrega.');
+    const label = descricao ? ` para "${descricao}"` : '';
+    throw new Error(
+      `Estoque físico insuficiente${label} para concluir a entrega. `
+      + `Faltam ${restante} un. (solicitado: ${quantidade}). `
+      + 'Verifique o estoque do produto nas localizações (incluindo Não alocados).'
+    );
   }
 }
 
@@ -923,7 +1007,8 @@ async function baixarItemEntrega(client, entrega, entregaItem, vendaItem, quanti
     vendaItem.produto_id,
     qtdBaixaEstoque,
     `Entrega expedição ${entrega.numero}`,
-    entrega.id
+    entrega.id,
+    vendaItem.descricao
   );
 
   await reduzirReservaAtiva(client, vendaItem.id, qtdBaixaEstoque);
@@ -1055,6 +1140,7 @@ function montarItensEntregaFromRows(rows, entregaNumero, dispMaps) {
 
     const disp = calcularDisponibilidadeItemSync({
       id: row.venda_item_id,
+      produto_id: row.produto_id,
       quantidade: row.quantidade_venda,
       quantidade_estoque: row.quantidade_estoque,
       quantidade_encomenda: row.quantidade_encomenda,
