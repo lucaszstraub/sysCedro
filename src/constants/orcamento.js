@@ -95,16 +95,16 @@ export function mapFormasPagamentoFromOrcamento(orc) {
   });
 }
 
-/** Menor total entre as opções de pagamento do orçamento (para pré-preencher venda). */
+/** Maior total entre as opções de pagamento do orçamento (pré-preenche "A receber" na venda). */
 export function resolverValorPedidoDesdeOrcamento(orc) {
   const subtotal = Number(orc?.subtotal) || Number(orc?.total) || 0;
   const formas = orc?.formas_pagamento || [];
   if (!formas.length) return subtotal;
   if (formas.some(isFormaPagamentoOrcamentoLegado)) {
-    return Math.min(
+    return Math.max(
       ...formas.map((f) => calcularTotalComDesconto(subtotal, f.desconto_percentual))
     );
   }
   const comValor = formas.map((f) => Number(f.valor) || 0).filter((v) => v > 0);
-  return comValor.length > 0 ? Math.min(...comValor) : subtotal;
+  return comValor.length > 0 ? Math.max(...comValor) : subtotal;
 }

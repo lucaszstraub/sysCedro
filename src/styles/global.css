@@ -1415,6 +1415,35 @@ a.btn {
   overflow: hidden;
 }
 
+/* Mantém o rodapé (Agendar / Criar) sempre visível no modal */
+.picker-modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.picker-modal-form > .modal-body,
+.picker-modal-form > .picker-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.picker-modal-form > .modal-footer,
+.picker-modal-form > .picker-footer {
+  flex-shrink: 0;
+}
+
+.assistencia-agendamento-fields {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
 .picker-modal .modal-body {
   overflow: hidden;
   display: flex;
@@ -1528,6 +1557,20 @@ a.btn {
   justify-content: flex-end;
   gap: 0.75rem;
   flex-wrap: wrap;
+}
+
+@media (max-width: 900px) {
+  .modal-footer,
+  .picker-footer {
+    padding: 0.85rem 1rem;
+    gap: 0.5rem;
+  }
+
+  .modal-footer .btn,
+  .picker-footer .btn {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-height: 2.75rem;
+  }
 }
 
 /* Celular / tablet: lista em cards — botão Selecionar sempre acessível */
@@ -2043,7 +2086,8 @@ a.btn {
   box-shadow: 0 14px 40px rgba(var(--surface-ink), 0.2);
   font-size: 0.95rem;
   line-height: 1.45;
-  pointer-events: auto;
+  /* Não bloqueia cliques na UI abaixo — só o botão fechar captura evento */
+  pointer-events: none;
   animation: toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
   border-width: 1px;
@@ -2189,6 +2233,7 @@ a.btn {
   opacity: 0.5;
   padding: 0;
   margin-left: 0.25rem;
+  pointer-events: auto;
 }
 
 .toast-close:hover {
@@ -2204,8 +2249,12 @@ a.btn {
 }
 
 .modal-lg {
-  max-width: 960px;
+  max-width: min(960px, calc(100vw - 2rem));
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  max-height: min(92vh, 92dvh);
+  overflow: hidden;
 }
 
 .visao-vendas-stats {
@@ -3129,7 +3178,8 @@ a.btn {
 
 .entrega-kanban-actions {
   flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: stretch;
+  gap: 0.4rem;
 }
 
 .entrega-kanban-menu {
@@ -4090,6 +4140,80 @@ a.btn {
   .entregas-fluxo-passos {
     grid-template-columns: 1fr;
   }
+
+  .entregas-tabs {
+    gap: 0.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .entregas-tab {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 0.55rem 0.75rem;
+    padding-right: 1.75rem;
+  }
+
+  .entregas-tab-desc {
+    display: none;
+  }
+
+  .entregas-expedicoes-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entregas-expedicoes-toolbar .toolbar-filters {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .entregas-expedicoes-toolbar .search-input {
+    width: 100%;
+    max-width: none;
+  }
+
+  .entregas-kanban-filtros {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0.4rem;
+  }
+
+  .entregas-kanban-filtros .btn {
+    width: 100%;
+    min-height: 2.5rem;
+    white-space: normal;
+    line-height: 1.2;
+    padding: 0.45rem 0.55rem;
+  }
+
+  .entregas-assistencia-btn {
+    width: 100%;
+    min-height: 2.75rem;
+  }
+
+  .entrega-kanban-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .entrega-kanban-actions > .btn,
+  .entrega-kanban-actions .entrega-kanban-menu,
+  .entrega-kanban-actions .entrega-kanban-menu > .btn {
+    width: 100%;
+    min-height: 2.5rem;
+  }
+
+  .entrega-kanban-actions > .btn-primary {
+    order: -1;
+  }
+
+  .kanban-board.kanban-board-2 {
+    grid-template-columns: 1fr;
+  }
 }
 
 .entrega-kanban-card--urgente {
@@ -4614,6 +4738,103 @@ a.btn {
   background: var(--brand-cream);
   border-radius: 8px;
   border: 1px dashed var(--border);
+}
+
+.ambiente-itens-wrap {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Tablet / celular: cada produto em card empilhado (não corta horizontalmente) */
+@media (max-width: 900px) {
+  .ambiente-itens-wrap {
+    overflow: visible;
+  }
+
+  .ambiente-itens-table,
+  .ambiente-itens-table thead,
+  .ambiente-itens-table tbody,
+  .ambiente-itens-table tr,
+  .ambiente-itens-table th,
+  .ambiente-itens-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .ambiente-itens-table thead {
+    display: none;
+  }
+
+  .ambiente-itens-table {
+    border-collapse: separate;
+    border-spacing: 0 0.75rem;
+  }
+
+  .ambiente-itens-table tbody tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 0.9rem;
+    box-shadow: var(--shadow);
+  }
+
+  .ambiente-itens-table td {
+    border: none !important;
+    padding: 0.4rem 0 !important;
+    background: transparent !important;
+    min-width: 0;
+  }
+
+  .ambiente-itens-table td[data-label]:not([data-label=""]):not([data-label="Foto"])::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .ambiente-itens-table td[data-label="Foto"] {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+  }
+
+  .ambiente-itens-table td input,
+  .ambiente-itens-table td select,
+  .ambiente-itens-table td .numeric-input,
+  .ambiente-itens-table td input[type="number"] {
+    width: 100% !important;
+    max-width: 100%;
+    min-width: 0 !important;
+    box-sizing: border-box;
+  }
+
+  .ambiente-itens-table td:last-child {
+    margin-top: 0.5rem;
+    padding-top: 0.65rem !important;
+    border-top: 1px solid var(--border) !important;
+  }
+
+  .ambiente-itens-table td:last-child .btn {
+    width: 100%;
+  }
+
+  .ambiente-itens-table tr:hover td {
+    background: transparent !important;
+  }
+
+  .ambiente-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .ambiente-toolbar .btn {
+    flex: 1 1 auto;
+    min-width: min(100%, 10rem);
+  }
 }
 
 .status-select {

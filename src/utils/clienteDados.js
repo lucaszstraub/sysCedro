@@ -1,5 +1,15 @@
+import { validarCpfCnpjOpcional } from './cpfCnpj';
+
 export const CAMPOS_ORCAMENTO = ['nome', 'telefone', 'endereco'];
 export const CAMPOS_VENDA_NF = ['nome', 'cpf_cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep'];
+
+export const ESTADOS_UF = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+];
+
+export const ESTADO_PADRAO = 'SC';
 
 export const CAMPOS_CLIENTE_LABELS = {
   nome: 'Nome',
@@ -38,6 +48,13 @@ export function validarClienteCadastro(data) {
   }
   if (!valorPreenchido(data?.telefone)) {
     throw new Error('Informe o telefone do cliente.');
+  }
+  validarCpfCnpjOpcional(data?.cpf_cnpj);
+  if (valorPreenchido(data?.estado)) {
+    const uf = String(data.estado).trim().toUpperCase();
+    if (!ESTADOS_UF.includes(uf)) {
+      throw new Error('Selecione um estado (UF) válido.');
+    }
   }
 }
 

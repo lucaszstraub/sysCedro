@@ -80,6 +80,7 @@ export default function EditarVenda() {
   const [showProdutoModal, setShowProdutoModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
   const [error, setError] = useState('');
 
   const hydratePagamentos = (detalhe, formas) => {
@@ -411,6 +412,25 @@ export default function EditarVenda() {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReimprimirPdf = async () => {
+    setGeneratingPdf(true);
+    setError('');
+    try {
+      await runWithFeedback(
+        () => api.gerarPdfVenda(Number(id)),
+        {
+          loading: 'Gerando PDF do pedido...',
+          success: 'PDF do pedido gerado com sucesso.',
+          error: 'Não foi possível gerar o PDF do pedido.',
+        }
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
@@ -829,9 +849,17 @@ export default function EditarVenda() {
         </div>
       )}
 
-      <div className="toolbar">
+      <div className="form-actions page-footer-actions">
         <button type="button" className="btn btn-secondary" onClick={() => navigate(listPath)}>
           Voltar
+        </button>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={handleReimprimirPdf}
+          disabled={generatingPdf || saving || venda.desativada}
+        >
+          {generatingPdf ? 'Gerando PDF...' : 'Reimprimir PDF'}
         </button>
         <button type="button" className="btn btn-primary" onClick={handleSalvar} disabled={saving || venda.desativada || !temAlteracoes}>
           {saving ? 'Salvando...' : 'Salvar alterações e gerar comprovante'}

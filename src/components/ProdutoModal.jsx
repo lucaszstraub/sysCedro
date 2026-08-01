@@ -282,6 +282,9 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
             <div className="form-group">
               <label htmlFor="preco_custo">Preço de custo (R$)</label>
               <input id="preco_custo" name="preco_custo" type="number" step="0.01" value={form.preco_custo} onChange={handleChange} />
+              <span className="hint-text">
+                Custo cheio: valor negociado + frete + IPI (ex.: o que a loja realmente paga por unidade).
+              </span>
             </div>
             <div className="form-group">
               <label htmlFor="preco_venda">Preço de venda (R$)</label>

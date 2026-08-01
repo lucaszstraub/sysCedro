@@ -501,7 +501,7 @@ export default function Entregas() {
 
       {aba === 'agendadas' && (
         <>
-          <div className="toolbar">
+          <div className="toolbar entregas-expedicoes-toolbar">
             <form onSubmit={handleSearch} className="toolbar-filters">
               <input
                 className="search-input"
@@ -524,7 +524,7 @@ export default function Entregas() {
             </form>
             <button
               type="button"
-              className="btn btn-primary"
+              className="btn btn-primary entregas-assistencia-btn"
               onClick={() => setShowAssistenciaModal(true)}
             >
               + Assistência técnica

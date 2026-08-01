@@ -7,6 +7,7 @@ import {
   FRETE_PADRAO,
   IPI_PADRAO,
   calcularCustoComImpostos,
+  calcularCustoNegociadoDesdeCustoCheio,
   calcularDataPrevisaoEntrega,
   resolverPrazoDias,
 } from '../constants/encomenda';
@@ -29,6 +30,8 @@ function emptyItem(prazoDias = 30) {
     produto_sku: '',
     quantidade_pedida: 1,
     custo_negociado: 0,
+    custo_cheio_referencia: null,
+    negociado_manual: false,
     previsao_entrega_dias: prazoDias,
     destino_esperado: 'estoque',
     observacoes: '',
@@ -37,6 +40,7 @@ function emptyItem(prazoDias = 30) {
 }
 
 function mapItemFromDb(item) {
+  const custoCheio = Number(item.produto_preco_custo);
   return {
     key: `item_${item.id}`,
     id: item.id,
@@ -49,6 +53,8 @@ function mapItemFromDb(item) {
     quantidade_recebida: item.quantidade_recebida,
     quantidade_pendente_max: item.quantidade_pedida,
     custo_negociado: Number(item.custo_negociado),
+    custo_cheio_referencia: Number.isFinite(custoCheio) && custoCheio > 0 ? custoCheio : null,
+    negociado_manual: true,
     previsao_entrega_dias: item.previsao_entrega_dias || 30,
     previsao_entrega: item.previsao_entrega,
     destino_esperado: item.destino_esperado,
@@ -62,7 +68,8 @@ function mapItemFromDb(item) {
   };
 }
 
-function mapPendenciaToItem(p, prazoDias) {
+function mapPendenciaToItem(p, prazoDias, fretePct, ipiPct) {
+  const custoCheio = Number(p.preco_custo) || 0;
   return {
     key: `venda_new_${p.venda_item_id}`,
     venda_item_id: p.venda_item_id,
@@ -72,7 +79,9 @@ function mapPendenciaToItem(p, prazoDias) {
     produto_sku: p.produto_sku,
     quantidade_pedida: p.quantidade_pendente,
     quantidade_pendente_max: p.quantidade_pendente,
-    custo_negociado: Number(p.preco_custo) || 0,
+    custo_negociado: calcularCustoNegociadoDesdeCustoCheio(custoCheio, fretePct, ipiPct),
+    custo_cheio_referencia: custoCheio > 0 ? custoCheio : null,
+    negociado_manual: false,
     previsao_entrega_dias: prazoDias,
     destino_esperado: 'cliente',
     observacoes: '',
@@ -196,6 +205,34 @@ export default function EncomendaFornecedorForm() {
     ipiPercentual
   );
 
+  const recalcularNegociados = (fretePct, ipiPct, { forcar = false } = {}) => {
+    setItens((prev) => prev.map((item) => {
+      const cheio = Number(item.custo_cheio_referencia);
+      if (!(cheio > 0)) return item;
+      if (!forcar && item.negociado_manual) return item;
+      return {
+        ...item,
+        custo_negociado: calcularCustoNegociadoDesdeCustoCheio(cheio, fretePct, ipiPct),
+        negociado_manual: false,
+      };
+    }));
+  };
+
+  const handleFreteChange = (value) => {
+    setFretePercentual(value);
+    recalcularNegociados(value, ipiPercentual);
+  };
+
+  const handleIpiChange = (value) => {
+    setIpiPercentual(value);
+    recalcularNegociados(fretePercentual, value);
+  };
+
+  const handleRecalcularNegociados = () => {
+    recalcularNegociados(fretePercentual, ipiPercentual, { forcar: true });
+    showSuccess('Valores negociados recalculados a partir do custo cadastrado (sem frete/IPI).');
+  };
+
   const dataPrevisaoItem = (item) => calcularDataPrevisaoEntrega(
     item.previsao_entrega_dias || prazoDiasPedido,
     dataPedido
@@ -287,12 +324,15 @@ export default function EncomendaFornecedorForm() {
       setError('Este produto pertence a outro fornecedor. Selecione um produto do fornecedor da encomenda.');
       return;
     }
+    const custoCheio = Number(produto.preco_custo) || 0;
     setItens((prev) => [...prev, {
       ...emptyItem(prazoDiasPedido),
       produto_id: produto.id,
       produto_nome: produto.nome,
       produto_sku: produto.sku,
-      custo_negociado: Number(produto.preco_custo) || 0,
+      custo_negociado: calcularCustoNegociadoDesdeCustoCheio(custoCheio, fretePercentual, ipiPercentual),
+      custo_cheio_referencia: custoCheio > 0 ? custoCheio : null,
+      negociado_manual: false,
     }]);
     setShowProdutoModal(false);
     setError('');
@@ -303,7 +343,7 @@ export default function EncomendaFornecedorForm() {
       const existentes = new Set(prev.map((i) => i.venda_item_id).filter(Boolean));
       const novos = pendencias
         .filter((p) => !existentes.has(p.venda_item_id))
-        .map((p) => mapPendenciaToItem(p, prazoDiasPedido));
+        .map((p) => mapPendenciaToItem(p, prazoDiasPedido, fretePercentual, ipiPercentual));
       if (novos.length > 0) {
         showSuccess(`${novos.length} item(ns) de venda vinculado(s) à encomenda.`);
       }
@@ -313,9 +353,13 @@ export default function EncomendaFornecedorForm() {
   };
 
   const updateItem = (key, field, value) => {
-    setItens((prev) => prev.map((item) => (
-      item.key === key ? { ...item, [field]: value } : item
-    )));
+    setItens((prev) => prev.map((item) => {
+      if (item.key !== key) return item;
+      if (field === 'custo_negociado') {
+        return { ...item, custo_negociado: value, negociado_manual: true };
+      }
+      return { ...item, [field]: value };
+    }));
   };
 
   const removeItem = (key) => {
@@ -562,7 +606,7 @@ export default function EncomendaFornecedorForm() {
                 step="0.01"
                 min="0"
                 value={fretePercentual}
-                onChange={setFretePercentual}
+                onChange={handleFreteChange}
               />
             </div>
             <div className="form-group">
@@ -572,8 +616,25 @@ export default function EncomendaFornecedorForm() {
                 step="0.01"
                 min="0"
                 value={ipiPercentual}
-                onChange={setIpiPercentual}
+                onChange={handleIpiChange}
               />
+            </div>
+            <div className="form-group full-width">
+              <p className="hint-text" style={{ margin: 0 }}>
+                O custo cadastrado do produto já é o valor cheio (negociado + frete + IPI).
+                Ao incluir itens, o sistema calcula o valor negociado com o representante para que,
+                com estes percentuais, o custo com frete e IPI bata com o cadastro.
+              </p>
+              {itens.some((i) => Number(i.custo_cheio_referencia) > 0) && (
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  style={{ marginTop: '0.5rem' }}
+                  onClick={handleRecalcularNegociados}
+                >
+                  Recalcular negociados a partir do custo cadastrado
+                </button>
+              )}
             </div>
             <div className="form-group full-width">
               <label htmlFor="obs">Observações</label>
@@ -633,7 +694,7 @@ export default function EncomendaFornecedorForm() {
                     <th className="pendencia-pedido-col">Pedido / Estoque</th>
                     <th>Produto</th>
                     <th>Qtd</th>
-                    <th>Custo negociado</th>
+                    <th>Valor negociado</th>
                     <th>Custo c/ frete e IPI</th>
                     <th>Prazo (dias)</th>
                     <th>Previsão</th>
@@ -678,6 +739,11 @@ export default function EncomendaFornecedorForm() {
                           onChange={(value) => updateItem(item.key, 'custo_negociado', value)}
                           style={{ width: 110 }}
                         />
+                        {Number(item.custo_cheio_referencia) > 0 && (
+                          <span className="hint-text" style={{ display: 'block', marginTop: 2 }}>
+                            Custo cad.: {formatCurrency(item.custo_cheio_referencia)}
+                          </span>
+                        )}
                       </td>
                       <td>{formatCurrency(custoParaItem(item))}</td>
                       <td>

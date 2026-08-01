@@ -66,7 +66,7 @@ export default function NovaAssistenciaTecnicaModal({ onClose, onCreated }) {
           <button type="button" className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="picker-modal-form" onSubmit={handleSubmit}>
           <div className="modal-body picker-body">
             {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
 
@@ -85,39 +85,46 @@ export default function NovaAssistenciaTecnicaModal({ onClose, onCreated }) {
               <div className="empty-state">Nenhuma venda confirmada encontrada.</div>
             ) : (
               <div className="picker-table-wrap">
-                <table className="picker-table">
+                <table className="picker-table picker-table--with-action">
                   <thead>
                     <tr>
-                      <th></th>
                       <th>Número</th>
                       <th>Pedido</th>
                       <th>Cliente</th>
                       <th>Total</th>
                       <th>Data</th>
+                      <th></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filtradas.map((v) => (
-                      <tr
-                        key={v.id}
-                        className={String(v.id) === String(vendaId) ? 'picker-row-selected' : ''}
-                        onClick={() => setVendaId(String(v.id))}
-                      >
-                        <td>
-                          <input
-                            type="radio"
-                            name="venda_assistencia"
-                            checked={String(v.id) === String(vendaId)}
-                            onChange={() => setVendaId(String(v.id))}
-                          />
-                        </td>
-                        <td><strong>{v.numero}</strong></td>
-                        <td>{v.numero_pedido || '—'}</td>
-                        <td>{v.cliente_nome}</td>
-                        <td>{formatCurrency(v.total)}</td>
-                        <td>{formatDate(v.criado_em)}</td>
-                      </tr>
-                    ))}
+                    {filtradas.map((v) => {
+                      const selected = String(v.id) === String(vendaId);
+                      return (
+                        <tr
+                          key={v.id}
+                          className={selected ? 'picker-row-selected' : ''}
+                          onClick={() => setVendaId(String(v.id))}
+                        >
+                          <td><strong>{v.numero}</strong></td>
+                          <td>{v.numero_pedido || '—'}</td>
+                          <td>{v.cliente_nome}</td>
+                          <td>{formatCurrency(v.total)}</td>
+                          <td>{formatDate(v.criado_em)}</td>
+                          <td className="picker-actions">
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${selected ? 'btn-primary' : 'btn-secondary'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setVendaId(String(v.id));
+                              }}
+                            >
+                              {selected ? 'Selecionada' : 'Selecionar'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

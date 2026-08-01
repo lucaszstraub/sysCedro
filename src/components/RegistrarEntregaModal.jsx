@@ -260,7 +260,7 @@ export default function RegistrarEntregaModal({
             </div>
             <button type="button" className="modal-close" onClick={onClose}>&times;</button>
           </div>
-          <form onSubmit={isConcluir ? handleSubmit : handleAgendar}>
+          <form className="picker-modal-form" onSubmit={isConcluir ? handleSubmit : handleAgendar}>
             <div className="modal-body">
               {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
 

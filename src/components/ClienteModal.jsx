@@ -4,8 +4,11 @@ import {
   CAMPOS_ORCAMENTO,
   CAMPOS_VENDA_NF,
   CAMPOS_CLIENTE_LABELS,
+  ESTADOS_UF,
+  ESTADO_PADRAO,
   validarClienteCadastro,
 } from '../utils/clienteDados';
+import { formatarCpfCnpj } from '../utils/cpfCnpj';
 
 const emptyForm = {
   nome: '',
@@ -14,10 +17,15 @@ const emptyForm = {
   email: '',
   endereco: '',
   cidade: '',
-  estado: '',
+  estado: ESTADO_PADRAO,
   cep: '',
   observacoes: '',
 };
+
+function normalizarEstado(valor) {
+  const uf = String(valor || '').trim().toUpperCase();
+  return ESTADOS_UF.includes(uf) ? uf : ESTADO_PADRAO;
+}
 
 function classeCampo(campo, context) {
   const classes = [];
@@ -35,12 +43,12 @@ function labelCampo(campo, obrigatorio = false) {
 export default function ClienteModal({ cliente, onClose, onSave, context = 'cadastro' }) {
   const [form, setForm] = useState(cliente ? {
     nome: cliente.nome,
-    cpf_cnpj: cliente.cpf_cnpj || '',
+    cpf_cnpj: cliente.cpf_cnpj ? formatarCpfCnpj(cliente.cpf_cnpj) : '',
     telefone: cliente.telefone || '',
     email: cliente.email || '',
     endereco: cliente.endereco || '',
     cidade: cliente.cidade || '',
-    estado: cliente.estado || '',
+    estado: normalizarEstado(cliente.estado),
     cep: cliente.cep || '',
     observacoes: cliente.observacoes || '',
   } : emptyForm);
@@ -58,6 +66,10 @@ export default function ClienteModal({ cliente, onClose, onSave, context = 'cada
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'cpf_cnpj') {
+      setForm((prev) => ({ ...prev, cpf_cnpj: formatarCpfCnpj(value) }));
+      return;
+    }
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -66,8 +78,12 @@ export default function ClienteModal({ cliente, onClose, onSave, context = 'cada
     setSaving(true);
     setError('');
     try {
-      validarClienteCadastro(form);
-      await onSave(form);
+      const payload = {
+        ...form,
+        estado: normalizarEstado(form.estado),
+      };
+      validarClienteCadastro(payload);
+      await onSave(payload);
     } catch (err) {
       setError(err.message);
       setSaving(false);
@@ -121,7 +137,15 @@ export default function ClienteModal({ cliente, onClose, onSave, context = 'cada
             </div>
             <div className={`form-group ${classeCampo('cpf_cnpj', context)}`}>
               <label htmlFor="cpf_cnpj">{labelCampo('cpf_cnpj')}</label>
-              <input id="cpf_cnpj" name="cpf_cnpj" value={form.cpf_cnpj} onChange={handleChange} />
+              <input
+                id="cpf_cnpj"
+                name="cpf_cnpj"
+                value={form.cpf_cnpj}
+                onChange={handleChange}
+                inputMode="numeric"
+                autoComplete="off"
+                placeholder="000.000.000-00"
+              />
             </div>
             <div className={`form-group ${classeCampo('telefone', context)}`}>
               <label htmlFor="telefone">{labelCampo('telefone', true)}</label>
@@ -141,7 +165,11 @@ export default function ClienteModal({ cliente, onClose, onSave, context = 'cada
             </div>
             <div className={`form-group ${classeCampo('estado', context)}`}>
               <label htmlFor="estado">{labelCampo('estado')}</label>
-              <input id="estado" name="estado" maxLength={2} value={form.estado} onChange={handleChange} placeholder="SP" />
+              <select id="estado" name="estado" value={form.estado} onChange={handleChange}>
+                {ESTADOS_UF.map((uf) => (
+                  <option key={uf} value={uf}>{uf}</option>
+                ))}
+              </select>
             </div>
             <div className={`form-group ${classeCampo('cep', context)}`}>
               <label htmlFor="cep">{labelCampo('cep')}</label>

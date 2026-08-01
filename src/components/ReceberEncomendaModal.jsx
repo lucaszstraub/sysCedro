@@ -236,7 +236,8 @@ export default function ReceberEncomendaModal({
                   onChange={handleValorNotaChange}
                 />
                 <span className="hint-text">
-                  Sugestão da encomenda: frete {fretePct}% · IPI {ipiPct}%
+                  Valor do produto na NF (negociado, sem frete/IPI). Sugestão: {formatCurrency(valorInicial)}
+                  {' · '}frete {fretePct}% · IPI {ipiPct}%
                 </span>
               </div>
               <div className="form-group">
@@ -263,7 +264,7 @@ export default function ReceberEncomendaModal({
                   {formatCurrency(custoRealCalculado)}
                 </p>
                 <span className="hint-text">
-                  Valor na nota + frete + IPI
+                  Valor na nota + frete + IPI — deve conferir com o custo cadastrado / esperado
                 </span>
               </div>
               <div className="form-group">
@@ -272,7 +273,7 @@ export default function ReceberEncomendaModal({
                   {formatCurrency(custoEsperado)}
                 </p>
                 <span className="hint-text">
-                  Produto {formatCurrency(item.custo_negociado)}
+                  Negociado {formatCurrency(item.custo_negociado)}
                   {' + '}frete {formatCurrency(calcularFreteUnitario(item.custo_negociado, fretePct))}
                   {' + '}IPI {formatCurrency(calcularIpiUnitario(item.custo_negociado, ipiPct))}
                   {divergencia !== 0 && (

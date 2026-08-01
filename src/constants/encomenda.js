@@ -43,6 +43,28 @@ export const PRAZO_ENTREGA_OPCOES = [30, 45, 60, 75, 90];
 export const FRETE_PADRAO = 10;
 export const IPI_PADRAO = 3.25;
 
+/** Multiplicador: negociado × fator ≈ custo cheio (cadastrado). */
+export function fatorFreteIpi(fretePct = FRETE_PADRAO, ipiPct = IPI_PADRAO) {
+  return 1 + (Number(fretePct) || 0) / 100 + (Number(ipiPct) || 0) / 100;
+}
+
+/**
+ * Custo cadastrado do produto já inclui frete + IPI (ex.: 350).
+ * Na encomenda o "valor negociado com o representante" é a base sem frete/IPI,
+ * de modo que negociado + frete% + IPI% ≈ custo cheio.
+ */
+export function calcularCustoNegociadoDesdeCustoCheio(
+  custoCheio,
+  fretePct = FRETE_PADRAO,
+  ipiPct = IPI_PADRAO
+) {
+  const cheio = Number(custoCheio) || 0;
+  if (cheio <= 0) return 0;
+  const fator = fatorFreteIpi(fretePct, ipiPct);
+  if (fator <= 0) return Math.round(cheio * 100) / 100;
+  return Math.round((cheio / fator) * 100) / 100;
+}
+
 export function calcularCustoComImpostos(custoNegociado, fretePct = FRETE_PADRAO, ipiPct = IPI_PADRAO) {
   const base = Number(custoNegociado) || 0;
   const frete = base * (Number(fretePct) || 0) / 100;

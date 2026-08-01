@@ -135,7 +135,7 @@ export function FeedbackProvider({ children }) {
   }, [dismissToast]);
 
   const success = useCallback(
-    (message, duration = 6500) => toast(message, 'success', duration, 'Salvo com sucesso'),
+    (message, duration = 2500) => toast(message, 'success', duration, 'Salvo com sucesso'),
     [toast]
   );
 
@@ -145,7 +145,7 @@ export function FeedbackProvider({ children }) {
   );
 
   const info = useCallback(
-    (message, duration = 5500) => toast(message, 'info', duration, 'Aviso'),
+    (message, duration = 3500) => toast(message, 'info', duration, 'Aviso'),
     [toast]
   );
 

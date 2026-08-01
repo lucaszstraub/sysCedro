@@ -7,6 +7,20 @@ const FRETE_PADRAO = 10;
 const IPI_PADRAO = 3.25;
 const PRAZO_PADRAO = 30;
 
+function fatorFreteIpi(fretePct, ipiPct) {
+  return 1 + (Number(fretePct ?? FRETE_PADRAO) || 0) / 100
+    + (Number(ipiPct ?? IPI_PADRAO) || 0) / 100;
+}
+
+/** preco_custo do produto = custo cheio; devolve base negociada sem frete/IPI. */
+function calcularCustoNegociadoDesdeCustoCheio(custoCheio, fretePct, ipiPct) {
+  const cheio = Number(custoCheio) || 0;
+  if (cheio <= 0) return 0;
+  const fator = fatorFreteIpi(fretePct, ipiPct);
+  if (fator <= 0) return Math.round(cheio * 100) / 100;
+  return Math.round((cheio / fator) * 100) / 100;
+}
+
 function calcularCustoComImpostos(custoNegociado, fretePct, ipiPct) {
   const base = Number(custoNegociado) || 0;
   const frete = base * (Number(fretePct ?? FRETE_PADRAO) || 0) / 100;
@@ -154,6 +168,7 @@ async function getEncomendaFornecedor(id, dbOrClient = null) {
 
   const itens = await db.query(`
     SELECT ei.*, p.sku AS produto_sku, p.nome AS produto_nome,
+           p.preco_custo AS produto_preco_custo,
            p.descricao AS produto_descricao, p.material AS produto_material,
            p.cor AS produto_cor, p.largura_cm AS produto_largura_cm,
            p.altura_cm AS produto_altura_cm, p.profundidade_cm AS produto_profundidade_cm,

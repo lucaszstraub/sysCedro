@@ -5,7 +5,7 @@ import { calcularTotalPagamentos,
   criarPagamento,
   formaPermiteParcelas,
 } from '../constants/venda';
-import { mapPagamentosFromApi, calcularAjustePagamentoSubtotal } from '../constants/pagamento';
+import { mapPagamentosFromApi, calcularAjustePagamentoSubtotal, isFormaAReceber } from '../constants/pagamento';
 import { TIPO_LIBERACAO_OPTIONS } from '../constants/entregas';
 import { AMBIENTE_NOME_PADRAO, resolverValorPedidoDesdeOrcamento } from '../constants/orcamento';
 import { formatCurrency } from '../utils/format';
@@ -296,7 +296,8 @@ export default function VendaForm() {
     setObservacoes(orc.observacoes || '');
     setVendedorId(vendedorBloqueado ? (meuVendedorId || '') : (orc.vendedor_id ? String(orc.vendedor_id) : ''));
     const valorPedido = resolverValorPedidoDesdeOrcamento(orc);
-    setPagamentos([{ ...criarPagamento(formas[0]?.id), valor: valorPedido }]);
+    const formaAReceber = formas.find((f) => isFormaAReceber(f.id, formas));
+    setPagamentos([{ ...criarPagamento(formaAReceber?.id || formas[0]?.id), valor: valorPedido }]);
     setAmbientes(orc.ambientes.length > 0 ? mapAmbientesFromDb(orc.ambientes).map((amb) => ({
       ...amb,
       itens: amb.itens.map((item) => ({
@@ -887,7 +888,8 @@ export default function VendaForm() {
                   Nenhum item neste ambiente. Clique em &quot;Adicionar produto&quot; ou &quot;Item avulso&quot;.
                 </div>
               ) : (
-                <table>
+                <div className="ambiente-itens-wrap">
+                <table className="ambiente-itens-table">
                 <thead>
                   <tr>
                     <th>Foto</th>
@@ -913,7 +915,7 @@ export default function VendaForm() {
                     const isPecaLoja = atendimento === 'peca_loja';
                     return (
                     <tr key={itemIndex}>
-                        <td>
+                        <td data-label="Foto">
                           {item.produto_id ? (
                             <ProdutoThumb produtoId={item.produto_id} alt={item.descricao} />
                           ) : (
@@ -922,7 +924,7 @@ export default function VendaForm() {
                             </div>
                           )}
                         </td>
-                        <td>
+                        <td data-label="Descrição">
                           <input
                             value={item.descricao}
                             onChange={(e) => updateItem(ambienteIndex, itemIndex, 'descricao', e.target.value)}
@@ -930,7 +932,7 @@ export default function VendaForm() {
                             style={{ width: '100%' }}
                           />
                         </td>
-                      <td>
+                      <td data-label="Qtd">
                         <NumericInput
                           min="1"
                           defaultOnEmpty={1}
@@ -939,7 +941,7 @@ export default function VendaForm() {
                           style={{ width: 70 }}
                         />
                       </td>
-                      <td>
+                      <td data-label="Atendimento">
                         <select
                           value={atendimento}
                           onChange={(e) => setAtendimentoTipo(ambienteIndex, itemIndex, e.target.value)}
@@ -953,7 +955,7 @@ export default function VendaForm() {
                           {atendimento === 'misto' && <option value="misto">Misto</option>}
                         </select>
                       </td>
-                      <td>
+                      <td data-label="Estoque">
                         {!isPecaLoja && (
                         <NumericInput
                           min="0"
@@ -966,7 +968,7 @@ export default function VendaForm() {
                         )}
                         {isPecaLoja && <span className="hint-text">—</span>}
                       </td>
-                      <td>
+                      <td data-label="Encomenda">
                         {!isPecaLoja && (
                         <NumericInput
                           min="0"
@@ -979,7 +981,7 @@ export default function VendaForm() {
                         )}
                         {isPecaLoja && <span className="hint-text">—</span>}
                       </td>
-                        <td>
+                        <td data-label="Preço unit.">
                           <NumericInput
                             step="0.01"
                             min="0"
@@ -988,7 +990,7 @@ export default function VendaForm() {
                             style={{ width: 120 }}
                           />
                         </td>
-                        <td>
+                        <td data-label="Comercial">
                           <select
                             value={item.status || 'efetivo'}
                             onChange={(e) => updateItem(ambienteIndex, itemIndex, 'status', e.target.value)}
@@ -998,12 +1000,12 @@ export default function VendaForm() {
                             ))}
                           </select>
                         </td>
-                        <td>
+                        <td data-label="Subtotal">
                           {(item.status || 'efetivo') === 'efetivo'
                             ? formatCurrency((Number(item.quantidade) || 0) * (Number(item.preco_unitario) || 0))
                             : '—'}
                         </td>
-                        <td>
+                        <td data-label="">
                           <button type="button" className="btn btn-danger btn-sm" onClick={() => removeItem(ambienteIndex, itemIndex)}>
                             Remover
                           </button>
@@ -1013,6 +1015,7 @@ export default function VendaForm() {
                   })}
                   </tbody>
                 </table>
+                </div>
               )}
             </div>
           </div>

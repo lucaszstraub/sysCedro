@@ -78,7 +78,7 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
           <button type="button" className="modal-close" onClick={onClose}>&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit}>
+        <form className="picker-modal-form" onSubmit={handleSubmit}>
           <div className="modal-body picker-body">
             {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
 
@@ -93,30 +93,63 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
 
             {loading ? (
               <div className="loading">Carregando vendas...</div>
+            ) : filtradas.length === 0 ? (
+              <div className="empty-state">Nenhuma venda confirmada encontrada.</div>
             ) : (
-              <div className="picker-grid">
-                {filtradas.map((v) => (
-                  <label
-                    key={v.id}
-                    className={`picker-card${String(vendaId) === String(v.id) ? ' is-selected' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="venda_assistencia"
-                      value={v.id}
-                      checked={String(vendaId) === String(v.id)}
-                      onChange={() => setVendaId(String(v.id))}
-                    />
-                    <strong>{v.numero_pedido || v.numero}</strong>
-                    <span>{v.cliente_nome}</span>
-                    <span className="hint-text">{formatDate(v.criado_em)}</span>
-                  </label>
-                ))}
+              <div className="picker-table-wrap">
+                <table className="picker-table picker-table--with-action">
+                  <thead>
+                    <tr>
+                      <th>Pedido</th>
+                      <th>Cliente</th>
+                      <th>Data</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtradas.map((v) => {
+                      const selected = String(vendaId) === String(v.id);
+                      return (
+                        <tr
+                          key={v.id}
+                          className={selected ? 'picker-row-selected' : ''}
+                          onClick={() => setVendaId(String(v.id))}
+                        >
+                          <td>
+                            <strong>{v.numero_pedido || v.numero}</strong>
+                            {v.numero_pedido && v.numero && (
+                              <span className="hint-text" style={{ display: 'block' }}>{v.numero}</span>
+                            )}
+                          </td>
+                          <td>{v.cliente_nome}</td>
+                          <td>{formatDate(v.criado_em)}</td>
+                          <td className="picker-actions">
+                            <button
+                              type="button"
+                              className={`btn btn-sm ${selected ? 'btn-primary' : 'btn-secondary'}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setVendaId(String(v.id));
+                              }}
+                            >
+                              {selected ? 'Selecionada' : 'Selecionar'}
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             )}
 
             {vendaSelecionada && (
-              <div className="form-grid" style={{ marginTop: '1rem' }}>
+              <div className="form-grid assistencia-agendamento-fields">
+                <p className="hint-text full-width" style={{ margin: 0 }}>
+                  Venda selecionada: <strong>{vendaSelecionada.numero_pedido || vendaSelecionada.numero}</strong>
+                  {' — '}
+                  {vendaSelecionada.cliente_nome}
+                </p>
                 <div className="form-group full-width">
                   <label htmlFor="descricao-assistencia">Descrição da assistência *</label>
                   <textarea
@@ -173,11 +206,15 @@ export default function NovaAssistenciaEntregaModal({ onClose, onCreated }) {
             )}
           </div>
 
-          <div className="modal-footer">
+          <div className="modal-footer picker-footer">
             <button type="button" className="btn btn-secondary" onClick={onClose} disabled={saving}>
               Cancelar
             </button>
-            <button type="submit" className="btn btn-primary" disabled={saving || !vendaId}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving || !vendaId || !descricao.trim()}
+            >
               {saving ? 'Agendando...' : 'Agendar assistência'}
             </button>
           </div>

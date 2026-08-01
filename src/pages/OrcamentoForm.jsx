@@ -586,7 +586,8 @@ export default function OrcamentoForm() {
                 Nenhum item neste ambiente. Clique em &quot;Adicionar produto&quot; ou &quot;Item avulso&quot;.
               </div>
             ) : (
-              <table>
+              <div className="ambiente-itens-wrap">
+              <table className="ambiente-itens-table">
                 <thead>
                   <tr>
                     <th>Foto</th>
@@ -600,7 +601,7 @@ export default function OrcamentoForm() {
                 <tbody>
                   {ambiente.itens.map((item, itemIndex) => (
                     <tr key={itemIndex}>
-                      <td>
+                      <td data-label="Foto">
                         {item.produto_id ? (
                           <ProdutoThumb produtoId={item.produto_id} alt={item.descricao} />
                         ) : (
@@ -609,7 +610,7 @@ export default function OrcamentoForm() {
                           </div>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Descrição">
                         <input
                           value={item.descricao}
                           onChange={(e) => updateItem(ambienteIndex, itemIndex, 'descricao', e.target.value)}
@@ -617,7 +618,7 @@ export default function OrcamentoForm() {
                           style={{ width: '100%' }}
                         />
                       </td>
-                      <td>
+                      <td data-label="Qtd">
                         <NumericInput
                           min="1"
                           defaultOnEmpty={1}
@@ -626,7 +627,7 @@ export default function OrcamentoForm() {
                           style={{ width: 80 }}
                         />
                       </td>
-                      <td>
+                      <td data-label="Preço unit.">
                         <NumericInput
                           step="0.01"
                           min="0"
@@ -635,8 +636,8 @@ export default function OrcamentoForm() {
                           style={{ width: 120 }}
                         />
                       </td>
-                      <td>{formatCurrency((Number(item.quantidade) || 0) * (Number(item.preco_unitario) || 0))}</td>
-                      <td>
+                      <td data-label="Subtotal">{formatCurrency((Number(item.quantidade) || 0) * (Number(item.preco_unitario) || 0))}</td>
+                      <td data-label="">
                         <button type="button" className="btn btn-danger btn-sm" onClick={() => removeItem(ambienteIndex, itemIndex)}>
                           Remover
                         </button>
@@ -645,6 +646,7 @@ export default function OrcamentoForm() {
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

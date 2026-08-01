@@ -47,7 +47,8 @@ export default function Vendas() {
   const [error, setError] = useState('');
   const [deletingId, setDeletingId] = useState(null);
   const [restaurandoId, setRestaurandoId] = useState(null);
-  const { confirm, success: showSuccess } = useFeedback();
+  const [pdfId, setPdfId] = useState(null);
+  const { confirm, success: showSuccess, runWithFeedback } = useFeedback();
   const load = async (term = busca) => {
     setLoading(true);
     setError('');
@@ -101,6 +102,25 @@ export default function Vendas() {
       setError(err.message);
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleReimprimirPdf = async (id) => {
+    setPdfId(id);
+    setError('');
+    try {
+      await runWithFeedback(
+        () => api.gerarPdfVenda(id),
+        {
+          loading: 'Gerando PDF do pedido...',
+          success: 'PDF do pedido gerado com sucesso.',
+          error: 'Não foi possível gerar o PDF do pedido.',
+        }
+      );
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPdfId(null);
     }
   };
 
@@ -228,6 +248,15 @@ export default function Vendas() {
                       <Link to={`${base}/${v.id}/editar`} className="btn btn-secondary btn-sm">
                         Editar
                       </Link>
+                      {' '}
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleReimprimirPdf(v.id)}
+                        disabled={pdfId === v.id}
+                      >
+                        {pdfId === v.id ? 'Gerando...' : 'PDF'}
+                      </button>
                       {' '}
                       <button
                         type="button"

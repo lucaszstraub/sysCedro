@@ -1,5 +1,13 @@
+const { validarCpfCnpjOpcional } = require('./cpfCnpj');
+
 const CAMPOS_ORCAMENTO = ['nome', 'telefone', 'endereco'];
 const CAMPOS_VENDA_NF = ['nome', 'cpf_cnpj', 'telefone', 'email', 'endereco', 'cidade', 'estado', 'cep'];
+
+const ESTADOS_UF = [
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
+  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
+  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
+];
 
 const LABELS = {
   nome: 'Nome',
@@ -27,16 +35,24 @@ function validarClienteCadastro(data) {
   if (!valorPreenchido(data?.telefone)) {
     throw new Error('Informe o telefone do cliente.');
   }
+  validarCpfCnpjOpcional(data?.cpf_cnpj);
+  if (valorPreenchido(data?.estado)) {
+    const uf = String(data.estado).trim().toUpperCase();
+    if (!ESTADOS_UF.includes(uf)) {
+      throw new Error('Selecione um estado (UF) válido.');
+    }
+  }
 }
 
 function validarClienteParaVenda(cliente) {
   const faltando = camposFaltantes(cliente, CAMPOS_VENDA_NF);
-  if (faltando.length === 0) return;
-
-  const labels = faltando.map((campo) => LABELS[campo] || campo);
-  throw new Error(
-    `Para confirmar a venda, complete o cadastro do cliente (dados para nota fiscal): ${labels.join(', ')}.`
-  );
+  if (faltando.length > 0) {
+    const labels = faltando.map((campo) => LABELS[campo] || campo);
+    throw new Error(
+      `Para confirmar a venda, complete o cadastro do cliente (dados para nota fiscal): ${labels.join(', ')}.`
+    );
+  }
+  validarCpfCnpjOpcional(cliente?.cpf_cnpj);
 }
 
 async function assertClienteParaVenda(client, clienteId) {
