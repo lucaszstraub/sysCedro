@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { userIsGerenteOuAdministrador } from '../constants/auth';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
+import VendaRowActions from '../components/VendaRowActions';
 import { formatCurrency, formatDate } from '../utils/format';
 
 const base = '/ferramentas-venda/vendas';
@@ -233,39 +234,14 @@ export default function Vendas() {
                     <td><PendenciasPedido venda={v} /></td>
                     <td>{formatDate(v.criado_em)}</td>
                     <td>
-                      {v.tem_a_receber && (
-                        <>
-                          <Link
-                            to={`${base}/${v.id}/editar`}
-                            state={{ aba: 'pagamento' }}
-                            className="btn btn-primary btn-sm"
-                          >
-                            Receber
-                          </Link>
-                          {' '}
-                        </>
-                      )}
-                      <Link to={`${base}/${v.id}/editar`} className="btn btn-secondary btn-sm">
-                        Editar
-                      </Link>
-                      {' '}
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => handleReimprimirPdf(v.id)}
-                        disabled={pdfId === v.id}
-                      >
-                        {pdfId === v.id ? 'Gerando...' : 'PDF'}
-                      </button>
-                      {' '}
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm"
-                        onClick={() => handleDelete(v.id, v.numero)}
-                        disabled={deletingId === v.id}
-                      >
-                        {deletingId === v.id ? 'Excluindo...' : 'Excluir'}
-                      </button>
+                      <VendaRowActions
+                        venda={v}
+                        basePath={base}
+                        onPdf={handleReimprimirPdf}
+                        onDelete={handleDelete}
+                        pdfLoading={pdfId === v.id}
+                        deleteLoading={deletingId === v.id}
+                      />
                     </td>
                   </tr>
                 ))}
