@@ -886,6 +886,77 @@ tr:hover td {
   flex-wrap: wrap;
 }
 
+.venda-row-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: nowrap;
+}
+
+.venda-row-actions-menu {
+  position: relative;
+}
+
+.venda-row-actions-trigger {
+  min-width: 3.5rem;
+}
+
+.venda-row-actions-panel {
+  min-width: 11rem;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  box-shadow: 0 8px 24px rgba(var(--surface-ink), 0.14);
+  padding: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  z-index: 1100;
+}
+
+.venda-row-actions-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.venda-row-actions-item:hover:not(:disabled) {
+  background: var(--bg-subtle);
+}
+
+.venda-row-actions-item:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.venda-row-actions-item--danger {
+  color: var(--danger);
+}
+
+.venda-row-actions-item--danger:hover:not(:disabled) {
+  background: rgba(139, 58, 50, 0.08);
+}
+
+@media (max-width: 900px) {
+  .venda-row-actions {
+    width: 100%;
+  }
+
+  .venda-row-actions > .btn {
+    flex: 1 1 auto;
+  }
+}
+
 .toolbar-checkbox {
   font-size: 0.88rem;
   color: var(--text-muted);
