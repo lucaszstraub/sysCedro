@@ -56,6 +56,18 @@
   padding: 0;
 }
 
+#root {
+  height: 100%;
+  min-height: 100%;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  max-width: 100%;
+}
+
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--bg);
@@ -65,13 +77,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-#root {
-  min-height: 100vh;
-}
-
 .app-layout {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -81,11 +91,15 @@ body {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .sidebar-brand {
   position: relative;
+  flex-shrink: 0;
   padding: 1.35rem 1rem 1.15rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -152,9 +166,11 @@ body {
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  overflow: hidden;
 }
 
 .sidebar-search {
+  flex-shrink: 0;
   padding: 0.75rem 0.75rem 0.25rem;
 }
 
@@ -188,7 +204,11 @@ body {
 .sidebar-nav {
   padding: 0.5rem 0.75rem 1rem;
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nav-section {
@@ -446,8 +466,12 @@ body {
 
 .main-content {
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   padding: 2rem;
+  overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior: contain;
   position: relative;
 }
 
@@ -636,6 +660,10 @@ body {
     bottom: 0;
     z-index: 100;
     width: min(280px, 88vw);
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100vh;
+    max-height: 100dvh;
     transform: translateX(-100%);
     transition: transform 0.22s ease;
     box-shadow: 8px 0 32px rgba(0, 0, 0, 0.2);
@@ -648,12 +676,79 @@ body {
   .main-content {
     padding: 1rem;
     width: 100%;
+    max-width: 100%;
   }
 
   .page-alert {
     left: 1rem;
     right: 1rem;
     max-width: none;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar,
+  .toolbar-filters,
+  .page-header,
+  .page-header-row {
+    min-width: 0;
+  }
+
+  .toolbar-filters > *,
+  .toolbar > * {
+    max-width: 100%;
+  }
+
+  .picker-search,
+  .ambiente-toolbar .search-input,
+  .analise-toolbar-fields {
+    min-width: 0 !important;
+    width: 100%;
+  }
+
+  .modal-overlay {
+    padding: max(0.75rem, env(safe-area-inset-top))
+      max(0.75rem, env(safe-area-inset-right))
+      max(0.75rem, env(safe-area-inset-bottom))
+      max(0.75rem, env(safe-area-inset-left));
+    align-items: flex-start;
+  }
+
+  .modal,
+  .modal-xl {
+    max-height: min(calc(100dvh - 1.5rem), calc(100vh - 1.5rem));
+  }
+
+  .form-actions {
+    flex-wrap: wrap;
+  }
+
+  .form-actions .btn {
+    flex: 1 1 auto;
+  }
+}
+
+/* Tablets em paisagem / iPad: evita campos estourarem a largura */
+@media (max-width: 1180px) {
+  .app-layout,
+  .main-content,
+  .modal-body,
+  .card-body,
+  .form-grid,
+  .form-group {
+    max-width: 100%;
+  }
+
+  .main-content {
+    min-width: 0;
+  }
+
+  .card-body,
+  .modal-body {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -1133,11 +1228,14 @@ tr:hover td {
 
 input, select, textarea {
   font: inherit;
+  font-size: 1rem;
   padding: 0.6rem 0.85rem;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--card);
   color: var(--text);
+  max-width: 100%;
+  min-width: 0;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -1165,7 +1263,9 @@ input:focus, select:focus, textarea:focus {
 }
 
 .search-input {
-  min-width: 260px;
+  min-width: 0;
+  width: min(260px, 100%);
+  flex: 1 1 180px;
 }
 
 .btn {
@@ -1231,12 +1331,17 @@ a.btn {
 
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
 .form-grid .full-width {
   grid-column: 1 / -1;
+}
+
+.form-group {
+  min-width: 0;
+  max-width: 100%;
 }
 
 .select-com-outro {
@@ -1268,6 +1373,8 @@ a.btn {
 .form-group select,
 .form-group textarea {
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .form-actions {
@@ -1293,17 +1400,18 @@ a.btn {
   background: var(--card);
   border-radius: var(--radius);
   width: 100%;
-  max-width: 640px;
-  max-height: 90vh;
+  max-width: min(640px, calc(100vw - 2rem));
+  max-height: min(90vh, 90dvh);
+  overflow-x: hidden;
   overflow-y: auto;
   box-shadow: 0 20px 60px rgba(0,0,0,0.2);
 }
 
 .modal-xl {
-  max-width: 1100px;
+  max-width: min(1100px, calc(100vw - 2rem));
   display: flex;
   flex-direction: column;
-  max-height: 92vh;
+  max-height: min(92vh, 92dvh);
   overflow: hidden;
 }
 
@@ -4201,6 +4309,8 @@ a.btn {
   display: flex;
   gap: 1rem;
   align-items: flex-start;
+  flex-wrap: wrap;
+  min-width: 0;
 }
 
 .foto-preview-box,
@@ -4239,6 +4349,26 @@ a.btn {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.foto-upload-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.foto-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .ambiente-card {
@@ -4474,7 +4604,8 @@ a.btn {
 }
 
 .app-loading {
-  min-height: 100vh;
+  min-height: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -4498,7 +4629,9 @@ a.btn {
 }
 
 .login-page {
-  min-height: 100vh;
+  min-height: 100%;
+  height: 100%;
+  overflow-y: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -4558,6 +4691,7 @@ a.btn {
 }
 
 .sidebar-user {
+  flex-shrink: 0;
   padding: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }

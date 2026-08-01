@@ -1,5 +1,5 @@
 import { InlineAlert } from './PageAlert';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import FornecedorModal from './FornecedorModal';
 
@@ -29,6 +29,8 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
   const [removerFoto, setRemoverFoto] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const galeriaInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   useEffect(() => {
     if (produto) {
@@ -72,8 +74,7 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFotoChange = (e) => {
-    const file = e.target.files?.[0];
+  const aplicarArquivoFoto = (file) => {
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setError('Selecione um arquivo de imagem válido.');
@@ -86,7 +87,15 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
       setRemoverFoto(false);
       setError('');
     };
+    reader.onerror = () => setError('Não foi possível ler a imagem.');
     reader.readAsDataURL(file);
+  };
+
+  const handleFotoChange = (e) => {
+    const file = e.target.files?.[0];
+    aplicarArquivoFoto(file);
+    // Permite selecionar o mesmo arquivo de novo
+    e.target.value = '';
   };
 
   const handleRemoverFoto = () => {
@@ -161,13 +170,48 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
                 )}
               </div>
               <div className="foto-upload-actions">
-                <input id="foto" type="file" accept="image/*" onChange={handleFotoChange} />
-                {fotoPreview && (
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={handleRemoverFoto}>
-                    Remover foto
+                <input
+                  ref={galeriaInputRef}
+                  id="foto-galeria"
+                  className="foto-file-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFotoChange}
+                />
+                <input
+                  ref={cameraInputRef}
+                  id="foto-camera"
+                  className="foto-file-input"
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleFotoChange}
+                />
+                <div className="foto-upload-buttons">
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    onClick={() => cameraInputRef.current?.click()}
+                  >
+                    Tirar foto
                   </button>
-                )}
-                <p className="hint-text">A imagem será otimizada em até 800×800 px mantendo boa qualidade visual.</p>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => galeriaInputRef.current?.click()}
+                  >
+                    Escolher arquivo
+                  </button>
+                  {fotoPreview && (
+                    <button type="button" className="btn btn-secondary btn-sm" onClick={handleRemoverFoto}>
+                      Remover foto
+                    </button>
+                  )}
+                </div>
+                <p className="hint-text">
+                  No tablet, use &quot;Tirar foto&quot; para fotografar o produto na loja.
+                  A imagem será otimizada em até 800×800 px.
+                </p>
               </div>
             </div>
           </div>
@@ -188,13 +232,13 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
             </div>
             <div className="form-group">
               <label htmlFor="fornecedor_id">Fornecedor</label>
-              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', minWidth: 0 }}>
                 <select
                   id="fornecedor_id"
                   name="fornecedor_id"
                   value={form.fornecedor_id}
                   onChange={handleChange}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: 0 }}
                 >
                   <option value="">Selecione...</option>
                   {fornecedoresLista.map((f) => (
@@ -205,6 +249,7 @@ export default function ProdutoModal({ produto, categorias, fornecedores, onClos
                   type="button"
                   className="btn btn-secondary btn-sm"
                   onClick={() => setShowFornecedorModal(true)}
+                  style={{ flexShrink: 0 }}
                 >
                   + Novo
                 </button>
