@@ -100,7 +100,7 @@ export default function SelecionarClienteModal({ onClose, onSelect, onNovoClient
             <div className="empty-state">Nenhum cliente encontrado com os filtros aplicados.</div>
           ) : (
             <div className="picker-table-wrap">
-              <table className="picker-table">
+              <table className="picker-table picker-table--with-action">
                 <thead>
                   <tr>
                     <th>Nome</th>
@@ -121,7 +121,7 @@ export default function SelecionarClienteModal({ onClose, onSelect, onNovoClient
                       <td>{c.email || '—'}</td>
                       <td>{c.cidade || '—'}</td>
                       <td>{c.estado || '—'}</td>
-                      <td>
+                      <td className="picker-actions">
                         <button
                           type="button"
                           className="btn btn-primary btn-sm"

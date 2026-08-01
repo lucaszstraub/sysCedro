@@ -86,7 +86,7 @@ export default function SelecionarOrcamentoPlanejadoModal({ onClose, onSelect, o
             </div>
           ) : (
             <div className="picker-table-wrap">
-              <table className="picker-table">
+              <table className="picker-table picker-table--with-action">
                 <thead>
                   <tr>
                     <th>Número</th>
@@ -105,7 +105,7 @@ export default function SelecionarOrcamentoPlanejadoModal({ onClose, onSelect, o
                       <td>{STATUS_LABEL[o.status] || o.status}</td>
                       <td>{formatCurrency(o.total)}</td>
                       <td>{formatDate(o.criado_em)}</td>
-                      <td>
+                      <td className="picker-actions">
                         <button
                           type="button"
                           className="btn btn-primary btn-sm"

@@ -1444,17 +1444,21 @@ a.btn {
 
 .picker-search-wrap {
   flex: 1;
-  min-width: 280px;
+  min-width: 0;
+  width: 100%;
 }
 
 .picker-search {
   width: 100%;
+  max-width: 100%;
 }
 
 .picker-meta {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   margin-bottom: 0.75rem;
   font-size: 0.85rem;
   color: var(--text-muted);
@@ -1466,10 +1470,12 @@ a.btn {
   border: 1px solid var(--border);
   border-radius: 8px;
   max-height: 52vh;
+  -webkit-overflow-scrolling: touch;
 }
 
 .picker-table {
   font-size: 0.85rem;
+  width: 100%;
 }
 
 .picker-table th {
@@ -1479,8 +1485,39 @@ a.btn {
   z-index: 1;
 }
 
+/* Coluna de ação sempre visível ao rolar horizontalmente */
+.picker-table--with-action th:last-child,
+.picker-table--with-action td:last-child {
+  position: sticky;
+  right: 0;
+  background: var(--card);
+  box-shadow: -6px 0 10px -6px rgba(var(--surface-ink), 0.18);
+  z-index: 2;
+  white-space: nowrap;
+}
+
+.picker-table--with-action th:last-child {
+  background: var(--brand-cream);
+  z-index: 3;
+}
+
 .picker-row-selected td {
   background: #ede8e2;
+}
+
+.picker-table--with-action .picker-row-selected td:last-child {
+  background: #ede8e2;
+}
+
+.picker-table td.picker-actions {
+  text-align: right;
+}
+
+.picker-actions-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: flex-end;
 }
 
 .modal-footer,
@@ -1490,6 +1527,113 @@ a.btn {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Celular / tablet: lista em cards — botão Selecionar sempre acessível */
+@media (max-width: 900px) {
+  .picker-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .picker-filters > * {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .picker-table-wrap {
+    max-height: min(60vh, 60dvh);
+    border: none;
+    background: transparent;
+    overflow: auto;
+  }
+
+  .picker-table--with-action,
+  .picker-table--with-action thead,
+  .picker-table--with-action tbody,
+  .picker-table--with-action tr,
+  .picker-table--with-action th,
+  .picker-table--with-action td {
+    display: block;
+    width: 100%;
+  }
+
+  .picker-table--with-action thead {
+    display: none;
+  }
+
+  .picker-table--with-action {
+    border-collapse: separate;
+    border-spacing: 0 0.65rem;
+  }
+
+  .picker-table--with-action tbody tr {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.85rem 0.9rem;
+    margin: 0;
+    box-shadow: var(--shadow);
+  }
+
+  .picker-table--with-action tbody tr.picker-row-selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(217, 119, 6, 0.25);
+  }
+
+  .picker-table--with-action td {
+    border: none !important;
+    padding: 0.2rem 0 !important;
+    white-space: normal;
+    background: transparent !important;
+  }
+
+  .picker-table--with-action th:last-child,
+  .picker-table--with-action td:last-child {
+    position: static;
+    box-shadow: none;
+    white-space: normal;
+    background: transparent !important;
+  }
+
+  .picker-table--with-action td:first-child {
+    font-size: 0.95rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .picker-table--with-action td:not(:first-child):not(:last-child) {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  .picker-table--with-action td:last-child,
+  .picker-table--with-action td.picker-actions {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem !important;
+    border-top: 1px solid var(--border) !important;
+    text-align: stretch;
+  }
+
+  .picker-table--with-action td:last-child .btn,
+  .picker-table--with-action td.picker-actions .btn,
+  .picker-table--with-action .picker-actions-group {
+    width: 100%;
+  }
+
+  .picker-table--with-action .picker-actions-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .picker-table--with-action td:last-child .btn + .btn {
+    margin-left: 0;
+    margin-top: 0.35rem;
+  }
+
+  .picker-table--with-action tr:hover td {
+    background: transparent !important;
+  }
 }
 
 .cliente-selecionado-card {

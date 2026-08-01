@@ -164,7 +164,7 @@ export default function SelecionarProdutoModal({
             <div className="empty-state">Nenhum produto encontrado com os filtros aplicados.</div>
           ) : (
             <div className="picker-table-wrap">
-              <table className="picker-table">
+              <table className="picker-table picker-table--with-action">
                 <thead>
                   <tr>
                     <th>Foto</th>
@@ -189,14 +189,15 @@ export default function SelecionarProdutoModal({
                       <td>{formatDimensions(p)}</td>
                       <td>{p.quantidade_total ?? 0}</td>
                       <td>{formatCurrency(p.preco_venda)}</td>
-                      <td>
-                        <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingProduto(p)}>
-                          Editar
-                        </button>
-                        {' '}
-                        <button type="button" className="btn btn-primary btn-sm" onClick={() => handleSelect(p)}>
-                          Adicionar
-                        </button>
+                      <td className="picker-actions">
+                        <div className="picker-actions-group">
+                          <button type="button" className="btn btn-secondary btn-sm" onClick={() => setEditingProduto(p)}>
+                            Editar
+                          </button>
+                          <button type="button" className="btn btn-primary btn-sm" onClick={() => handleSelect(p)}>
+                            Adicionar
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
