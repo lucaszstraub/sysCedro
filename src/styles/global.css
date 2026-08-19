@@ -2328,6 +2328,27 @@ a.btn {
   overflow: hidden;
 }
 
+.modal-lg > form,
+.modal-lg > .picker-modal-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.modal-lg .modal-body {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-lg .modal-footer {
+  flex-shrink: 0;
+}
+
 .visao-vendas-stats {
   margin-bottom: 1.25rem;
 }

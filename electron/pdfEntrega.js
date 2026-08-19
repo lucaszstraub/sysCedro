@@ -93,6 +93,17 @@ async function gerarPdfEntrega(filePath, entregaId) {
     try {
       let y = drawPdfHeader(doc, { ...headerMeta, variant: 'print' });
 
+      if (data.status === 'entregue' || data.status === 'parcial') {
+        const dataStr = data.data_realizada ? ` em ${formatDate(data.data_realizada)}` : '';
+        const isParcial = data.status === 'parcial';
+        y = drawAttentionBanner(doc, y, {
+          title: isParcial ? 'ENTREGA PARCIAL REALIZADA' : `ENTREGA CONCLUÍDA${dataStr}`,
+          message: isParcial
+            ? `Entrega parcial registrada${dataStr}. Este ticket lista os itens da expedição conforme o último registro.`
+            : 'Esta entrega já foi concluída. O ticket abaixo é uma reimpressão.',
+        });
+      }
+
       if (data.tem_a_receber) {
         y = drawAttentionBanner(doc, y, {
           title: 'ATENÇÃO — SALDO A RECEBER',

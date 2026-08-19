@@ -264,7 +264,12 @@ async function listEstoque(busca = '') {
   const result = await db.query(`
     SELECT e.id, e.quantidade, e.atualizado_em,
            p.id AS produto_id, p.sku, p.nome AS produto_nome, p.estoque_minimo,
-           l.id AS localizacao_id, l.codigo AS localizacao_codigo, l.nome AS localizacao_nome
+           l.id AS localizacao_id, l.codigo AS localizacao_codigo, l.nome AS localizacao_nome,
+           COALESCE((
+             SELECT SUM(r.quantidade)
+             FROM estoque_reservas r
+             WHERE r.produto_id = p.id AND r.status = 'ativa'
+           ), 0)::int AS reservado
     FROM estoque e
     JOIN produtos p ON p.id = e.produto_id
     JOIN localizacoes l ON l.id = e.localizacao_id
@@ -556,6 +561,23 @@ async function deleteLocalizacao(id) {
   return { success: true };
 }
 
+async function listReservasProduto(produtoId) {
+  const db = getPool();
+  const result = await db.query(`
+    SELECT r.id, r.quantidade, r.status, r.criado_em,
+           v.numero AS venda_numero, v.numero_pedido,
+           c.nome AS cliente_nome,
+           vi.descricao AS item_descricao
+    FROM estoque_reservas r
+    LEFT JOIN vendas v ON v.id = r.venda_id
+    LEFT JOIN clientes c ON c.id = v.cliente_id
+    LEFT JOIN venda_itens vi ON vi.id = r.venda_item_id
+    WHERE r.produto_id = $1 AND r.status = 'ativa'
+    ORDER BY r.criado_em DESC
+  `, [produtoId]);
+  return result.rows;
+}
+
 module.exports = {
   getDashboard,
   listCategorias,
@@ -566,6 +588,7 @@ module.exports = {
   updateProduto,
   deleteProduto,
   listEstoque,
+  listReservasProduto,
   listPendenciasAlocacao,
   alocarProduto,
   listMovimentacoes,

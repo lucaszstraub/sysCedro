@@ -304,6 +304,18 @@ export default function EncomendaFornecedorForm() {
           const enc = await api.getEncomendaFornecedor(Number(id));
           hydrateFromEncomenda(enc);
           setBaselineSnapshot(snapshotFromEncomenda(enc));
+        } else {
+          // Pré-carrega itens pendentes de uma venda quando vem de assistência técnica
+          const vendaIdParam = searchParams.get('venda_id');
+            if (vendaIdParam) {
+              const pendencias = await api.listPendenciasEncomenda(null, '', Number(vendaIdParam));
+              const daVenda = pendencias;
+            if (daVenda.length > 0) {
+              const forn = daVenda[0].fornecedor_id;
+              if (forn) setFornecedorId(String(forn));
+              setItens(daVenda.map((p) => mapPendenciaToItem(p, prazoDiasPedido, FRETE_PADRAO, IPI_PADRAO)));
+            }
+          }
         }
       } catch (err) {
         setError(err.message);

@@ -252,7 +252,7 @@ const SQL_PENDENCIAS_ENCOMENDA = `
     AND (vi.quantidade_encomenda - COALESCE(e.qtd, 0)) > 0
 `;
 
-async function listPendenciasEncomenda(fornecedorId = null, busca = '') {
+async function listPendenciasEncomenda(fornecedorId = null, busca = '', vendaId = null) {
   const db = getPool();
   const termo = `%${busca}%`;
   const result = await db.query(`
@@ -261,8 +261,9 @@ async function listPendenciasEncomenda(fornecedorId = null, busca = '') {
     AND ($2 = '' OR v.numero ILIKE $2 OR v.numero_pedido ILIKE $2 OR c.nome ILIKE $2
          OR vi.descricao ILIKE $2 OR p.nome ILIKE $2 OR p.sku ILIKE $2
          OR f.nome ILIKE $2)
+    AND ($3::int IS NULL OR v.id = $3)
     ORDER BY f.nome NULLS LAST, v.numero_pedido NULLS LAST, v.numero, vi.id
-  `, [fornecedorId || null, termo]);
+  `, [fornecedorId || null, termo, vendaId || null]);
   return result.rows;
 }
 
@@ -910,36 +911,47 @@ async function estornarRecebimento(recebimentoId) {
     }
 
     if (rec.localizacao_id) {
-      const estoque = await client.query(`
-        SELECT quantidade FROM estoque
-        WHERE produto_id = $1 AND localizacao_id = $2
+      // Verifica saldo total do produto em todo o estoque (pode ter sido movido)
+      const estoqueTotal = await client.query(`
+        SELECT localizacao_id, quantidade FROM estoque
+        WHERE produto_id = $1 AND quantidade > 0
+        ORDER BY CASE WHEN localizacao_id = $2 THEN 0 ELSE 1 END, quantidade DESC
       `, [rec.produto_id, rec.localizacao_id]);
 
-      const saldo = Number(estoque.rows[0]?.quantidade) || 0;
-      if (saldo < qty) {
+      const totalDisponivel = estoqueTotal.rows.reduce(
+        (s, r) => s + Number(r.quantidade), 0
+      );
+      if (totalDisponivel < qty) {
         throw new Error(
-          `Estoque insuficiente para estornar (${saldo} disponível, ${qty} necessário).`
+          `Estoque insuficiente para estornar (${totalDisponivel} disponível, ${qty} necessário). O produto pode ter sido vendido ou consumido.`
         );
       }
 
-      await client.query(`
-        UPDATE estoque SET quantidade = quantidade - $3, atualizado_em = NOW()
-        WHERE produto_id = $1 AND localizacao_id = $2
-      `, [rec.produto_id, rec.localizacao_id, qty]);
+      // Deduz da localização original se possível, senão de outras localizações
+      let restante = qty;
+      for (const row of estoqueTotal.rows) {
+        if (restante <= 0) break;
+        const deduzir = Math.min(restante, Number(row.quantidade));
+        await client.query(`
+          UPDATE estoque SET quantidade = quantidade - $3, atualizado_em = NOW()
+          WHERE produto_id = $1 AND localizacao_id = $2
+        `, [rec.produto_id, row.localizacao_id, deduzir]);
 
-      await client.query(`
-        INSERT INTO movimentacoes (
-          produto_id, localizacao_origem_id, tipo, quantidade, motivo, usuario,
-          referencia_tipo, referencia_id
-        )
-        VALUES ($1, $2, 'saida', $3, $4, 'sistema', 'encomenda_estorno', $5)
-      `, [
-        rec.produto_id,
-        rec.localizacao_id,
-        qty,
-        `Estorno recebimento encomenda ${rec.encomenda_numero}`,
-        recebimentoId,
-      ]);
+        await client.query(`
+          INSERT INTO movimentacoes (
+            produto_id, localizacao_origem_id, tipo, quantidade, motivo, usuario,
+            referencia_tipo, referencia_id
+          )
+          VALUES ($1, $2, 'saida', $3, $4, 'sistema', 'encomenda_estorno', $5)
+        `, [
+          rec.produto_id,
+          row.localizacao_id,
+          deduzir,
+          `Estorno recebimento encomenda ${rec.encomenda_numero}`,
+          recebimentoId,
+        ]);
+        restante -= deduzir;
+      }
     }
 
     await client.query(`

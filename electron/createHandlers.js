@@ -174,6 +174,7 @@ function createHandlers(deps = {}) {
       }, (filePath) => gerarPdfFolhasEtiquetas(filePath, etiquetas));
     },
     'estoque:list': (_, busca) => services.listEstoque(busca),
+    'estoque:reservas': (_, produtoId) => services.listReservasProduto(produtoId),
     'estoque:pendenciasAlocacao': (_, busca) => services.listPendenciasAlocacao(busca),
     'estoque:alocar': (_, data) => services.alocarProduto(data),
     'movimentacoes:list': (_, limite) => services.listMovimentacoes(limite),
@@ -282,7 +283,7 @@ function createHandlers(deps = {}) {
     'encomendas:save': (_, data, id) => encomendas.salvarEncomendaFornecedor(data, id),
     'encomendas:delete': (_, id) => encomendas.deleteEncomendaFornecedor(id),
     'encomendas:updateStatus': (_, id, status) => encomendas.updateEncomendaFornecedorStatus(id, status),
-    'encomendas:pendencias': (_, fornecedorId, busca) => encomendas.listPendenciasEncomenda(fornecedorId, busca),
+    'encomendas:pendencias': (_, fornecedorId, busca, vendaId) => encomendas.listPendenciasEncomenda(fornecedorId, busca, vendaId),
     'encomendas:resumoPendencias': () => encomendas.getResumoPendenciasEncomenda(),
     'encomendas:pendentesRecebimento': (_, busca) => encomendas.listItensPendentesRecebimento(busca),
     'encomendas:controleRecebimento': (_, filtro, busca) => encomendas.listItensControleRecebimento(filtro, busca),

@@ -17,6 +17,7 @@ export default function EntregaAgendadaKanbanCard({
   onImprimir,
   onObservacoes,
   onConfirmarCliente,
+  onCriarEncomenda,
 }) {
   const [menuAberto, setMenuAberto] = useState(false);
   const {
@@ -142,6 +143,16 @@ export default function EntregaAgendadaKanbanCard({
                 title="Para entregas já feitas antes do go-live — sem registrar data"
               >
                 Entrega já realizada
+              </button>
+            )}
+            {isAssistencia && onCriarEncomenda && entrega.venda_id && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => onCriarEncomenda(entrega)}
+                title="Criar pedido de compra para troca do produto com o fabricante"
+              >
+                Criar encomenda de troca
               </button>
             )}
           </>

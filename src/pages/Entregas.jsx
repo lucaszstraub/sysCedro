@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../api';
 import { useFaseImplantacao } from '../context/FaseImplantacaoContext';
 import {
@@ -81,6 +81,7 @@ function filtrarKanban(entregas, filtro) {
 }
 
 export default function Entregas() {
+  const navigate = useNavigate();
   const [aba, setAba] = useState('disponibilidade');
   const [entregas, setEntregas] = useState([]);
   const [agendadas, setAgendadas] = useState([]);
@@ -288,6 +289,17 @@ export default function Entregas() {
       return (
         <button type="button" className="btn btn-secondary btn-sm" disabled title={SITUACAO_ENTREGA_HINT.indisponivel}>
           Aguardando estoque
+        </button>
+      );
+    }
+    if (e.expedicoes?.agendadas > 0) {
+      return (
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() => irParaExpedicoes(e.numero_pedido || e.venda_numero)}
+        >
+          Agendada ({e.expedicoes.agendadas}) — Ver
         </button>
       );
     }
@@ -566,6 +578,7 @@ export default function Entregas() {
                           onImprimir={handlePrint}
                           onObservacoes={setObservacoesEntrega}
                           onConfirmarCliente={handleConfirmarAgendamentoCliente}
+                          onCriarEncomenda={(e) => navigate(`/gestao-estoque/encomendas/nova?venda_id=${e.venda_id}`)}
                         />
                       ))
                     )}

@@ -346,7 +346,8 @@ export default function Recebimentos() {
                   <th>Valor na nota</th>
                   <th>Frete</th>
                   <th>IPI</th>
-                  <th>Custo c/ frete e IPI</th>
+                  <th>Custo unit. (c/ frete/IPI)</th>
+                  <th>Total recebido</th>
                   <th>Nº nota fiscal</th>
                   <th>Situação</th>
                   <th></th>
@@ -373,6 +374,7 @@ export default function Recebimentos() {
                     <td>{formatCurrency(h.frete_unitario)}</td>
                     <td>{formatCurrency(h.ipi_unitario)}</td>
                     <td>{formatCurrency(h.custo_real)}</td>
+                    <td><strong>{formatCurrency((Number(h.custo_real) || 0) * (Number(h.quantidade) || 0))}</strong></td>
                     <td>
                       <strong>{h.nota_fiscal_numero_cadastrada || h.numero_nota_fiscal || '—'}</strong>
                       {h.nota_fiscal_numero_cadastrada && h.numero_nota_fiscal

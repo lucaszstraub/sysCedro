@@ -3,7 +3,62 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import PageAlert from '../components/PageAlert';
 import { CODIGO_LOCALIZACAO_NAO_ALOCADOS, isLocalizacaoNaoAlocados } from '../constants/estoque';
-import { formatDate } from '../utils/format';
+import { formatDate, formatDateTime } from '../utils/format';
+
+function ReservasModal({ produto, onClose }) {
+  const [reservas, setReservas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.listReservasProduto(produto.produto_id)
+      .then(setReservas)
+      .finally(() => setLoading(false));
+  }, [produto.produto_id]);
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h2>Estoque bloqueado — {produto.produto_nome}</h2>
+          <button type="button" className="modal-close" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          {loading ? (
+            <div className="loading">Carregando...</div>
+          ) : reservas.length === 0 ? (
+            <div className="empty-state">Nenhuma reserva ativa encontrada.</div>
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Cliente</th>
+                  <th>Item</th>
+                  <th>Qtd reservada</th>
+                  <th>Desde</th>
+                </tr>
+              </thead>
+              <tbody>
+                {reservas.map((r) => (
+                  <tr key={r.id}>
+                    <td><strong>{r.numero_pedido || r.venda_numero || '—'}</strong></td>
+                    <td>{r.cliente_nome || '—'}</td>
+                    <td>{r.item_descricao || '—'}</td>
+                    <td>{r.quantidade}</td>
+                    <td>{formatDateTime(r.criado_em)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="modal-footer">
+          <button type="button" className="btn btn-secondary" onClick={onClose}>Fechar</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Estoque() {
   const [itens, setItens] = useState([]);
@@ -11,6 +66,7 @@ export default function Estoque() {
   const [filtro, setFiltro] = useState('todos');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [reservasModal, setReservasModal] = useState(null);
 
   const load = async (term = busca) => {
     setLoading(true);
@@ -104,7 +160,9 @@ export default function Estoque() {
                   <th>SKU</th>
                   <th>Produto</th>
                   <th>Localização</th>
-                  <th>Quantidade</th>
+                  <th>Qtd física</th>
+                  <th title="Reservado para pedidos de clientes">Reservado</th>
+                  <th title="Disponível = físico total do produto menos reservado">Disponível</th>
                   <th>Mínimo</th>
                   <th>Atualizado em</th>
                 </tr>
@@ -112,6 +170,8 @@ export default function Estoque() {
               <tbody>
                 {itensFiltrados.map((item) => {
                   const naoAlocado = isLocalizacaoNaoAlocados({ codigo: item.localizacao_codigo });
+                  const reservado = Number(item.reservado) || 0;
+                  const disponivel = Math.max(item.quantidade - reservado, 0);
                   return (
                     <tr key={item.id} className={naoAlocado ? 'row-pendencia-alocacao' : ''}>
                       <td><strong>{item.sku}</strong></td>
@@ -135,6 +195,26 @@ export default function Estoque() {
                           {item.quantidade}
                         </span>
                       </td>
+                      <td>
+                        {reservado > 0 ? (
+                          <button
+                            type="button"
+                            className="btn btn-link btn-sm"
+                            style={{ padding: 0 }}
+                            onClick={() => setReservasModal(item)}
+                            title="Ver pedidos que bloqueiam este estoque"
+                          >
+                            <span className="badge badge-warning">{reservado}</span>
+                          </button>
+                        ) : (
+                          <span className="text-muted">—</span>
+                        )}
+                      </td>
+                      <td>
+                        <strong className={disponivel <= 0 && reservado > 0 ? 'text-danger' : ''}>
+                          {disponivel}
+                        </strong>
+                      </td>
                       <td>{item.estoque_minimo}</td>
                       <td>{formatDate(item.atualizado_em)}</td>
                     </tr>
@@ -145,6 +225,10 @@ export default function Estoque() {
           )}
         </div>
       </div>
+
+      {reservasModal && (
+        <ReservasModal produto={reservasModal} onClose={() => setReservasModal(null)} />
+      )}
     </>
   );
 }
