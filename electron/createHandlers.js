@@ -175,6 +175,7 @@ function createHandlers(deps = {}) {
     },
     'estoque:list': (_, busca) => services.listEstoque(busca),
     'estoque:reservas': (_, produtoId) => services.listReservasProduto(produtoId),
+    'estoque:localizacoesProduto': (_, produtoId) => services.listEstoqueLocalizacoesProduto(produtoId),
     'estoque:pendenciasAlocacao': (_, busca) => services.listPendenciasAlocacao(busca),
     'estoque:alocar': (_, data) => services.alocarProduto(data),
     'movimentacoes:list': (_, limite) => services.listMovimentacoes(limite),

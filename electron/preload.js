@@ -97,6 +97,7 @@ const api = {
   listRecebimentosParaEtiquetas: (busca) => ipcRenderer.invoke('etiquetas:recebimentos', busca),
   listEstoque: (busca) => ipcRenderer.invoke('estoque:list', busca),
   listReservasProduto: (produtoId) => ipcRenderer.invoke('estoque:reservas', produtoId),
+  listEstoqueLocalizacoesProduto: (produtoId) => ipcRenderer.invoke('estoque:localizacoesProduto', produtoId),
   listPendenciasAlocacao: (busca) => ipcRenderer.invoke('estoque:pendenciasAlocacao', busca),
   alocarProduto: (data) => ipcRenderer.invoke('estoque:alocar', data),
   listMovimentacoes: (limite) => ipcRenderer.invoke('movimentacoes:list', limite),

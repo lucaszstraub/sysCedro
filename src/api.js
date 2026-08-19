@@ -224,6 +224,7 @@ export const api = {
   listEntregasAgendadas: (...args) => invoke('listEntregasAgendadas', args),
   listEstoque: (...args) => invoke('listEstoque', args),
   listReservasProduto: (...args) => invoke('listReservasProduto', args),
+  listEstoqueLocalizacoesProduto: (...args) => invoke('listEstoqueLocalizacoesProduto', args),
   listFormasPagamento: (...args) => invoke('listFormasPagamento', args),
   listFormasPagamentoAll: (...args) => invoke('listFormasPagamentoAll', args),
   listFornecedores: (...args) => invoke('listFornecedores', args),

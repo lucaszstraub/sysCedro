@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 const FeedbackContext = createContext(null);
 
@@ -20,7 +21,7 @@ const TOAST_META = {
 function ToastContainer({ toasts, onDismiss }) {
   if (toasts.length === 0) return null;
 
-  return (
+  return createPortal(
     <div className="toast-stack" aria-live="polite" aria-relevant="additions">
       {toasts.map((item) => {
         const meta = TOAST_META[item.type] || TOAST_META.info;
@@ -43,7 +44,7 @@ function ToastContainer({ toasts, onDismiss }) {
                 type="button"
                 className="toast-close"
                 onClick={() => onDismiss(item.id)}
-                aria-label="Fechar"
+                aria-label="Fechar notificação"
               >
                 ×
               </button>
@@ -57,7 +58,8 @@ function ToastContainer({ toasts, onDismiss }) {
           </div>
         );
       })}
-    </div>
+    </div>,
+    document.body
   );
 }
 

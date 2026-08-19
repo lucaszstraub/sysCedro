@@ -578,6 +578,19 @@ async function listReservasProduto(produtoId) {
   return result.rows;
 }
 
+async function listEstoqueLocalizacoesProduto(produtoId) {
+  const db = getPool();
+  const result = await db.query(`
+    SELECT e.localizacao_id, e.quantidade,
+           l.codigo AS localizacao_codigo, l.nome AS localizacao_nome
+    FROM estoque e
+    JOIN localizacoes l ON l.id = e.localizacao_id
+    WHERE e.produto_id = $1 AND e.quantidade > 0 AND l.ativo = true
+    ORDER BY e.quantidade DESC, l.codigo ASC
+  `, [produtoId]);
+  return result.rows;
+}
+
 module.exports = {
   getDashboard,
   listCategorias,
@@ -589,6 +602,7 @@ module.exports = {
   deleteProduto,
   listEstoque,
   listReservasProduto,
+  listEstoqueLocalizacoesProduto,
   listPendenciasAlocacao,
   alocarProduto,
   listMovimentacoes,

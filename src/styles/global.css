@@ -2133,15 +2133,15 @@ a.btn {
 
 .toast-stack {
   position: fixed;
-  bottom: 1.5rem;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 2000;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
-  max-width: min(520px, calc(100vw - 2rem));
+  max-width: min(420px, calc(100vw - 2rem));
   width: calc(100% - 2rem);
   pointer-events: none;
 }
@@ -2152,13 +2152,12 @@ a.btn {
   align-items: flex-start;
   gap: 0.85rem;
   width: 100%;
-  padding: 1.1rem 1.15rem 1.1rem 1.1rem;
+  padding: 1.25rem 1.15rem 1.25rem 1.25rem;
   border-radius: 14px;
-  box-shadow: 0 14px 40px rgba(var(--surface-ink), 0.2);
+  box-shadow: 0 18px 48px rgba(var(--surface-ink), 0.22);
   font-size: 0.95rem;
   line-height: 1.45;
-  /* Não bloqueia cliques na UI abaixo — só o botão fechar captura evento */
-  pointer-events: none;
+  pointer-events: auto;
   animation: toast-in 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   overflow: hidden;
   border-width: 1px;
@@ -2168,11 +2167,11 @@ a.btn {
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: scale(0.94);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: scale(1);
   }
 }
 
@@ -2297,18 +2296,23 @@ a.btn {
 .toast-close {
   background: none;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.45rem;
   line-height: 1;
   cursor: pointer;
   color: inherit;
-  opacity: 0.5;
-  padding: 0;
-  margin-left: 0.25rem;
+  opacity: 0.65;
+  padding: 0.15rem 0.25rem;
+  margin: -0.15rem -0.1rem 0 0.35rem;
+  flex-shrink: 0;
+  align-self: flex-start;
+  border-radius: 6px;
   pointer-events: auto;
 }
 
-.toast-close:hover {
+.toast-close:hover,
+.toast-close:focus-visible {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
 }
 
 .confirm-dialog-overlay {
