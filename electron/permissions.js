@@ -87,6 +87,7 @@ const CHANNEL_PERMISSIONS = {
 
   'dashboard:get': PERMISSIONS.WMS,
   'estoque:list': PERMISSIONS.WMS,
+  'estoque:reservas': PERMISSIONS.WMS,
   'estoque:pendenciasAlocacao': PERMISSIONS.WMS,
   'estoque:alocar': PERMISSIONS.WMS,
   'movimentacoes:list': PERMISSIONS.WMS,

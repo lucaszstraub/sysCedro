@@ -82,6 +82,7 @@
   "gerarPdfFolhasEtiquetas": "etiquetas:imprimir",
   "listRecebimentosParaEtiquetas": "etiquetas:recebimentos",
   "listEstoque": "estoque:list",
+  "listReservasProduto": "estoque:reservas",
   "listPendenciasAlocacao": "estoque:pendenciasAlocacao",
   "alocarProduto": "estoque:alocar",
   "listMovimentacoes": "movimentacoes:list",

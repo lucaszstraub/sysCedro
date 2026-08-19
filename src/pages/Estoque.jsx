@@ -1,62 +1,84 @@
 import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { api } from '../api';
-import PageAlert from '../components/PageAlert';
+import PageAlert, { InlineAlert } from '../components/PageAlert';
 import { CODIGO_LOCALIZACAO_NAO_ALOCADOS, isLocalizacaoNaoAlocados } from '../constants/estoque';
 import { formatDate, formatDateTime } from '../utils/format';
 
 function ReservasModal({ produto, onClose }) {
   const [reservas, setReservas] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    api.listReservasProduto(produto.produto_id)
-      .then(setReservas)
-      .finally(() => setLoading(false));
+    let cancelled = false;
+    setLoading(true);
+    setError('');
+    setReservas([]);
+
+    api.listReservasProduto(Number(produto.produto_id))
+      .then((data) => {
+        if (cancelled) return;
+        setReservas(Array.isArray(data) ? data : []);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setError(err.message || 'Não foi possível carregar as reservas deste produto.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => { cancelled = true; };
   }, [produto.produto_id]);
 
-  return (
+  return createPortal(
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>Estoque bloqueado — {produto.produto_nome}</h2>
-          <button type="button" className="modal-close" onClick={onClose}>×</button>
+          <h3>Estoque bloqueado — {produto.produto_nome}</h3>
+          <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">&times;</button>
         </div>
         <div className="modal-body">
+          {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
           {loading ? (
-            <div className="loading">Carregando...</div>
-          ) : reservas.length === 0 ? (
-            <div className="empty-state">Nenhuma reserva ativa encontrada.</div>
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>Pedido</th>
-                  <th>Cliente</th>
-                  <th>Item</th>
-                  <th>Qtd reservada</th>
-                  <th>Desde</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reservas.map((r) => (
-                  <tr key={r.id}>
-                    <td><strong>{r.numero_pedido || r.venda_numero || '—'}</strong></td>
-                    <td>{r.cliente_nome || '—'}</td>
-                    <td>{r.item_descricao || '—'}</td>
-                    <td>{r.quantidade}</td>
-                    <td>{formatDateTime(r.criado_em)}</td>
+            <div className="loading">Carregando reservas...</div>
+          ) : !error && reservas.length === 0 ? (
+            <div className="empty-state">Nenhuma reserva ativa encontrada para este produto.</div>
+          ) : !error && (
+            <div className="picker-table-wrap">
+              <table className="picker-table">
+                <thead>
+                  <tr>
+                    <th>Pedido</th>
+                    <th>Cliente</th>
+                    <th>Item</th>
+                    <th>Qtd reservada</th>
+                    <th>Desde</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {reservas.map((r) => (
+                    <tr key={r.id}>
+                      <td><strong>{r.numero_pedido || r.venda_numero || '—'}</strong></td>
+                      <td>{r.cliente_nome || '—'}</td>
+                      <td>{r.item_descricao || '—'}</td>
+                      <td>{r.quantidade}</td>
+                      <td>{formatDateTime(r.criado_em)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
         <div className="modal-footer">
           <button type="button" className="btn btn-secondary" onClick={onClose}>Fechar</button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
@@ -201,7 +223,10 @@ export default function Estoque() {
                             type="button"
                             className="btn btn-link btn-sm"
                             style={{ padding: 0 }}
-                            onClick={() => setReservasModal(item)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setReservasModal(item);
+                            }}
                             title="Ver pedidos que bloqueiam este estoque"
                           >
                             <span className="badge badge-warning">{reservado}</span>
