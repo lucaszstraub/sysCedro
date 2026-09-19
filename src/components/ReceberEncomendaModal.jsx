@@ -4,8 +4,6 @@ import { api } from '../api';
 import {
   DESTINO_LABEL,
   resolverCustoEsperado,
-  calcularFreteUnitario,
-  calcularIpiUnitario,
   calcularCustoRealRecebimento,
   normalizarNumeroNotaFiscal,
 } from '../constants/encomenda';
@@ -21,12 +19,10 @@ export default function ReceberEncomendaModal({
 }) {
   const [quantidade, setQuantidade] = useState(item.quantidade_pendente);
   const custoEsperado = resolverCustoEsperado(item);
-  const fretePct = Number(item.frete_percentual) || 10;
-  const ipiPct = Number(item.ipi_percentual) || 3.25;
   const valorInicial = Number(item.custo_negociado) || 0;
   const [valorNotaUnitario, setValorNotaUnitario] = useState(valorInicial);
-  const [freteUnitario, setFreteUnitario] = useState(() => calcularFreteUnitario(valorInicial, fretePct));
-  const [ipiUnitario, setIpiUnitario] = useState(() => calcularIpiUnitario(valorInicial, ipiPct));
+  const [freteUnitario, setFreteUnitario] = useState(0);
+  const [ipiUnitario, setIpiUnitario] = useState(0);
   const custoRealCalculado = useMemo(
     () => calcularCustoRealRecebimento(valorNotaUnitario, freteUnitario, ipiUnitario),
     [valorNotaUnitario, freteUnitario, ipiUnitario]
@@ -62,12 +58,6 @@ export default function ReceberEncomendaModal({
     const nota = notasDisponiveis.find((n) => String(n.id) === notaFiscalId);
     setNumeroNotaFiscal(nota?.numero || '');
   }, [modoNota, notaFiscalId, notasDisponiveis]);
-
-  const handleValorNotaChange = (valor) => {
-    setValorNotaUnitario(valor);
-    setFreteUnitario(calcularFreteUnitario(valor, fretePct));
-    setIpiUnitario(calcularIpiUnitario(valor, ipiPct));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -228,16 +218,15 @@ export default function ReceberEncomendaModal({
                 <span className="hint-text">Pendente: {item.quantidade_pendente}</span>
               </div>
               <div className="form-group">
-                <label>Valor unitário na nota *</label>
+                <label>Valor unitário do produto na nota *</label>
                 <NumericInput
                   step="0.01"
                   min="0"
                   value={valorNotaUnitario}
-                  onChange={handleValorNotaChange}
+                  onChange={setValorNotaUnitario}
                 />
                 <span className="hint-text">
-                  Valor do produto na NF (negociado, sem frete/IPI). Sugestão: {formatCurrency(valorInicial)}
-                  {' · '}frete {fretePct}% · IPI {ipiPct}%
+                  Valor do produto na NF (sem frete/IPI). Sugestão da encomenda: {formatCurrency(valorInicial)}
                 </span>
               </div>
               <div className="form-group">
@@ -264,18 +253,17 @@ export default function ReceberEncomendaModal({
                   {formatCurrency(custoRealCalculado)}
                 </p>
                 <span className="hint-text">
-                  Valor na nota + frete + IPI — deve conferir com o custo cadastrado / esperado
+                  Produto + frete + IPI da NF
                 </span>
               </div>
               <div className="form-group">
-                <label>Custo esperado na encomenda</label>
+                <label>Valor computado para venda (encomenda)</label>
                 <p style={{ margin: '0.35rem 0 0', fontWeight: 600 }}>
                   {formatCurrency(custoEsperado)}
                 </p>
                 <span className="hint-text">
-                  Negociado {formatCurrency(item.custo_negociado)}
-                  {' + '}frete {formatCurrency(calcularFreteUnitario(item.custo_negociado, fretePct))}
-                  {' + '}IPI {formatCurrency(calcularIpiUnitario(item.custo_negociado, ipiPct))}
+                  Se houver diferença, o custo do produto será corrigido e as comissões/desempenho
+                  da venda serão atualizados.
                   {divergencia !== 0 && (
                     <span className={divergencia > 0 ? 'text-danger' : 'text-success'}>
                       {' · '}Divergência: {formatCurrency(divergencia)}

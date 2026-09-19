@@ -3,36 +3,16 @@ const { getSession } = require('./auth');
 const entregas = require('./entregas');
 const markupVendas = require('./markupVendas');
 const faseImplantacao = require('./faseImplantacao');
-const FRETE_PADRAO = 10;
-const IPI_PADRAO = 3.25;
 const PRAZO_PADRAO = 30;
 
-function fatorFreteIpi(fretePct, ipiPct) {
-  return 1 + (Number(fretePct ?? FRETE_PADRAO) || 0) / 100
-    + (Number(ipiPct ?? IPI_PADRAO) || 0) / 100;
-}
-
-/** preco_custo do produto = custo cheio; devolve base negociada sem frete/IPI. */
-function calcularCustoNegociadoDesdeCustoCheio(custoCheio, fretePct, ipiPct) {
-  const cheio = Number(custoCheio) || 0;
-  if (cheio <= 0) return 0;
-  const fator = fatorFreteIpi(fretePct, ipiPct);
-  if (fator <= 0) return Math.round(cheio * 100) / 100;
-  return Math.round((cheio / fator) * 100) / 100;
-}
-
-function calcularCustoComImpostos(custoNegociado, fretePct, ipiPct) {
-  const base = Number(custoNegociado) || 0;
-  const frete = base * (Number(fretePct ?? FRETE_PADRAO) || 0) / 100;
-  const ipi = base * (Number(ipiPct ?? IPI_PADRAO) || 0) / 100;
-  return Math.round((base + frete + ipi) * 100) / 100;
+function round2(n) {
+  return Math.round((Number(n) || 0) * 100) / 100;
 }
 
 function calcularCustoRealRecebimento(valorNota, freteUnitario, ipiUnitario) {
-  const base = Number(valorNota) || 0;
-  const frete = Number(freteUnitario) || 0;
-  const ipi = Number(ipiUnitario) || 0;
-  return Math.round((base + frete + ipi) * 100) / 100;
+  return round2(
+    (Number(valorNota) || 0) + (Number(freteUnitario) || 0) + (Number(ipiUnitario) || 0)
+  );
 }
 
 const CODIGO_LOCALIZACAO_NAO_ALOCADOS = 'NAO-ALOC';
@@ -52,15 +32,17 @@ async function obterLocalizacaoNaoAlocados(client) {
   return inserted.rows[0].id;
 }
 
+/** Valor computado para venda (custo interno). Coluna legada: custo_com_impostos. */
+function resolverValorComputadoVenda(item) {
+  const computado = Number(item?.valor_computado_venda);
+  if (Number.isFinite(computado) && computado > 0) return round2(computado);
+  const legado = Number(item?.custo_com_impostos);
+  if (Number.isFinite(legado) && legado > 0) return round2(legado);
+  return 0;
+}
+
 function resolverCustoEsperado(item) {
-  const negociado = Number(item.custo_negociado) || 0;
-  const comImpostos = Number(item.custo_com_impostos);
-  if (comImpostos > 0) return comImpostos;
-  return calcularCustoComImpostos(
-    negociado,
-    item.frete_percentual ?? FRETE_PADRAO,
-    item.ipi_percentual ?? IPI_PADRAO
-  );
+  return resolverValorComputadoVenda(item);
 }
 
 function calcularDataPrevisao(dias, dataBase = null) {
@@ -79,15 +61,16 @@ function normalizarNumeroNotaFiscal(valor) {
   return numero;
 }
 
-function normalizarItemEncomenda(item, fretePct, ipiPct, dataPedido, prazoPadrao) {
+function normalizarItemEncomenda(item, dataPedido, prazoPadrao) {
   const dias = Number(item.previsao_entrega_dias) || Number(prazoPadrao) || PRAZO_PADRAO;
-  const custoNegociado = Number(item.custo_negociado) || 0;
-  const custoComImpostos = calcularCustoComImpostos(custoNegociado, fretePct, ipiPct);
+  const custoNegociado = round2(item.custo_negociado);
+  const valorComputado = resolverValorComputadoVenda(item) || custoNegociado;
   return {
     ...item,
     quantidade_pedida: Number(item.quantidade_pedida) || 1,
     custo_negociado: custoNegociado,
-    custo_com_impostos: custoComImpostos,
+    custo_com_impostos: valorComputado,
+    valor_computado_venda: valorComputado,
     previsao_entrega_dias: dias,
     previsao_entrega: item.previsao_entrega || calcularDataPrevisao(dias, dataPedido),
     destino_esperado: item.destino_esperado || 'estoque',
@@ -184,7 +167,13 @@ async function getEncomendaFornecedor(id, dbOrClient = null) {
     ORDER BY ei.id
   `, [id]);
 
-  return { ...header.rows[0], itens: itens.rows };
+  return {
+    ...header.rows[0],
+    itens: itens.rows.map((item) => ({
+      ...item,
+      valor_computado_venda: resolverValorComputadoVenda(item),
+    })),
+  };
 }
 
 async function quantidadeJaEncomendadaVendaItem(client, vendaItemId, excludeItemId = null) {
@@ -337,15 +326,13 @@ async function salvarEncomendaFornecedor(data, id = null) {
 
     if (!data.fornecedor_id) throw new Error('Selecione um fornecedor.');
 
-    const fretePct = Number(data.frete_percentual ?? FRETE_PADRAO);
-    const ipiPct = Number(data.ipi_percentual ?? IPI_PADRAO);
     const prazoPadrao = Number(data.previsao_entrega_dias) || PRAZO_PADRAO;
     const dataPedido = data.data_pedido || new Date().toISOString().split('T')[0];
     const previsaoEntrega = data.previsao_entrega || calcularDataPrevisao(prazoPadrao, dataPedido);
 
     const itensManuais = (data.itens || [])
       .filter((i) => !i.venda_item_id && i.produto_id && Number(i.quantidade_pedida) > 0)
-      .map((i) => normalizarItemEncomenda(i, fretePct, ipiPct, dataPedido, prazoPadrao));
+      .map((i) => normalizarItemEncomenda(i, dataPedido, prazoPadrao));
 
     const itensVendaPayload = (data.itens_venda || [])
       .filter((i) => i.venda_item_id && i.produto_id && Number(i.quantidade_pedida) > 0);
@@ -390,10 +377,10 @@ async function salvarEncomendaFornecedor(data, id = null) {
     }
 
     const itensVendaExistentesNorm = itensVendaExistentes.map(
-      (i) => normalizarItemEncomenda(i, fretePct, ipiPct, dataPedido, prazoPadrao)
+      (i) => normalizarItemEncomenda(i, dataPedido, prazoPadrao)
     );
     const itensVendaNovosNorm = itensVendaNovos.map(
-      (i) => normalizarItemEncomenda({ ...i, destino_esperado: 'cliente' }, fretePct, ipiPct, dataPedido, prazoPadrao)
+      (i) => normalizarItemEncomenda({ ...i, destino_esperado: 'cliente' }, dataPedido, prazoPadrao)
     );
 
     let encomenda;
@@ -404,14 +391,13 @@ async function salvarEncomendaFornecedor(data, id = null) {
         UPDATE encomendas_fornecedor SET
           fornecedor_id = $2, status = $3, data_pedido = $4,
           previsao_entrega = $5, previsao_entrega_dias = $6,
-          frete_percentual = $7, ipi_percentual = $8,
-          observacoes = $9, atualizado_em = NOW()
+          observacoes = $7, atualizado_em = NOW()
         WHERE id = $1
         RETURNING *
       `, [
         id, data.fornecedor_id, data.status || 'rascunho',
         dataPedido, previsaoEntrega, prazoPadrao,
-        fretePct, ipiPct, data.observacoes || null,
+        data.observacoes || null,
       ]);
       if (updated.rowCount === 0) throw new Error('Encomenda não encontrada.');
       encomenda = updated.rows[0];
@@ -425,14 +411,14 @@ async function salvarEncomendaFornecedor(data, id = null) {
       const created = await client.query(`
         INSERT INTO encomendas_fornecedor (
           numero, fornecedor_id, status, data_pedido, previsao_entrega, previsao_entrega_dias,
-          frete_percentual, ipi_percentual, observacoes
+          observacoes
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
       `, [
         numero, data.fornecedor_id, data.status || 'rascunho',
         dataPedido, previsaoEntrega, prazoPadrao,
-        fretePct, ipiPct, data.observacoes || null,
+        data.observacoes || null,
       ]);
       encomenda = created.rows[0];
     }
@@ -789,8 +775,6 @@ const SQL_ITENS_CONTROLE_RECEBIMENTO = `
     ei.*,
     ef.numero AS encomenda_numero,
     ef.previsao_entrega,
-    ef.frete_percentual,
-    ef.ipi_percentual,
     p.sku AS produto_sku,
     p.nome AS produto_nome,
     f.nome AS fornecedor_nome,
@@ -842,7 +826,10 @@ async function listItensControleRecebimento(filtro = 'a_receber', busca = '') {
       ef.previsao_entrega NULLS LAST,
       ei.id
   `, [termo]);
-  return result.rows;
+  return result.rows.map((item) => ({
+    ...item,
+    valor_computado_venda: resolverValorComputadoVenda(item),
+  }));
 }
 
 async function listHistoricoRecebimentos(busca = '') {
@@ -856,14 +843,13 @@ async function listHistoricoRecebimentos(busca = '') {
       p.sku AS produto_sku,
       p.nome AS produto_nome,
       ef.numero AS encomenda_numero,
-      ef.frete_percentual,
-      ef.ipi_percentual,
       f.nome AS fornecedor_nome,
       nf.numero AS nota_fiscal_numero_cadastrada,
       v.numero AS venda_numero,
       v.numero_pedido,
       c.nome AS cliente_nome,
       ei.custo_negociado,
+      ei.custo_com_impostos,
       ei.observacoes AS item_observacoes,
       l.codigo AS localizacao_codigo,
       l.nome AS localizacao_nome
@@ -1025,8 +1011,7 @@ async function receberEncomendaItem(data) {
     if (!qty || qty <= 0) throw new Error('Informe a quantidade recebida.');
 
     const itemResult = await client.query(`
-      SELECT ei.*, ef.fornecedor_id, ef.numero AS encomenda_numero,
-             ef.frete_percentual, ef.ipi_percentual
+      SELECT ei.*, ef.fornecedor_id, ef.numero AS encomenda_numero
       FROM encomenda_fornecedor_itens ei
       JOIN encomendas_fornecedor ef ON ef.id = ei.encomenda_id
       WHERE ei.id = $1
@@ -1147,6 +1132,17 @@ async function receberEncomendaItem(data) {
       });
     }
 
+    const custoEsperado = resolverCustoEsperado(item);
+    const divergencia = round2(custoReal - custoEsperado);
+    let produtoCustoAtualizado = false;
+    if (Math.abs(divergencia) >= 0.01 && item.produto_id) {
+      await client.query(
+        'UPDATE produtos SET preco_custo = $2, atualizado_em = NOW() WHERE id = $1',
+        [item.produto_id, custoReal]
+      );
+      produtoCustoAtualizado = true;
+    }
+
     await client.query('COMMIT');
 
     if (vendaItemId) {
@@ -1171,8 +1167,6 @@ async function receberEncomendaItem(data) {
       await entregas.atualizarStatusEntrega(db, row.id);
     }
 
-    const divergencia = custoReal - resolverCustoEsperado(item);
-    const custoEsperado = resolverCustoEsperado(item);
     return {
       ...recebimento.rows[0],
       custo_negociado: Number(item.custo_negociado),
@@ -1180,10 +1174,12 @@ async function receberEncomendaItem(data) {
       frete_unitario: freteUnitario,
       ipi_unitario: ipiUnitario,
       custo_com_impostos: custoEsperado,
+      valor_computado_venda: custoEsperado,
       divergencia_custo: divergencia,
       divergencia_percentual: custoEsperado > 0
         ? ((divergencia / custoEsperado) * 100)
         : null,
+      produto_custo_atualizado: produtoCustoAtualizado,
     };
   } catch (err) {
     await client.query('ROLLBACK');
@@ -1196,9 +1192,9 @@ async function receberEncomendaItem(data) {
 async function listItensPendentesRecebimento(busca = '') {
   const db = getPool();
   const result = await db.query(`
-    SELECT ei.*, ef.numero AS encomenda_numero, ef.previsao_entrega, ef.frete_percentual, ef.ipi_percentual,
+    SELECT ei.*, ef.numero AS encomenda_numero, ef.previsao_entrega,
            p.sku AS produto_sku, p.nome AS produto_nome,
-           f.nome AS fornecedor_nome,
+           f.nome AS fornecedor_nome, ef.fornecedor_id,
            v.numero AS venda_numero, v.numero_pedido, c.nome AS cliente_nome,
            (ei.quantidade_pedida - ei.quantidade_recebida)::int AS quantidade_pendente
     FROM encomenda_fornecedor_itens ei
@@ -1213,7 +1209,10 @@ async function listItensPendentesRecebimento(busca = '') {
            OR f.nome ILIKE $1 OR v.numero ILIKE $1 OR v.numero_pedido ILIKE $1)
     ORDER BY ef.previsao_entrega NULLS LAST, ei.id
   `, [`%${busca}%`]);
-  return result.rows;
+  return result.rows.map((item) => ({
+    ...item,
+    valor_computado_venda: resolverValorComputadoVenda(item),
+  }));
 }
 
 module.exports = {

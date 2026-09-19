@@ -129,8 +129,6 @@ function compararEncomendas(anterior, novo) {
   compararCampo(alteracoes, 'Status', 'status', anterior.status, novo.status);
   compararCampo(alteracoes, 'Data do pedido', 'data_pedido', anterior.data_pedido, novo.data_pedido);
   compararCampo(alteracoes, 'Previsão de entrega', 'previsao_entrega', anterior.previsao_entrega, novo.previsao_entrega);
-  compararCampo(alteracoes, 'Frete (%)', 'frete_percentual', anterior.frete_percentual, novo.frete_percentual);
-  compararCampo(alteracoes, 'IPI (%)', 'ipi_percentual', anterior.ipi_percentual, novo.ipi_percentual);
   compararCampo(alteracoes, 'Observações', 'observacoes', anterior.observacoes, novo.observacoes);
 
   const itensAnt = mapItensEncomenda(anterior);
@@ -153,7 +151,7 @@ function compararEncomendas(anterior, novo) {
     const ant = itensAnt.get(key);
     compararCampo(alteracoes, 'Quantidade pedida', 'quantidade_pedida', ant.quantidade_pedida, item.quantidade_pedida, ctx);
     compararCampo(alteracoes, 'Custo negociado', 'custo_negociado', ant.custo_negociado, item.custo_negociado, ctx);
-    compararCampo(alteracoes, 'Custo com impostos', 'custo_com_impostos', ant.custo_com_impostos, item.custo_com_impostos, ctx);
+    compararCampo(alteracoes, 'Valor computado para venda', 'custo_com_impostos', ant.custo_com_impostos, item.custo_com_impostos, ctx);
     compararCampo(alteracoes, 'Previsão de entrega', 'previsao_entrega', ant.previsao_entrega, item.previsao_entrega, ctx);
   }
 

@@ -49,9 +49,8 @@ function recalcularCustoRealEMarkup(item) {
 
 async function obterCustoEncomendaVendaItem(client, vendaItemId, produtoId) {
   const enc = await client.query(`
-    SELECT custo_com_impostos, custo_negociado, ef.frete_percentual, ef.ipi_percentual
+    SELECT custo_com_impostos, custo_negociado
     FROM encomenda_fornecedor_itens ei
-    JOIN encomendas_fornecedor ef ON ef.id = ei.encomenda_id
     WHERE ei.venda_item_id = $1 AND ei.status != 'cancelado'
     ORDER BY ei.id DESC
     LIMIT 1
@@ -61,10 +60,7 @@ async function obterCustoEncomendaVendaItem(client, vendaItemId, produtoId) {
     const row = enc.rows[0];
     const comImpostos = Number(row.custo_com_impostos);
     if (comImpostos > 0) return comImpostos;
-    const neg = Number(row.custo_negociado) || 0;
-    const fretePct = Number(row.frete_percentual ?? 10);
-    const ipiPct = Number(row.ipi_percentual ?? 3.25);
-    return round2(neg + (neg * fretePct / 100) + (neg * ipiPct / 100));
+    return Number(row.custo_negociado) || 0;
   }
 
   if (produtoId) {

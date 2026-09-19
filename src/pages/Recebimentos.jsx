@@ -108,8 +108,8 @@ export default function Recebimentos() {
     await loadAll();
     const divergencia = result.divergencia_custo;
     const msg = divergencia === 0
-      ? 'Recebimento registrado. Custo real de chegada confere com o esperado na encomenda.'
-      : `Recebimento registrado. Divergência de custo real: ${formatCurrency(divergencia)} (${result.divergencia_percentual?.toFixed(1)}% em relação ao esperado na encomenda)`;
+      ? 'Recebimento registrado. Custo confere com o valor computado para venda.'
+      : `Recebimento registrado. Divergência de ${formatCurrency(divergencia)} em relação ao valor computado (${result.divergencia_percentual?.toFixed(1)}%)${result.produto_custo_atualizado ? ' — custo do produto atualizado' : ''}.`;
     showSuccess(msg, 7000);
   };
 
@@ -123,7 +123,7 @@ export default function Recebimentos() {
     const contexto = notaFiscalContexto;
     setShowNotaFiscalModal(false);
     setNotaFiscalContexto(null);
-    showSuccess(`Nota fiscal ${nota.numero} cadastrada${nota.total_boletos ? ` com ${nota.total_boletos} boleto(s)` : ''}.`);
+    showSuccess(`Nota fiscal ${nota.numero} cadastrada.`);
     await loadNotasFiscais();
     if (contexto) {
       setItemReceber(contexto);
@@ -200,7 +200,7 @@ export default function Recebimentos() {
             <div className="loading">Carregando notas fiscais...</div>
           ) : notasFiscais.length === 0 ? (
             <div className="empty-state">
-              Nenhuma nota fiscal cadastrada. Use &quot;+ Nota fiscal&quot; para registrar pagamentos ao fornecedor.
+              Nenhuma nota fiscal cadastrada. Use &quot;+ Nota fiscal&quot; para registrar o número e valor da NF.
             </div>
           ) : (
             <table>
@@ -209,7 +209,6 @@ export default function Recebimentos() {
                   <th>Fornecedor</th>
                   <th>Número</th>
                   <th>Valor total</th>
-                  <th>Boletos</th>
                   <th>Recebimentos vinculados</th>
                   <th>Cadastrada em</th>
                 </tr>
@@ -220,7 +219,6 @@ export default function Recebimentos() {
                     <td>{nota.fornecedor_nome}</td>
                     <td><strong>{nota.numero}</strong></td>
                     <td>{formatCurrency(nota.valor_total)}</td>
-                    <td>{nota.total_boletos || 0}</td>
                     <td>{nota.total_recebimentos || 0}</td>
                     <td>{formatDate(nota.criado_em)}</td>
                   </tr>
@@ -251,7 +249,7 @@ export default function Recebimentos() {
                   <th>Produto</th>
                   <th>Observações</th>
                   <th>Qtd</th>
-                  <th>Custo esperado (c/ frete e IPI)</th>
+                  <th>Valor computado p/ venda</th>
                   <th>Previsão</th>
                   <th></th>
                 </tr>
@@ -346,7 +344,7 @@ export default function Recebimentos() {
                   <th>Valor na nota</th>
                   <th>Frete</th>
                   <th>IPI</th>
-                  <th>Custo unit. (c/ frete/IPI)</th>
+                  <th>Custo unit. real</th>
                   <th>Total recebido</th>
                   <th>Nº nota fiscal</th>
                   <th>Situação</th>
