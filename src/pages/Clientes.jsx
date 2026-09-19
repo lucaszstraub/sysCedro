@@ -54,7 +54,7 @@ export default function Clientes() {
     <>
       <header className="page-header">
         <h2>Clientes</h2>
-        <p>Cadastre e edite clientes para orçamentos, vendas e entregas</p>
+        <p>Cadastre e edite clientes para orçamentos e vendas</p>
       </header>
 
       {error && <PageAlert onDismiss={() => setError('')}>{error}</PageAlert>}

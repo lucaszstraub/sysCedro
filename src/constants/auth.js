@@ -88,7 +88,7 @@ export const MENU_MACRO_GROUPS = [
   {
     id: 'operacao',
     title: 'Operação',
-    description: 'Estoque, recebimentos e entregas',
+    description: 'Estoque e recebimentos',
     accent: '#059669',
     sectionIds: ['logistica'],
   },
@@ -102,11 +102,68 @@ export const MENU_MACRO_GROUPS = [
   {
     id: 'gestao',
     title: 'Gestão',
-    description: 'Compras, financeiro e cadastros',
+    description: 'Compras, comissões e cadastros',
     accent: '#7C3AED',
     sectionIds: ['compras', 'financeiro', 'administracao', 'cadastros'],
   },
 ];
+
+/** Opções do hub de cadastros (sidebar mostra um único atalho) */
+export const CADASTRO_OPTIONS = [
+  {
+    to: `${ESTOQUE_BASE}/produtos`,
+    label: 'Produtos',
+    icon: '🛋️',
+    description: 'Catálogo de móveis soltos (SKU)',
+    permissions: [PERMISSIONS.CADASTROS],
+  },
+  {
+    to: `${ESTOQUE_BASE}/produtos-planejados`,
+    label: 'Produtos planejados',
+    icon: '📐',
+    description: 'Itens de móveis planejados sob medida',
+    permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS],
+  },
+  {
+    to: `${ESTOQUE_BASE}/clientes`,
+    label: 'Clientes',
+    icon: '👤',
+    description: 'CPF/CNPJ, telefone e endereço',
+    permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS],
+  },
+  {
+    to: `${ESTOQUE_BASE}/fornecedores`,
+    label: 'Fornecedores',
+    icon: '🏭',
+    description: 'Cadastro de fornecedores',
+    permissions: [PERMISSIONS.CADASTROS],
+  },
+  {
+    to: `${ESTOQUE_BASE}/formas-pagamento`,
+    label: 'Formas de pagamento',
+    icon: '💳',
+    description: 'Formas usadas em vendas e comissões',
+    permissions: [PERMISSIONS.CADASTROS],
+  },
+  {
+    to: `${ESTOQUE_BASE}/localizacoes`,
+    label: 'Localizações',
+    icon: '📍',
+    description: 'Endereços de estoque no armazém',
+    permissions: [PERMISSIONS.CADASTROS],
+  },
+  {
+    to: `${VENDAS_BASE}/parceiros`,
+    label: 'Parceiros',
+    icon: '🤝',
+    description: 'Parceiros comerciais e incentivos',
+    permissions: [PERMISSIONS.PARCEIROS],
+  },
+];
+
+export function filterCadastroOptions(user) {
+  return CADASTRO_OPTIONS.filter((item) => userHasAnyPermission(user, item.permissions));
+}
 
 export const SECTION_ACCENTS = {
   inicio: '#D97706',
@@ -243,11 +300,11 @@ export function getDefaultRoute(user, { offline = false } = {}) {
   if (!user) return '/login';
   if (offline) return getDefaultRouteOffline(user);
   if (shouldUseHubHome(user)) return INICIO_PATH;
-  if (userHasPermission(user, PERMISSIONS.WMS)) return `${ESTOQUE_BASE}/painel`;
+  if (userHasPermission(user, PERMISSIONS.WMS)) return `${ESTOQUE_BASE}/estoque`;
   if (userHasPermission(user, PERMISSIONS.VENDAS)) return `${VENDAS_BASE}/orcamentos`;
   if (userHasPermission(user, PERMISSIONS.PLANEJADOS)) return `${VENDAS_BASE}/orcamentos-planejados`;
   if (userHasPermission(user, PERMISSIONS.GERENCIAL)) return `${ESTOQUE_BASE}/encomendas`;
-  if (userHasPermission(user, PERMISSIONS.CADASTROS)) return `${ESTOQUE_BASE}/produtos`;
+  if (userHasPermission(user, PERMISSIONS.CADASTROS)) return `${ESTOQUE_BASE}/cadastros`;
   if (userIsAdministrador(user)) return `${VENDAS_BASE}/controle-comissoes`;
   return INICIO_PATH;
 }
@@ -274,25 +331,18 @@ export const MENU_SECTIONS = [
   {
     id: 'logistica',
     title: 'Estoque & logística',
-    hubDescription: 'Armazém, recebimentos e entregas',
+    hubDescription: 'Armazém e recebimentos',
     macroGroup: 'operacao',
     permission: PERMISSIONS.WMS,
     groups: [
       {
         items: [
           {
-            to: `${ESTOQUE_BASE}/painel`,
-            label: 'Painel do estoque',
-            icon: '📊',
-            end: true,
-            keywords: 'dashboard wms indicadores',
-          },
-          { to: `${ESTOQUE_BASE}/estoque`, label: 'Estoque', icon: '📦', keywords: 'saldo produtos' },
-          {
-            to: `${ESTOQUE_BASE}/movimentacoes`,
-            label: 'Alocação',
-            icon: '📥',
-            keywords: 'movimentacao guardar endereco',
+            to: `${ESTOQUE_BASE}/estoque`,
+            label: 'Estoque',
+            icon: '📦',
+            keywords: 'saldo produtos alocacao movimentacao',
+            activePrefixes: [`${ESTOQUE_BASE}/estoque`, `${ESTOQUE_BASE}/movimentacoes`],
           },
           {
             to: `${ESTOQUE_BASE}/recebimentos`,
@@ -306,7 +356,6 @@ export const MENU_SECTIONS = [
             icon: '🏷️',
             keywords: 'imprimir etiqueta produto recebido',
           },
-          { to: `${VENDAS_BASE}/entregas`, label: 'Entregas', icon: '🚚', keywords: 'cliente transporte' },
         ],
       },
     ],
@@ -395,15 +444,19 @@ export const MENU_SECTIONS = [
   {
     id: 'compras',
     title: 'Compras',
-    hubDescription: 'Encomendas e pendências com fornecedores',
+    hubDescription: 'Encomendas a fornecedores',
     macroGroup: 'gestao',
     permission: PERMISSIONS.GERENCIAL,
     defaultCollapsed: true,
     groups: [
       {
         items: [
-          { to: `${ESTOQUE_BASE}/encomendas`, label: 'Encomendas', icon: '📦', keywords: 'fornecedor pedido' },
-          { to: `${ESTOQUE_BASE}/encomendas/pendencias`, label: 'Pendências', icon: '⏳', keywords: 'falta comprar' },
+          {
+            to: `${ESTOQUE_BASE}/encomendas`,
+            label: 'Encomendas',
+            icon: '📦',
+            keywords: 'fornecedor pedido pendencias',
+          },
         ],
       },
     ],
@@ -411,7 +464,7 @@ export const MENU_SECTIONS = [
   {
     id: 'financeiro',
     title: 'Financeiro',
-    hubDescription: 'Comissões, custos fixos e pagamentos',
+    hubDescription: 'Pagamento de comissões',
     macroGroup: 'gestao',
     administradorOnly: true,
     defaultCollapsed: true,
@@ -422,14 +475,12 @@ export const MENU_SECTIONS = [
             to: `${VENDAS_BASE}/controle-comissoes`,
             label: 'Comissões',
             icon: '💰',
-            keywords: 'pagamento vendedor',
-          },
-          { to: `${VENDAS_BASE}/custos-fixos`, label: 'Custos fixos', icon: '🏢', keywords: 'despesa mensal' },
-          {
-            to: `${VENDAS_BASE}/pagamentos`,
-            label: 'Pagamentos',
-            icon: '💸',
-            keywords: 'boleto nota fiscal dre',
+            keywords: 'pagamento vendedor regras comissao',
+            activePrefixes: [
+              `${VENDAS_BASE}/controle-comissoes`,
+              `${VENDAS_BASE}/regras-comissao`,
+              `${VENDAS_BASE}/regras-comissao-planejados`,
+            ],
           },
         ],
       },
@@ -438,28 +489,11 @@ export const MENU_SECTIONS = [
   {
     id: 'administracao',
     title: 'Administração',
-    hubDescription: 'Usuários, regras e manutenção do sistema',
+    hubDescription: 'Usuários e manutenção do sistema',
     macroGroup: 'gestao',
     administradorOnly: true,
     defaultCollapsed: true,
     groups: [
-      {
-        subtitle: 'Comissões',
-        items: [
-          {
-            to: `${VENDAS_BASE}/regras-comissao`,
-            label: 'Regras — soltos',
-            icon: '⚙️',
-            keywords: 'percentual comissao',
-          },
-          {
-            to: `${VENDAS_BASE}/regras-comissao-planejados`,
-            label: 'Regras — planejados',
-            icon: '🪚',
-            keywords: 'percentual comissao',
-          },
-        ],
-      },
       {
         subtitle: 'Equipe',
         items: [
@@ -483,42 +517,19 @@ export const MENU_SECTIONS = [
   {
     id: 'cadastros',
     title: 'Cadastros',
-    hubDescription: 'Produtos, clientes, fornecedores e dados de referência',
+    hubDescription: 'Escolha o que deseja cadastrar',
     macroGroup: 'gestao',
-    permission: PERMISSIONS.CADASTROS,
+    permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PARCEIROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS],
     defaultCollapsed: true,
     groups: [
       {
-        subtitle: 'Catálogo',
         items: [
-          { to: `${ESTOQUE_BASE}/produtos`, label: 'Produtos', icon: '🛋️', keywords: 'sku movel' },
           {
-            to: `${ESTOQUE_BASE}/produtos-planejados`,
-            label: 'Produtos planejados',
-            icon: '📐',
-            permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS],
-          },
-        ],
-      },
-      {
-        subtitle: 'Referências',
-        items: [
-          { to: `${ESTOQUE_BASE}/clientes`, label: 'Clientes', icon: '👤', keywords: 'cpf cnpj telefone endereco' },
-          { to: `${ESTOQUE_BASE}/fornecedores`, label: 'Fornecedores', icon: '🏭' },
-          { to: `${ESTOQUE_BASE}/formas-pagamento`, label: 'Formas de pagamento', icon: '💳' },
-          {
-            to: `${ESTOQUE_BASE}/centros-custo`,
-            label: 'Centros de custo',
-            icon: '🏷️',
-            administradorOnly: true,
-            keywords: 'dre pagamento despesa classificacao',
-          },
-          { to: `${ESTOQUE_BASE}/localizacoes`, label: 'Localizações', icon: '📍', keywords: 'endereco estoque' },
-          {
-            to: `${VENDAS_BASE}/parceiros`,
-            label: 'Parceiros',
-            icon: '🤝',
-            permission: PERMISSIONS.PARCEIROS,
+            to: `${ESTOQUE_BASE}/cadastros`,
+            label: 'Cadastro',
+            icon: '📝',
+            keywords: 'produtos clientes fornecedores localizacoes parceiros',
+            permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PARCEIROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS],
           },
         ],
       },
@@ -546,7 +557,10 @@ export function filterMenuSections(user) {
               return false;
             }
             const required = item.permissions
-              || [item.permission || section.permission].filter(Boolean);
+              || (item.permission ? [item.permission] : null)
+              || section.permissions
+              || (section.permission ? [section.permission] : null)
+              || [];
             if (required.length === 0) return true;
             return userHasAnyPermission(user, required);
           }),
@@ -557,12 +571,11 @@ export function filterMenuSections(user) {
 }
 
 export const ROUTE_PERMISSIONS = [
-  { prefix: `${ESTOQUE_BASE}/painel`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/estoque`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/movimentacoes`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/recebimentos`, permission: PERMISSIONS.WMS },
   { prefix: `${ESTOQUE_BASE}/etiquetas`, permissions: [PERMISSIONS.WMS, PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS] },
-  { prefix: `${VENDAS_BASE}/entregas`, permission: PERMISSIONS.WMS },
+  { prefix: `${ESTOQUE_BASE}/cadastros`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PARCEIROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS] },
   { prefix: `${VENDAS_BASE}/orcamentos-planejados`, permission: PERMISSIONS.PLANEJADOS },
   { prefix: `${VENDAS_BASE}/vendas-planejados`, permission: PERMISSIONS.PLANEJADOS },
   { prefix: `${VENDAS_BASE}/acompanhamento-pedidos`, permission: PERMISSIONS.PLANEJADOS },
@@ -578,13 +591,10 @@ export const ROUTE_PERMISSIONS = [
   { prefix: `${ESTOQUE_BASE}/arquivo`, administradorOnly: true },
   { prefix: `${VENDAS_BASE}/usuarios`, administradorOnly: true },
   { prefix: `${VENDAS_BASE}/quadro-colaboradores`, administradorOnly: true },
-  { prefix: `${VENDAS_BASE}/custos-fixos`, administradorOnly: true },
-  { prefix: `${VENDAS_BASE}/pagamentos`, administradorOnly: true },
   { prefix: `${ESTOQUE_BASE}/produtos`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS] },
   { prefix: `${ESTOQUE_BASE}/fornecedores`, permission: PERMISSIONS.CADASTROS },
-  { prefix: `${ESTOQUE_BASE}/clientes`, permission: PERMISSIONS.CADASTROS },
+  { prefix: `${ESTOQUE_BASE}/clientes`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS] },
   { prefix: `${ESTOQUE_BASE}/formas-pagamento`, permission: PERMISSIONS.CADASTROS },
-  { prefix: `${ESTOQUE_BASE}/centros-custo`, administradorOnly: true },
   { prefix: `${ESTOQUE_BASE}/produtos-planejados`, permissions: [PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS] },
   { prefix: `${ESTOQUE_BASE}/localizacoes`, permission: PERMISSIONS.CADASTROS },
 ];

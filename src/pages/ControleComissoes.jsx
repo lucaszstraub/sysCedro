@@ -424,10 +424,7 @@ export default function ControleComissoes() {
         </div>
         <div className="visao-vendas-header-actions">
           <Link to={`${VENDAS_BASE}/regras-comissao`} className="btn btn-secondary">
-            Regras — soltos
-          </Link>
-          <Link to={`${VENDAS_BASE}/regras-comissao-planejados`} className="btn btn-secondary">
-            Regras — planejados
+            Regras de comissões
           </Link>
         </div>
       </header>

@@ -114,7 +114,7 @@ export default function EncomendasFornecedor() {
             onChange={(e) => setBusca(e.target.value)}
           />
         </form>
-        <Link to={`${base}/pendencias`} className="btn btn-secondary">Pendências de encomenda</Link>
+        <Link to={`${base}/pendencias`} className="btn btn-secondary">Verificar pendências</Link>
         <Link to={`${base}/nova`} className="btn btn-primary">+ Nova encomenda</Link>
         <Link to="/gestao-estoque/recebimentos" className="btn btn-secondary">Recebimentos</Link>
       </div>

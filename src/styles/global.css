@@ -390,6 +390,39 @@ body {
   padding: 0.5rem;
 }
 
+.cadastros-hub-grid {
+  margin-top: 0.5rem;
+}
+
+a.cadastro-option-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.15rem 1.25rem;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+a.cadastro-option-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border));
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+a.cadastro-option-card .hub-link-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+a.cadastro-option-card strong {
+  font-size: 1.05rem;
+}
+
+a.cadastro-option-card .hint-text {
+  margin: 0;
+}
+
 .hub-link {
   display: flex;
   align-items: center;

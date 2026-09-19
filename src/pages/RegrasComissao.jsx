@@ -272,9 +272,9 @@ export default function RegrasComissao() {
     <>
       <header className="page-header">
         <div>
-          <h2>Cadastro de regra de comissão</h2>
+          <h2>Regras de comissões — móveis soltos</h2>
           <p>
-            Móveis soltos — defina como calcular a comissão por markup real do produto
+            Defina como calcular a comissão por markup real do produto
             para vendedores e gerência. Somente administração.
           </p>
         </div>
@@ -283,7 +283,7 @@ export default function RegrasComissao() {
             Regras — planejados
           </Link>
           <Link to={`${VENDAS_BASE}/controle-comissoes`} className="btn btn-secondary">
-            Controle de comissões
+            Voltar às comissões
           </Link>
         </div>
       </header>

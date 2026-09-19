@@ -122,9 +122,16 @@ export default function Estoque() {
 
   return (
     <>
-      <header className="page-header">
-        <h2>Estoque</h2>
-        <p>Posição de estoque por produto e localização</p>
+      <header className="page-header visao-vendas-header">
+        <div>
+          <h2>Estoque</h2>
+          <p>Posição de estoque por produto e localização</p>
+        </div>
+        <div className="visao-vendas-header-actions">
+          <Link to="/gestao-estoque/movimentacoes" className="btn btn-primary">
+            Alocação
+          </Link>
+        </div>
       </header>
 
       {error && <PageAlert onDismiss={() => setError('')}>{error}</PageAlert>}

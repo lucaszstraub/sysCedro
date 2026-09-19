@@ -10,9 +10,14 @@ function normalizePath(pathname) {
 
 function itemMatchesPath(item, pathname) {
   const current = normalizePath(pathname);
-  const target = normalizePath(item.to);
-  if (item.end) return current === target;
-  return current === target || current.startsWith(`${target}/`);
+  const prefixes = item.activePrefixes?.length
+    ? item.activePrefixes
+    : [item.to];
+  return prefixes.some((prefix) => {
+    const target = normalizePath(prefix);
+    if (item.end) return current === target;
+    return current === target || current.startsWith(`${target}/`);
+  });
 }
 
 function sectionHasActiveItem(section, pathname) {

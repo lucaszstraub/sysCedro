@@ -78,11 +78,18 @@ export default function Movimentacoes() {
 
   return (
     <>
-      <header className="page-header">
-        <h2>Alocação e movimentações</h2>
-        <p>
-          Produtos recebidos ficam em <strong>Não alocados</strong> até serem guardados em um endereço do armazém
-        </p>
+      <header className="page-header visao-vendas-header">
+        <div>
+          <h2>Alocação e movimentações</h2>
+          <p>
+            Produtos recebidos ficam em <strong>Não alocados</strong> até serem guardados em um endereço do armazém
+          </p>
+        </div>
+        <div className="visao-vendas-header-actions">
+          <Link to="/gestao-estoque/estoque" className="btn btn-secondary">
+            Voltar ao estoque
+          </Link>
+        </div>
       </header>
 
       {error && <PageAlert onDismiss={() => setError('')}>{error}</PageAlert>}

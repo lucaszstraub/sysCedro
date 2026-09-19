@@ -94,7 +94,7 @@ export default function RegrasComissaoPlanejados() {
     <>
       <header className="page-header visao-vendas-header">
         <div>
-          <h2>Cadastro de regra de comissão — planejados</h2>
+          <h2>Regras de comissões — planejados</h2>
           <p>
             Comissão do vendedor planejado por faixa de vendas no mês.
             Considera apenas vendas confirmadas de planejados.
@@ -105,7 +105,7 @@ export default function RegrasComissaoPlanejados() {
             Regras — móveis soltos
           </Link>
           <Link to={`${VENDAS_BASE}/controle-comissoes`} className="btn btn-secondary">
-            Controle de comissões
+            Voltar às comissões
           </Link>
         </div>
       </header>

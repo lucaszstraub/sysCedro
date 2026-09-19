@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useParams, useLocation } from 'react-router-dom';
-import Dashboard from './pages/Dashboard';
 import Produtos from './pages/Produtos';
 import Estoque from './pages/Estoque';
 import Movimentacoes from './pages/Movimentacoes';
@@ -21,11 +20,11 @@ import EncomendaFornecedorForm from './pages/EncomendaFornecedorForm';
 import Arquivo from './pages/Arquivo';
 import Recebimentos from './pages/Recebimentos';
 import Etiquetas from './pages/Etiquetas';
-import Entregas from './pages/Entregas';
 import Fornecedores from './pages/Fornecedores';
 import Clientes from './pages/Clientes';
 import FormasPagamento from './pages/FormasPagamento';
 import ProdutosPlanejados from './pages/ProdutosPlanejados';
+import Cadastros from './pages/Cadastros';
 import VisaoVendas from './pages/VisaoVendas';
 import Parceiros from './pages/Parceiros';
 import IncentivosParceiros from './pages/IncentivosParceiros';
@@ -34,9 +33,6 @@ import RegrasComissao from './pages/RegrasComissao';
 import RegrasComissaoPlanejados from './pages/RegrasComissaoPlanejados';
 import Usuarios from './pages/Usuarios';
 import QuadroColaboradores from './pages/QuadroColaboradores';
-import CustosFixos from './pages/CustosFixos';
-import Pagamentos from './pages/Pagamentos';
-import CentrosCusto from './pages/CentrosCusto';
 import Inicio from './pages/Inicio';
 import Login from './pages/Login';
 import BrandLogo from './components/BrandLogo';
@@ -142,7 +138,12 @@ function AppLayout() {
           <Route path="/" element={<Navigate to={homeRoute} replace />} />
           <Route path="/inicio" element={offline ? <Navigate to={homeRoute} replace /> : <Inicio />} />
 
-          <Route path={`${ESTOQUE_BASE}/painel`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Dashboard /></ProtectedRoute>} />
+          <Route path={`${ESTOQUE_BASE}/painel`} element={<Navigate to={`${ESTOQUE_BASE}/estoque`} replace />} />
+          <Route path={`${ESTOQUE_BASE}/cadastros`} element={
+            <ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.PARCEIROS, PERMISSIONS.VENDAS, PERMISSIONS.PLANEJADOS]}>
+              <Cadastros />
+            </ProtectedRoute>
+          } />
           <Route path={`${ESTOQUE_BASE}/produtos`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.VENDAS]}><Produtos /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/fornecedores`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><Fornecedores /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/clientes`} element={
@@ -151,7 +152,7 @@ function AppLayout() {
             </ProtectedRoute>
           } />
           <Route path={`${ESTOQUE_BASE}/formas-pagamento`} element={<ProtectedRoute permission={PERMISSIONS.CADASTROS}><FormasPagamento /></ProtectedRoute>} />
-          <Route path={`${ESTOQUE_BASE}/centros-custo`} element={<ProtectedRoute administrador><CentrosCusto /></ProtectedRoute>} />
+          <Route path={`${ESTOQUE_BASE}/centros-custo`} element={<Navigate to={`${ESTOQUE_BASE}/cadastros`} replace />} />
           <Route path={`${ESTOQUE_BASE}/produtos-planejados`} element={<ProtectedRoute permissions={[PERMISSIONS.CADASTROS, PERMISSIONS.PLANEJADOS]}><ProdutosPlanejados /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/estoque`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Estoque /></ProtectedRoute>} />
           <Route path={`${ESTOQUE_BASE}/movimentacoes`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Movimentacoes /></ProtectedRoute>} />
@@ -187,12 +188,12 @@ function AppLayout() {
           <Route path={`${VENDAS_BASE}/regras-comissao-planejados`} element={<ProtectedRoute administrador><RegrasComissaoPlanejados /></ProtectedRoute>} />
           <Route path={`${VENDAS_BASE}/parceiros`} element={<ProtectedRoute permission={PERMISSIONS.PARCEIROS}><Parceiros /></ProtectedRoute>} />
           <Route path={`${VENDAS_BASE}/incentivos-parceiros`} element={<ProtectedRoute permission={PERMISSIONS.PARCEIROS}><IncentivosParceiros /></ProtectedRoute>} />
-          <Route path={`${VENDAS_BASE}/entregas`} element={<ProtectedRoute permission={PERMISSIONS.WMS}><Entregas /></ProtectedRoute>} />
+          <Route path={`${VENDAS_BASE}/entregas`} element={<Navigate to={`${ESTOQUE_BASE}/estoque`} replace />} />
           <Route path={`${VENDAS_BASE}/vendedores`} element={<Navigate to={`${VENDAS_BASE}/quadro-colaboradores`} replace />} />
           <Route path={`${VENDAS_BASE}/usuarios`} element={<ProtectedRoute administrador><Usuarios /></ProtectedRoute>} />
           <Route path={`${VENDAS_BASE}/quadro-colaboradores`} element={<ProtectedRoute administrador><QuadroColaboradores /></ProtectedRoute>} />
-          <Route path={`${VENDAS_BASE}/custos-fixos`} element={<ProtectedRoute administrador><CustosFixos /></ProtectedRoute>} />
-          <Route path={`${VENDAS_BASE}/pagamentos`} element={<ProtectedRoute administrador><Pagamentos /></ProtectedRoute>} />
+          <Route path={`${VENDAS_BASE}/custos-fixos`} element={<Navigate to={`${VENDAS_BASE}/controle-comissoes`} replace />} />
+          <Route path={`${VENDAS_BASE}/pagamentos`} element={<Navigate to={`${VENDAS_BASE}/controle-comissoes`} replace />} />
 
           <Route path={`${ESTOQUE_BASE}/orcamentos/novo`} element={<Navigate to={`${VENDAS_BASE}/orcamentos/novo`} replace />} />
           <Route path={`${ESTOQUE_BASE}/orcamentos/:id`} element={<RedirectOrcamentoId />} />
