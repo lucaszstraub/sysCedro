@@ -3,16 +3,22 @@
 --           centros_custo, custos_fixos_template, usuário Master.
 -- Remove: produtos, fornecedores, estoque, vendas, clientes, encomendas,
 --         recebimentos, planejados, demais usuários, etc.
+--
+-- IMPORTANTE: não usar TRUNCATE em vendedores com CASCADE — a FK
+-- usuarios.vendedor_id faria o CASCADE apagar também o Master.
 
 BEGIN;
 
-UPDATE usuarios
-SET vendedor_id = NULL
-WHERE is_master = true OR LOWER(login) = 'master';
+-- Desvincula usuários de vendedores antes de limpar
+UPDATE usuarios SET vendedor_id = NULL;
+UPDATE vendedores SET usuario_id = NULL WHERE usuario_id IS NOT NULL;
 
-UPDATE vendedores
-SET usuario_id = NULL
-WHERE usuario_id IS NOT NULL;
+-- Remove demais usuários, mantendo Master
+DELETE FROM usuarios
+WHERE NOT (COALESCE(is_master, false) = true OR LOWER(login) = 'master');
+
+-- Vendedores: DELETE (não TRUNCATE CASCADE) para não afetar usuarios
+DELETE FROM vendedores;
 
 TRUNCATE TABLE
   nota_fiscal_boletos,
@@ -60,11 +66,12 @@ TRUNCATE TABLE
   produtos,
   fornecedores,
   clientes,
-  vendedores,
   sync_id_map
 RESTART IDENTITY CASCADE;
 
-DELETE FROM usuarios
-WHERE NOT (COALESCE(is_master, false) = true OR LOWER(login) = 'master');
+-- Garante Master (senha padrão 12345 se precisar recriar via app)
+UPDATE usuarios
+SET vendedor_id = NULL, ativo = true, is_master = true
+WHERE LOWER(login) = 'master';
 
 COMMIT;
