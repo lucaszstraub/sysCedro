@@ -911,6 +911,20 @@ tr:hover td {
   border: 1px solid var(--border);
 }
 
+.estoque-localizacoes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.estoque-localizacoes-list li {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
 .table-actions {
   white-space: nowrap;
   display: flex;

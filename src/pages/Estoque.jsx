@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import PageAlert, { InlineAlert } from '../components/PageAlert';
 import { CODIGO_LOCALIZACAO_NAO_ALOCADOS, isLocalizacaoNaoAlocados } from '../constants/estoque';
-import { formatDate, formatDateTime } from '../utils/format';
+import { formatDateTime } from '../utils/format';
 
 function ReservasModal({ produto, onClose }) {
   const [reservas, setReservas] = useState([]);
@@ -37,15 +37,15 @@ function ReservasModal({ produto, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal modal-lg" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h3>Estoque bloqueado — {produto.produto_nome}</h3>
+          <h3>Compromissos — {produto.produto_nome}</h3>
           <button type="button" className="modal-close" onClick={onClose} aria-label="Fechar">&times;</button>
         </div>
         <div className="modal-body">
           {error && <InlineAlert onDismiss={() => setError('')}>{error}</InlineAlert>}
           {loading ? (
-            <div className="loading">Carregando reservas...</div>
+            <div className="loading">Carregando compromissos...</div>
           ) : !error && reservas.length === 0 ? (
-            <div className="empty-state">Nenhuma reserva ativa encontrada para este produto.</div>
+            <div className="empty-state">Nenhum compromisso ativo para este produto.</div>
           ) : !error && (
             <div className="picker-table-wrap">
               <table className="picker-table">
@@ -54,7 +54,7 @@ function ReservasModal({ produto, onClose }) {
                     <th>Pedido</th>
                     <th>Cliente</th>
                     <th>Item</th>
-                    <th>Qtd reservada</th>
+                    <th>Qtd comprometida</th>
                     <th>Desde</th>
                   </tr>
                 </thead>
@@ -115,21 +115,46 @@ export default function Estoque() {
     return itens;
   }, [itens, filtro]);
 
-  const totalGeral = itensFiltrados.reduce((sum, i) => sum + i.quantidade, 0);
+  const produtosAgrupados = useMemo(() => {
+    const map = new Map();
+    for (const item of itensFiltrados) {
+      const key = item.produto_id;
+      if (!map.has(key)) {
+        map.set(key, {
+          produto_id: item.produto_id,
+          sku: item.sku,
+          produto_nome: item.produto_nome,
+          estoque_minimo: item.estoque_minimo,
+          estoque_total: Number(item.estoque_total) || 0,
+          reservado: Number(item.reservado) || 0,
+          disponivel: Number(item.disponivel),
+          localizacoes: [],
+        });
+      }
+      map.get(key).localizacoes.push(item);
+    }
+    return [...map.values()];
+  }, [itensFiltrados]);
+
+  const totalGeral = produtosAgrupados.reduce((sum, p) => sum + p.estoque_total, 0);
   const totalNaoAlocados = itens
     .filter((i) => i.localizacao_codigo === CODIGO_LOCALIZACAO_NAO_ALOCADOS)
-    .reduce((sum, i) => sum + i.quantidade, 0);
+    .reduce((sum, i) => sum + Number(i.quantidade), 0);
+  const totalDisponivel = produtosAgrupados.reduce((sum, p) => sum + (Number(p.disponivel) || 0), 0);
 
   return (
     <>
       <header className="page-header visao-vendas-header">
         <div>
           <h2>Estoque</h2>
-          <p>Posição de estoque por produto e localização</p>
+          <p>
+            Estoque físico por localização e disponibilidade do produto
+            (estoque − compromissos de vendas/encomendas).
+          </p>
         </div>
         <div className="visao-vendas-header-actions">
           <Link to="/gestao-estoque/movimentacoes" className="btn btn-primary">
-            Alocação
+            Alocação e entregas
           </Link>
         </div>
       </header>
@@ -144,10 +169,14 @@ export default function Estoque() {
         </div>
       )}
 
-      <div className="stats-grid" style={{ maxWidth: 560 }}>
+      <div className="stats-grid" style={{ maxWidth: 720 }}>
         <div className="stat-card">
-          <div className="label">Total listado</div>
+          <div className="label">Estoque físico total</div>
           <div className="value">{totalGeral}</div>
+        </div>
+        <div className="stat-card">
+          <div className="label">Disponibilidade (soma)</div>
+          <div className={`value ${totalDisponivel < 0 ? 'text-danger' : ''}`}>{totalDisponivel}</div>
         </div>
         <div className={`stat-card ${totalNaoAlocados > 0 ? 'stat-card-priority' : ''}`}>
           <div className="label">Em Não alocados</div>
@@ -180,7 +209,7 @@ export default function Estoque() {
         <div className="card-body" style={{ padding: 0 }}>
           {loading ? (
             <div className="loading">Carregando estoque...</div>
-          ) : itensFiltrados.length === 0 ? (
+          ) : produtosAgrupados.length === 0 ? (
             <div className="empty-state">Nenhum item em estoque</div>
           ) : (
             <table>
@@ -188,41 +217,34 @@ export default function Estoque() {
                 <tr>
                   <th>SKU</th>
                   <th>Produto</th>
-                  <th>Localização</th>
-                  <th>Qtd física</th>
-                  <th title="Reservado para pedidos de clientes">Reservado</th>
-                  <th title="Disponível = físico total do produto menos reservado">Disponível</th>
-                  <th>Mínimo</th>
-                  <th>Atualizado em</th>
+                  <th title="Quantidade física somada em todas as localizações">Estoque</th>
+                  <th title="Disponibilidade = estoque − compromissos. Pode ser negativa se houver venda em encomenda sem mercadoria.">
+                    Disponibilidade
+                  </th>
+                  <th title="Reservado / comprometido a pedidos">Comprometido</th>
+                  <th>Localizações</th>
+                  <th>Atualizado</th>
                 </tr>
               </thead>
               <tbody>
-                {itensFiltrados.map((item) => {
-                  const naoAlocado = isLocalizacaoNaoAlocados({ codigo: item.localizacao_codigo });
-                  const reservado = Number(item.reservado) || 0;
-                  const disponivel = Math.max(item.quantidade - reservado, 0);
+                {produtosAgrupados.map((produto) => {
+                  const disponivel = Number(produto.disponivel);
+                  const reservado = Number(produto.reservado) || 0;
                   return (
-                    <tr key={item.id} className={naoAlocado ? 'row-pendencia-alocacao' : ''}>
-                      <td><strong>{item.sku}</strong></td>
-                      <td>{item.produto_nome}</td>
+                    <tr key={produto.produto_id}>
+                      <td><strong>{produto.sku}</strong></td>
+                      <td>{produto.produto_nome}</td>
                       <td>
-                        {naoAlocado ? (
-                          <span className="badge badge-nao-alocados">{item.localizacao_codigo}</span>
-                        ) : (
-                          <>{item.localizacao_codigo}</>
-                        )}
-                        {' — '}{item.localizacao_nome}
+                        <strong className={
+                          produto.estoque_total <= produto.estoque_minimo ? 'badge badge-warning' : ''
+                        }>
+                          {produto.estoque_total}
+                        </strong>
                       </td>
                       <td>
-                        <span className={
-                          naoAlocado
-                            ? 'badge badge-a-receber'
-                            : item.quantidade <= item.estoque_minimo
-                              ? 'badge badge-warning'
-                              : ''
-                        }>
-                          {item.quantidade}
-                        </span>
+                        <strong className={disponivel < 0 ? 'text-danger' : disponivel === 0 && reservado > 0 ? 'text-muted' : ''}>
+                          {disponivel}
+                        </strong>
                       </td>
                       <td>
                         {reservado > 0 ? (
@@ -230,25 +252,48 @@ export default function Estoque() {
                             type="button"
                             className="btn btn-link btn-sm"
                             style={{ padding: 0 }}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setReservasModal(item);
-                            }}
-                            title="Ver pedidos que bloqueiam este estoque"
+                            onClick={() => setReservasModal(produto)}
+                            title="Ver pedidos comprometidos"
                           >
                             <span className="badge badge-warning">{reservado}</span>
                           </button>
                         ) : (
-                          <span className="text-muted">—</span>
+                          <span className="text-muted">0</span>
                         )}
                       </td>
                       <td>
-                        <strong className={disponivel <= 0 && reservado > 0 ? 'text-danger' : ''}>
-                          {disponivel}
-                        </strong>
+                        {produto.localizacoes.some((l) => l.localizacao_id) ? (
+                          <ul className="estoque-localizacoes-list">
+                            {produto.localizacoes.filter((l) => l.localizacao_id).map((loc) => {
+                              const naoAlocado = isLocalizacaoNaoAlocados({ codigo: loc.localizacao_codigo });
+                              return (
+                                <li key={loc.id || `${loc.produto_id}-${loc.localizacao_id}`}>
+                                  {naoAlocado ? (
+                                    <span className="badge badge-nao-alocados">Não alocado</span>
+                                  ) : (
+                                    <span>{loc.localizacao_codigo}</span>
+                                  )}
+                                  {' '}
+                                  <span className="hint-text">{loc.localizacao_nome}</span>
+                                  {': '}
+                                  <strong>{loc.quantidade}</strong>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        ) : (
+                          <span className="hint-text">Sem estoque físico (só compromisso)</span>
+                        )}
                       </td>
-                      <td>{item.estoque_minimo}</td>
-                      <td>{formatDate(item.atualizado_em)}</td>
+                      <td>
+                        {formatDateTime(
+                          produto.localizacoes
+                            .map((l) => l.atualizado_em)
+                            .filter(Boolean)
+                            .sort()
+                            .slice(-1)[0]
+                        )}
+                      </td>
                     </tr>
                   );
                 })}

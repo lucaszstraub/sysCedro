@@ -40,16 +40,31 @@ export function normalizarNumeroNotaFiscal(valor) {
 
 export const PRAZO_ENTREGA_OPCOES = [30, 45, 60, 75, 90];
 
-/** @deprecated Mantido só para recebimentos legados que ainda tenham % na encomenda. */
+/** Placeholders padrão no recebimento (percentuais sobre o valor do produto na NF). */
 export const FRETE_PADRAO = 10;
-/** @deprecated Mantido só para recebimentos legados que ainda tenham % na encomenda. */
-export const IPI_PADRAO = 3.25;
+export const IPI_PADRAO = 3.5;
+
+export function calcularValorPercentual(base, percentual) {
+  const valor = Number(base) || 0;
+  const pct = Number(percentual) || 0;
+  return Math.round(valor * pct / 100 * 100) / 100;
+}
 
 export function calcularCustoRealRecebimento(valorNota, freteUnitario, ipiUnitario) {
   const base = Number(valorNota) || 0;
   const frete = Number(freteUnitario) || 0;
   const ipi = Number(ipiUnitario) || 0;
   return Math.round((base + frete + ipi) * 100) / 100;
+}
+
+export function calcularCustoRealRecebimentoPorPercentuais(valorNota, fretePct, ipiPct) {
+  const frete = calcularValorPercentual(valorNota, fretePct);
+  const ipi = calcularValorPercentual(valorNota, ipiPct);
+  return {
+    frete_unitario: frete,
+    ipi_unitario: ipi,
+    custo_real: calcularCustoRealRecebimento(valorNota, frete, ipi),
+  };
 }
 
 /**

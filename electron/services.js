@@ -261,23 +261,81 @@ async function deleteProduto(id) {
 
 async function listEstoque(busca = '') {
   const db = getPool();
+  const termo = `%${busca}%`;
+  // Inclui linhas físicas (qty > 0) e produtos só com compromisso (encomenda sem chegada).
   const result = await db.query(`
-    SELECT e.id, e.quantidade, e.atualizado_em,
-           p.id AS produto_id, p.sku, p.nome AS produto_nome, p.estoque_minimo,
-           l.id AS localizacao_id, l.codigo AS localizacao_codigo, l.nome AS localizacao_nome,
-           COALESCE((
-             SELECT SUM(r.quantidade)
-             FROM estoque_reservas r
-             WHERE r.produto_id = p.id AND r.status = 'ativa'
-           ), 0)::int AS reservado
-    FROM estoque e
-    JOIN produtos p ON p.id = e.produto_id
-    JOIN localizacoes l ON l.id = e.localizacao_id
-    WHERE p.ativo = true
-      AND ($1 = '' OR p.nome ILIKE $1 OR p.sku ILIKE $1 OR l.codigo ILIKE $1)
-    ORDER BY p.nome, l.codigo
-  `, [`%${busca}%`]);
-  return result.rows;
+    WITH totais AS (
+      SELECT
+        p.id AS produto_id,
+        p.sku,
+        p.nome AS produto_nome,
+        p.estoque_minimo,
+        COALESCE((
+          SELECT SUM(e2.quantidade) FROM estoque e2 WHERE e2.produto_id = p.id
+        ), 0)::int AS estoque_total,
+        COALESCE((
+          SELECT SUM(r.quantidade)
+          FROM estoque_reservas r
+          WHERE r.produto_id = p.id AND r.status = 'ativa'
+        ), 0)::int AS reservado
+      FROM produtos p
+      WHERE p.ativo = true
+        AND ($1 = '' OR p.nome ILIKE $1 OR p.sku ILIKE $1)
+    ),
+    fisicos AS (
+      SELECT
+        e.id,
+        e.quantidade,
+        e.atualizado_em,
+        t.produto_id,
+        t.sku,
+        t.produto_nome,
+        t.estoque_minimo,
+        t.estoque_total,
+        t.reservado,
+        l.id AS localizacao_id,
+        l.codigo AS localizacao_codigo,
+        l.nome AS localizacao_nome
+      FROM totais t
+      JOIN estoque e ON e.produto_id = t.produto_id AND e.quantidade > 0
+      JOIN localizacoes l ON l.id = e.localizacao_id
+      WHERE $1 = '' OR t.sku ILIKE $1 OR t.produto_nome ILIKE $1 OR l.codigo ILIKE $1
+    ),
+    so_compromisso AS (
+      SELECT
+        NULL::int AS id,
+        0::int AS quantidade,
+        NULL::timestamptz AS atualizado_em,
+        t.produto_id,
+        t.sku,
+        t.produto_nome,
+        t.estoque_minimo,
+        t.estoque_total,
+        t.reservado,
+        NULL::int AS localizacao_id,
+        NULL::varchar AS localizacao_codigo,
+        NULL::varchar AS localizacao_nome
+      FROM totais t
+      WHERE t.estoque_total = 0 AND t.reservado > 0
+        AND NOT EXISTS (
+          SELECT 1 FROM estoque e WHERE e.produto_id = t.produto_id AND e.quantidade > 0
+        )
+    )
+    SELECT * FROM fisicos
+    UNION ALL
+    SELECT * FROM so_compromisso
+    ORDER BY produto_nome, localizacao_codigo NULLS LAST
+  `, [termo]);
+  return result.rows.map((row) => {
+    const estoqueTotal = Number(row.estoque_total) || 0;
+    const reservado = Number(row.reservado) || 0;
+    return {
+      ...row,
+      estoque_total: estoqueTotal,
+      reservado,
+      disponivel: estoqueTotal - reservado,
+    };
+  });
 }
 
 async function listPendenciasAlocacao(busca = '') {
@@ -393,35 +451,76 @@ async function registrarMovimentacao(data) {
   try {
     await client.query('BEGIN');
 
-    const { produto_id, tipo, quantidade, localizacao_origem_id, localizacao_destino_id, motivo, usuario } = data;
+    const {
+      produto_id,
+      tipo,
+      quantidade,
+      localizacao_origem_id,
+      localizacao_destino_id,
+      motivo,
+      usuario,
+      data_movimento,
+    } = data;
 
-    if (tipo === 'entrada') {
+    const qty = Number(quantidade);
+    if (!qty || qty <= 0) throw new Error('Informe a quantidade.');
+
+    let referenciaTipo = data.referencia_tipo || null;
+    let criadoEm = null;
+    if (data_movimento) {
+      const parsed = new Date(`${data_movimento}T12:00:00`);
+      if (Number.isNaN(parsed.getTime())) throw new Error('Data da movimentação inválida.');
+      criadoEm = parsed.toISOString();
+    }
+
+    if (tipo === 'entregue') {
+      if (!localizacao_origem_id) {
+        throw new Error('Localização de origem é obrigatória para marcar como entregue.');
+      }
+      await reduzirEstoque(client, produto_id, localizacao_origem_id, qty);
+      await baixarCompromissosProduto(client, produto_id, qty);
+      referenciaTipo = 'entregue';
+    } else if (tipo === 'entrada') {
       if (!localizacao_destino_id) throw new Error('Localização de destino é obrigatória para entrada.');
       await assertDestinoNaoEhNaoAlocados(client, localizacao_destino_id);
-      await upsertEstoque(client, produto_id, localizacao_destino_id, quantidade);
+      await upsertEstoque(client, produto_id, localizacao_destino_id, qty);
     } else if (tipo === 'saida') {
       if (!localizacao_origem_id) throw new Error('Localização de origem é obrigatória para saída.');
-      await reduzirEstoque(client, produto_id, localizacao_origem_id, quantidade);
+      await reduzirEstoque(client, produto_id, localizacao_origem_id, qty);
     } else if (tipo === 'transferencia') {
       if (!localizacao_origem_id || !localizacao_destino_id) {
         throw new Error('Origem e destino são obrigatórios para transferência.');
       }
       await assertDestinoNaoEhNaoAlocados(client, localizacao_destino_id);
-      await reduzirEstoque(client, produto_id, localizacao_origem_id, quantidade);
-      await upsertEstoque(client, produto_id, localizacao_destino_id, quantidade);
+      await reduzirEstoque(client, produto_id, localizacao_origem_id, qty);
+      await upsertEstoque(client, produto_id, localizacao_destino_id, qty);
     } else if (tipo === 'ajuste') {
       if (!localizacao_destino_id) throw new Error('Localização é obrigatória para ajuste.');
       await assertDestinoNaoEhNaoAlocados(client, localizacao_destino_id);
-      await ajustarEstoque(client, produto_id, localizacao_destino_id, quantidade);
+      await ajustarEstoque(client, produto_id, localizacao_destino_id, qty);
     } else {
       throw new Error('Tipo de movimentação inválido.');
     }
 
+    const tipoDb = tipo === 'entregue' ? 'saida' : tipo;
     const mov = await client.query(`
-      INSERT INTO movimentacoes (produto_id, localizacao_origem_id, localizacao_destino_id, tipo, quantidade, motivo, usuario)
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      INSERT INTO movimentacoes (
+        produto_id, localizacao_origem_id, localizacao_destino_id,
+        tipo, quantidade, motivo, usuario, referencia_tipo, criado_em
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9::timestamptz, NOW()))
       RETURNING *
-    `, [produto_id, localizacao_origem_id || null, localizacao_destino_id || null, tipo, quantidade, motivo || null, usuario || 'operador']);
+    `, [
+      produto_id,
+      localizacao_origem_id || null,
+      localizacao_destino_id || null,
+      tipoDb,
+      qty,
+      motivo || (tipo === 'entregue' ? 'Entregue ao cliente' : null),
+      usuario || 'operador',
+      referenciaTipo,
+      criadoEm,
+    ]);
 
     await client.query('COMMIT');
     return mov.rows[0];
@@ -430,6 +529,60 @@ async function registrarMovimentacao(data) {
     throw err;
   } finally {
     client.release();
+  }
+}
+
+/**
+ * Baixa compromissos (reservas ativas) do produto na ordem FIFO e atualiza
+ * quantidade_entregue nos itens de venda vinculados.
+ */
+async function baixarCompromissosProduto(client, produtoId, quantidade) {
+  let restante = Number(quantidade) || 0;
+  if (restante <= 0) return;
+
+  const reservas = await client.query(`
+    SELECT r.*, vi.quantidade AS item_quantidade, vi.quantidade_entregue
+    FROM estoque_reservas r
+    LEFT JOIN venda_itens vi ON vi.id = r.venda_item_id
+    WHERE r.produto_id = $1 AND r.status = 'ativa'
+    ORDER BY r.criado_em ASC, r.id ASC
+  `, [produtoId]);
+
+  for (const reserva of reservas.rows) {
+    if (restante <= 0) break;
+    const qtdReserva = Number(reserva.quantidade) || 0;
+    const baixar = Math.min(restante, qtdReserva);
+    if (baixar <= 0) continue;
+
+    const novaQtd = qtdReserva - baixar;
+    if (novaQtd <= 0) {
+      await client.query(`
+        UPDATE estoque_reservas SET status = 'baixada', quantidade = 0, atualizado_em = NOW()
+        WHERE id = $1
+      `, [reserva.id]);
+    } else {
+      await client.query(`
+        UPDATE estoque_reservas SET quantidade = $2, atualizado_em = NOW()
+        WHERE id = $1
+      `, [reserva.id, novaQtd]);
+    }
+
+    if (reserva.venda_item_id) {
+      const entregueAtual = Number(reserva.quantidade_entregue) || 0;
+      const itemQtd = Number(reserva.item_quantidade) || 0;
+      const novoEntregue = Math.min(itemQtd, entregueAtual + baixar);
+      await client.query(`
+        UPDATE venda_itens SET quantidade_entregue = $2 WHERE id = $1
+      `, [reserva.venda_item_id, novoEntregue]);
+    }
+
+    restante -= baixar;
+  }
+
+  if (restante > 0) {
+    throw new Error(
+      `Não há compromisso suficiente para entregar ${quantidade} un. Faltam ${restante} un. de reserva ativa.`
+    );
   }
 }
 

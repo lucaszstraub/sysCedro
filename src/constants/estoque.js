@@ -8,6 +8,7 @@ export function labelTipoMovimentacao(mov) {
   if (mov.referencia_tipo === 'alocacao') return 'Alocação';
   if (mov.referencia_tipo === 'encomenda_recebimento') return 'Recebimento encomenda';
   if (mov.referencia_tipo === 'encomenda_estorno') return 'Estorno receb.';
+  if (mov.referencia_tipo === 'entregue') return 'Entregue';
   if (mov.referencia_tipo === 'entrega') return 'Saída por entrega';
   const tipos = {
     entrada: 'Entrada',
@@ -21,5 +22,6 @@ export function labelTipoMovimentacao(mov) {
 export function badgeClassMovimentacao(mov) {
   if (mov.referencia_tipo === 'alocacao') return 'badge-alocacao';
   if (mov.referencia_tipo === 'encomenda_recebimento') return 'badge-entrada';
+  if (mov.referencia_tipo === 'entregue') return 'badge-saida';
   return `badge-${mov.tipo}`;
 }

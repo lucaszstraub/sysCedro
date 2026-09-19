@@ -8,7 +8,7 @@ import {
 } from '../constants/estoque';
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
-import { formatDate, formatDateTime } from '../utils/format';
+import { formatDateTime } from '../utils/format';
 import AlocarProdutoModal from '../components/AlocarProdutoModal';
 import MovimentacaoModal from '../components/MovimentacaoModal';
 
@@ -21,7 +21,7 @@ export default function Movimentacoes() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [itemAlocar, setItemAlocar] = useState(null);
-  const [modalMovimentacao, setModalMovimentacao] = useState(false);
+  const [modalMovimentacao, setModalMovimentacao] = useState(null);
   const { success: showSuccess } = useFeedback();
 
   const localizacoesDestino = useMemo(
@@ -66,8 +66,11 @@ export default function Movimentacoes() {
 
   const handleSaveMovimentacao = async (data) => {
     await api.createMovimentacao(data);
-    setModalMovimentacao(false);
-    showSuccess('Movimentação registrada com sucesso!');
+    setModalMovimentacao(null);
+    const msg = data.tipo === 'entregue'
+      ? 'Entrega registrada: estoque e compromisso atualizados.'
+      : 'Movimentação registrada com sucesso!';
+    showSuccess(msg);
     await load();
   };
 
@@ -82,10 +85,18 @@ export default function Movimentacoes() {
         <div>
           <h2>Alocação e movimentações</h2>
           <p>
-            Produtos recebidos ficam em <strong>Não alocados</strong> até serem guardados em um endereço do armazém
+            Guarde produtos em endereços, registre saídas ao cliente como <strong>Entregue</strong>
+            e consulte o histórico com data e hora.
           </p>
         </div>
         <div className="visao-vendas-header-actions">
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setModalMovimentacao({ tipo: 'entregue' })}
+          >
+            Registrar entregue
+          </button>
           <Link to="/gestao-estoque/estoque" className="btn btn-secondary">
             Voltar ao estoque
           </Link>
@@ -192,9 +203,22 @@ export default function Movimentacoes() {
 
       <div className="toolbar">
         <h3 className="section-inline-title">Outras movimentações</h3>
-        <button type="button" className="btn btn-secondary" onClick={() => setModalMovimentacao(true)}>
-          + Saída, transferência ou ajuste
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => setModalMovimentacao({ tipo: 'entregue' })}
+          >
+            + Entregue
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => setModalMovimentacao({ tipo: 'transferencia' })}
+          >
+            + Transferência / saída / ajuste
+          </button>
+        </div>
       </div>
 
       <div className="card">
@@ -208,19 +232,22 @@ export default function Movimentacoes() {
             <table>
               <thead>
                 <tr>
-                  <th>Data</th>
+                  <th>Data e hora</th>
                   <th>Tipo</th>
                   <th>Produto</th>
                   <th>Qtd</th>
                   <th>Origem</th>
                   <th>Destino</th>
                   <th>Motivo</th>
+                  <th>Usuário</th>
                 </tr>
               </thead>
               <tbody>
                 {movimentacoes.map((m) => (
                   <tr key={m.id}>
-                    <td>{formatDate(m.criado_em)}</td>
+                    <td>
+                      <time dateTime={m.criado_em}>{formatDateTime(m.criado_em)}</time>
+                    </td>
                     <td>
                       <span className={`badge ${badgeClassMovimentacao(m)}`}>
                         {labelTipoMovimentacao(m)}
@@ -231,6 +258,7 @@ export default function Movimentacoes() {
                     <td>{m.origem_codigo || '—'}</td>
                     <td>{m.destino_codigo || '—'}</td>
                     <td>{m.motivo || '—'}</td>
+                    <td>{m.usuario || '—'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -253,7 +281,8 @@ export default function Movimentacoes() {
           produtos={produtos}
           localizacoes={localizacoes}
           localizacoesDestino={localizacoesDestino}
-          onClose={() => setModalMovimentacao(false)}
+          initialTipo={modalMovimentacao.tipo}
+          onClose={() => setModalMovimentacao(null)}
           onSave={handleSaveMovimentacao}
         />
       )}

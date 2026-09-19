@@ -3,10 +3,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
 import {
   DESTINO_LABEL,
+  FRETE_PADRAO,
+  IPI_PADRAO,
   resolverCustoEsperado,
-  calcularCustoRealRecebimento,
+  calcularCustoRealRecebimentoPorPercentuais,
+  calcularValorPercentual,
   normalizarNumeroNotaFiscal,
 } from '../constants/encomenda';
+import { CODIGO_LOCALIZACAO_NAO_ALOCADOS } from '../constants/estoque';
 import { formatCurrency } from '../utils/format';
 import NumericInput from './NumericInput';
 import NumeroPedidoCell from './NumeroPedidoCell';
@@ -21,17 +25,24 @@ export default function ReceberEncomendaModal({
   const custoEsperado = resolverCustoEsperado(item);
   const valorInicial = Number(item.custo_negociado) || 0;
   const [valorNotaUnitario, setValorNotaUnitario] = useState(valorInicial);
-  const [freteUnitario, setFreteUnitario] = useState(0);
-  const [ipiUnitario, setIpiUnitario] = useState(0);
-  const custoRealCalculado = useMemo(
-    () => calcularCustoRealRecebimento(valorNotaUnitario, freteUnitario, ipiUnitario),
-    [valorNotaUnitario, freteUnitario, ipiUnitario]
+  const [fretePercentual, setFretePercentual] = useState(FRETE_PADRAO);
+  const [ipiPercentual, setIpiPercentual] = useState(IPI_PADRAO);
+
+  const { frete_unitario: freteUnitario, ipi_unitario: ipiUnitario, custo_real: custoRealCalculado } = useMemo(
+    () => calcularCustoRealRecebimentoPorPercentuais(valorNotaUnitario, fretePercentual, ipiPercentual),
+    [valorNotaUnitario, fretePercentual, ipiPercentual]
   );
+
   const destino = item.destino_esperado || 'estoque';
-  const [modoNota, setModoNota] = useState('cadastrada');
+  const [modoNota, setModoNota] = useState('pesquisar');
+  const [buscaNota, setBuscaNota] = useState('');
   const [notasDisponiveis, setNotasDisponiveis] = useState([]);
-  const [notaFiscalId, setNotaFiscalId] = useState('');
+  const [buscandoNotas, setBuscandoNotas] = useState(false);
+  const [notaSelecionada, setNotaSelecionada] = useState(null);
   const [numeroNotaFiscal, setNumeroNotaFiscal] = useState('');
+  const [localizacoes, setLocalizacoes] = useState([]);
+  const [localizacaoId, setLocalizacaoId] = useState('');
+  const [loadingLocalizacoes, setLoadingLocalizacoes] = useState(true);
   const [observacoes, setObservacoes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -40,43 +51,89 @@ export default function ReceberEncomendaModal({
   const observacoesEncomenda = item.observacoes || item.item_observacoes || '';
 
   useEffect(() => {
-    if (!item.fornecedor_id) return;
-    api.listNotasFiscais('', item.fornecedor_id)
+    let cancelled = false;
+    setLoadingLocalizacoes(true);
+    api.listLocalizacoes()
       .then((lista) => {
-        setNotasDisponiveis(lista);
-        if (lista.length > 0) {
-          setModoNota('cadastrada');
-        } else {
-          setModoNota('manual');
-        }
+        if (cancelled) return;
+        const locs = Array.isArray(lista) ? lista : [];
+        const ordenadas = [...locs].sort((a, b) => {
+          if (a.codigo === CODIGO_LOCALIZACAO_NAO_ALOCADOS) return -1;
+          if (b.codigo === CODIGO_LOCALIZACAO_NAO_ALOCADOS) return 1;
+          return String(a.codigo).localeCompare(String(b.codigo));
+        });
+        setLocalizacoes(ordenadas);
+        const naoAloc = ordenadas.find((l) => l.codigo === CODIGO_LOCALIZACAO_NAO_ALOCADOS);
+        setLocalizacaoId(naoAloc ? String(naoAloc.id) : (ordenadas[0] ? String(ordenadas[0].id) : ''));
       })
-      .catch(() => setNotasDisponiveis([]));
-  }, [item.fornecedor_id]);
+      .catch(() => {
+        if (!cancelled) setLocalizacoes([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLocalizacoes(false);
+      });
+    return () => { cancelled = true; };
+  }, []);
 
   useEffect(() => {
-    if (modoNota !== 'cadastrada') return;
-    const nota = notasDisponiveis.find((n) => String(n.id) === notaFiscalId);
-    setNumeroNotaFiscal(nota?.numero || '');
-  }, [modoNota, notaFiscalId, notasDisponiveis]);
+    if (modoNota !== 'pesquisar' || !item.fornecedor_id) return undefined;
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      setBuscandoNotas(true);
+      api.listNotasFiscais(buscaNota.trim(), item.fornecedor_id)
+        .then((lista) => {
+          if (!cancelled) setNotasDisponiveis(Array.isArray(lista) ? lista : []);
+        })
+        .catch(() => {
+          if (!cancelled) setNotasDisponiveis([]);
+        })
+        .finally(() => {
+          if (!cancelled) setBuscandoNotas(false);
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [modoNota, buscaNota, item.fornecedor_id]);
+
+  const selecionarNota = (nota) => {
+    setNotaSelecionada(nota);
+    setNumeroNotaFiscal(nota.numero || '');
+    setBuscaNota(nota.numero || '');
+    setError('');
+  };
+
+  const limparNotaSelecionada = () => {
+    setNotaSelecionada(null);
+    setNumeroNotaFiscal('');
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError('');
     try {
+      if (!localizacaoId) throw new Error('Selecione a localização de alocação.');
+
       const payload = {
         encomenda_item_id: item.id,
         quantidade: Number(quantidade),
         valor_nota_unitario: Number(valorNotaUnitario),
-        frete_unitario: Number(freteUnitario),
-        ipi_unitario: Number(ipiUnitario),
+        frete_unitario: freteUnitario,
+        ipi_unitario: ipiUnitario,
+        localizacao_id: Number(localizacaoId),
         observacoes,
       };
 
-      if (modoNota === 'cadastrada') {
-        if (!notaFiscalId) throw new Error('Selecione a nota fiscal cadastrada.');
-        payload.nota_fiscal_id = Number(notaFiscalId);
-        payload.numero_nota_fiscal = numeroNotaFiscal;
+      if (modoNota === 'pesquisar') {
+        if (!notaSelecionada?.id) {
+          throw new Error('Pesquise e selecione a nota fiscal cadastrada.');
+        }
+        payload.nota_fiscal_id = Number(notaSelecionada.id);
+        payload.numero_nota_fiscal = notaSelecionada.numero;
       } else {
         payload.numero_nota_fiscal = normalizarNumeroNotaFiscal(numeroNotaFiscal);
       }
@@ -127,31 +184,63 @@ export default function ReceberEncomendaModal({
             )}
 
             <p className="hint-text" style={{ marginBottom: 0 }}>
-              Destino definido na encomenda: {DESTINO_LABEL[destino] || destino}
-              {' · '}O produto será alocado em <strong>Não alocados</strong> para guarda posterior no WMS.
+              Destino definido na encomenda: {DESTINO_LABEL[destino] || destino}.
+              Escolha a localização de entrada — o padrão é <strong>Não alocados</strong>.
             </p>
+
+            <div className="form-group" style={{ marginTop: '1rem' }}>
+              <label htmlFor="localizacao_alocacao">Alocação (localização) *</label>
+              <select
+                id="localizacao_alocacao"
+                value={localizacaoId}
+                onChange={(e) => setLocalizacaoId(e.target.value)}
+                required
+                disabled={loadingLocalizacoes}
+              >
+                {loadingLocalizacoes ? (
+                  <option value="">Carregando...</option>
+                ) : (
+                  localizacoes.map((loc) => (
+                    <option key={loc.id} value={String(loc.id)}>
+                      {loc.codigo === CODIGO_LOCALIZACAO_NAO_ALOCADOS
+                        ? 'Não alocado'
+                        : `${loc.codigo} — ${loc.nome}`}
+                    </option>
+                  ))
+                )}
+              </select>
+              <span className="hint-text">
+                Se escolher um endereço definitivo, o produto já entra alocado (sem passar por Não alocados).
+              </span>
+            </div>
 
             <div className="card" style={{ marginTop: '1rem' }}>
               <div className="card-header">Nota fiscal</div>
               <div className="card-body">
                 <p className="hint-text" style={{ marginTop: 0 }}>
-                  Vincule uma nota já cadastrada ou informe o número manualmente. O recebimento é por
+                  Pesquise uma nota já cadastrada ou informe o número manualmente. O recebimento é por
                   produto; a nota pode agrupar vários itens do fornecedor.
                 </p>
 
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                   <button
                     type="button"
-                    className={`btn btn-sm ${modoNota === 'cadastrada' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setModoNota('cadastrada')}
-                    disabled={notasDisponiveis.length === 0}
+                    className={`btn btn-sm ${modoNota === 'pesquisar' ? 'btn-primary' : 'btn-secondary'}`}
+                    onClick={() => {
+                      setModoNota('pesquisar');
+                      limparNotaSelecionada();
+                    }}
                   >
-                    Nota cadastrada
+                    Pesquisar nota
                   </button>
                   <button
                     type="button"
                     className={`btn btn-sm ${modoNota === 'manual' ? 'btn-primary' : 'btn-secondary'}`}
-                    onClick={() => setModoNota('manual')}
+                    onClick={() => {
+                      setModoNota('manual');
+                      limparNotaSelecionada();
+                      setBuscaNota('');
+                    }}
                   >
                     Informar número
                   </button>
@@ -166,24 +255,76 @@ export default function ReceberEncomendaModal({
                   )}
                 </div>
 
-                {modoNota === 'cadastrada' ? (
+                {modoNota === 'pesquisar' ? (
                   <div className="form-group">
-                    <label htmlFor="nota_fiscal_id">Selecione a nota fiscal *</label>
-                    <select
-                      id="nota_fiscal_id"
-                      value={notaFiscalId}
-                      onChange={(e) => setNotaFiscalId(e.target.value)}
-                      required
-                    >
-                      <option value="">Selecione...</option>
-                      {notasDisponiveis.map((nota) => (
-                        <option key={nota.id} value={nota.id}>
-                          NF {nota.numero} — {formatCurrency(nota.valor_total)}
-                        </option>
-                      ))}
-                    </select>
-                    {notasDisponiveis.length === 0 && (
-                      <p className="hint-text">Nenhuma nota cadastrada para este fornecedor.</p>
+                    <label htmlFor="busca_nota_fiscal">Pesquisar nota fiscal *</label>
+                    <input
+                      id="busca_nota_fiscal"
+                      className="search-input"
+                      placeholder="Digite o número da NF..."
+                      value={buscaNota}
+                      onChange={(e) => {
+                        setBuscaNota(e.target.value);
+                        if (notaSelecionada) limparNotaSelecionada();
+                      }}
+                      autoComplete="off"
+                    />
+                    {notaSelecionada ? (
+                      <div className="alert alert-success" style={{ marginTop: '0.75rem', marginBottom: 0 }}>
+                        <strong>NF {notaSelecionada.numero}</strong>
+                        {' — '}
+                        {formatCurrency(notaSelecionada.valor_total)}
+                        <button
+                          type="button"
+                          className="btn btn-link btn-sm"
+                          style={{ marginLeft: 8 }}
+                          onClick={() => {
+                            limparNotaSelecionada();
+                            setBuscaNota('');
+                          }}
+                        >
+                          Trocar
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="picker-table-wrap" style={{ marginTop: '0.75rem', maxHeight: 220, overflow: 'auto' }}>
+                        {buscandoNotas ? (
+                          <p className="hint-text">Buscando notas...</p>
+                        ) : notasDisponiveis.length === 0 ? (
+                          <p className="hint-text">
+                            {buscaNota.trim()
+                              ? 'Nenhuma nota encontrada para este fornecedor.'
+                              : 'Nenhuma nota cadastrada para este fornecedor. Cadastre uma ou informe o número.'}
+                          </p>
+                        ) : (
+                          <table className="picker-table">
+                            <thead>
+                              <tr>
+                                <th>Número</th>
+                                <th>Valor</th>
+                                <th></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {notasDisponiveis.map((nota) => (
+                                <tr key={nota.id}>
+                                  <td><strong>{nota.numero}</strong></td>
+                                  <td>{formatCurrency(nota.valor_total)}</td>
+                                  <td className="picker-actions">
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-secondary"
+                                      onClick={() => selecionarNota(nota)}
+                                    >
+                                      Selecionar
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
                     )}
                   </div>
                 ) : (
@@ -230,22 +371,32 @@ export default function ReceberEncomendaModal({
                 </span>
               </div>
               <div className="form-group">
-                <label>Frete unitário (nota) *</label>
+                <label htmlFor="frete_pct">Frete (%) *</label>
                 <NumericInput
+                  id="frete_pct"
                   step="0.01"
                   min="0"
-                  value={freteUnitario}
-                  onChange={setFreteUnitario}
+                  value={fretePercentual}
+                  onChange={setFretePercentual}
+                  placeholder="10"
                 />
+                <span className="hint-text">
+                  Padrão 10% · {formatCurrency(calcularValorPercentual(valorNotaUnitario, fretePercentual))} sobre o produto
+                </span>
               </div>
               <div className="form-group">
-                <label>IPI unitário (nota) *</label>
+                <label htmlFor="ipi_pct">IPI (%) *</label>
                 <NumericInput
+                  id="ipi_pct"
                   step="0.01"
                   min="0"
-                  value={ipiUnitario}
-                  onChange={setIpiUnitario}
+                  value={ipiPercentual}
+                  onChange={setIpiPercentual}
+                  placeholder="3,5"
                 />
+                <span className="hint-text">
+                  Padrão 3,5% · {formatCurrency(calcularValorPercentual(valorNotaUnitario, ipiPercentual))} sobre o produto
+                </span>
               </div>
               <div className="form-group">
                 <label>Custo real de chegada</label>
@@ -253,7 +404,7 @@ export default function ReceberEncomendaModal({
                   {formatCurrency(custoRealCalculado)}
                 </p>
                 <span className="hint-text">
-                  Produto + frete + IPI da NF
+                  Produto + frete ({fretePercentual || 0}%) + IPI ({ipiPercentual || 0}%)
                 </span>
               </div>
               <div className="form-group">

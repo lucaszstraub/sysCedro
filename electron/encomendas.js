@@ -94,31 +94,25 @@ async function getDisponibilidadeProduto(produtoId) {
   const db = getPool();
   const result = await db.query(`
     SELECT
-      COALESCE(SUM(e.quantidade), 0)::int AS fisico,
+      COALESCE((
+        SELECT SUM(e.quantidade) FROM estoque e WHERE e.produto_id = $1
+      ), 0)::int AS fisico,
       COALESCE((
         SELECT SUM(r.quantidade)
         FROM estoque_reservas r
         WHERE r.produto_id = $1 AND r.status = 'ativa'
-      ), 0)::int AS reservado,
-      COALESCE((
-        SELECT SUM(ei.quantidade_pedida - ei.quantidade_recebida)
-        FROM encomenda_fornecedor_itens ei
-        WHERE ei.produto_id = $1
-          AND ei.status IN ('pendente', 'parcial')
-          AND ei.destino_esperado = 'cliente'
-      ), 0)::int AS encomendado_clientes
-    FROM estoque e
-    WHERE e.produto_id = $1
+      ), 0)::int AS reservado
   `, [produtoId]);
 
-  const row = result.rows[0] || { fisico: 0, reservado: 0, encomendado_clientes: 0 };
+  const row = result.rows[0] || { fisico: 0, reservado: 0 };
   const fisico = Number(row.fisico) || 0;
   const reservado = Number(row.reservado) || 0;
   return {
     fisico,
     reservado,
-    disponivel: Math.max(fisico - reservado, 0),
-    encomendado_clientes: Number(row.encomendado_clientes) || 0,
+    /** Pode ser negativo quando há compromisso (encomenda) sem estoque físico. */
+    disponivel: fisico - reservado,
+    disponivel_para_venda: Math.max(fisico - reservado, 0),
   };
 }
 
@@ -580,22 +574,20 @@ async function confirmarItemEfetivo(client, vendaId, item) {
     await processarPecaLojaImplantacao(client, item, qtdPecaLoja);
   }
 
-  const qtdReservar = Math.max(qtdEstoque - qtdEntregue, 0);
+  const qtdEstoqueReservar = Math.max(qtdEstoque - qtdEntregue, 0);
+  const qtdEncomendaReservar = Math.max(qtdEncomenda, 0);
+  const qtdReservar = qtdEstoqueReservar + qtdEncomendaReservar;
 
-  if (qtdReservar > 0) {
+  if (qtdEstoqueReservar > 0) {
     if (!item.produto_id) {
       throw new Error(`Item "${item.descricao}" usa estoque mas não tem produto vinculado.`);
     }
     const disp = await getDisponibilidadeProduto(item.produto_id);
-    if (disp.disponivel < qtdReservar) {
+    if (disp.disponivel_para_venda < qtdEstoqueReservar) {
       throw new Error(
-        `Estoque insuficiente para "${item.descricao}". Disponível: ${disp.disponivel}, solicitado: ${qtdReservar}.`
+        `Estoque insuficiente para "${item.descricao}". Disponível: ${disp.disponivel_para_venda}, solicitado: ${qtdEstoqueReservar}.`
       );
     }
-    await client.query(`
-      INSERT INTO estoque_reservas (venda_id, venda_item_id, produto_id, quantidade, status)
-      VALUES ($1, $2, $3, $4, 'ativa')
-    `, [vendaId, item.id, item.produto_id, qtdReservar]);
   }
 
   if (qtdEncomenda > 0) {
@@ -605,6 +597,13 @@ async function confirmarItemEfetivo(client, vendaId, item) {
     if (!item.fornecedor_id) {
       throw new Error(`Produto "${item.produto_nome || item.descricao}" não tem fornecedor cadastrado.`);
     }
+  }
+
+  if (qtdReservar > 0 && item.produto_id) {
+    await client.query(`
+      INSERT INTO estoque_reservas (venda_id, venda_item_id, produto_id, quantidade, status)
+      VALUES ($1, $2, $3, $4, 'ativa')
+    `, [vendaId, item.id, item.produto_id, qtdReservar]);
   }
 }
 
@@ -979,25 +978,36 @@ async function aumentarReservaVendaItem(client, vendaItemId, quantidade) {
   const vi = viResult.rows[0];
   if (!vi.produto_id) return;
 
+  const qtdEsperada = Math.max(
+    0,
+    (Number(vi.quantidade_estoque) || 0)
+      + (Number(vi.quantidade_encomenda) || 0)
+      - (Number(vi.quantidade_entregue) || 0)
+  );
+
   const reserva = await client.query(`
-    SELECT id FROM estoque_reservas
+    SELECT id, quantidade FROM estoque_reservas
     WHERE venda_item_id = $1 AND status = 'ativa'
     LIMIT 1
   `, [vendaItemId]);
 
   if (reserva.rowCount > 0) {
+    const atual = Number(reserva.rows[0].quantidade) || 0;
+    if (atual >= qtdEsperada) return;
     await client.query(`
       UPDATE estoque_reservas
-      SET quantidade = quantidade + $2, atualizado_em = NOW()
+      SET quantidade = $2, atualizado_em = NOW()
       WHERE id = $1
-    `, [reserva.rows[0].id, quantidade]);
+    `, [reserva.rows[0].id, qtdEsperada]);
     return;
   }
+
+  if (qtdEsperada <= 0) return;
 
   await client.query(`
     INSERT INTO estoque_reservas (venda_id, venda_item_id, produto_id, quantidade, status)
     VALUES ($1, $2, $3, $4, 'ativa')
-  `, [vi.venda_id, vendaItemId, vi.produto_id, quantidade]);
+  `, [vi.venda_id, vendaItemId, vi.produto_id, qtdEsperada]);
 }
 
 async function receberEncomendaItem(data) {
@@ -1027,6 +1037,22 @@ async function receberEncomendaItem(data) {
 
     const destino = item.destino_esperado || 'estoque';
     const localizacaoNaoAlocadosId = await obterLocalizacaoNaoAlocados(client);
+    let localizacaoId = localizacaoNaoAlocadosId;
+    if (data.localizacao_id) {
+      const locId = Number(data.localizacao_id);
+      const loc = await client.query(
+        'SELECT id, codigo, nome FROM localizacoes WHERE id = $1 AND ativo = true',
+        [locId]
+      );
+      if (loc.rowCount === 0) throw new Error('Localização de alocação inválida.');
+      localizacaoId = loc.rows[0].id;
+    }
+    const locInfo = await client.query(
+      'SELECT codigo, nome FROM localizacoes WHERE id = $1',
+      [localizacaoId]
+    );
+    const locCodigo = locInfo.rows[0]?.codigo || '—';
+    const locNome = locInfo.rows[0]?.nome || '';
 
     let notaFiscalId = data.nota_fiscal_id ? Number(data.nota_fiscal_id) : null;
     let numeroNotaFiscal;
@@ -1061,7 +1087,7 @@ async function receberEncomendaItem(data) {
 
     let movimentacaoId = null;
 
-    await upsertEstoqueTx(client, item.produto_id, localizacaoNaoAlocadosId, qty);
+    await upsertEstoqueTx(client, item.produto_id, localizacaoId, qty);
     const mov = await client.query(`
       INSERT INTO movimentacoes (
         produto_id, localizacao_destino_id, tipo, quantidade, motivo, usuario,
@@ -1071,9 +1097,9 @@ async function receberEncomendaItem(data) {
       RETURNING id
     `, [
       item.produto_id,
-      localizacaoNaoAlocadosId,
+      localizacaoId,
       qty,
-      `Recebimento encomenda ${item.encomenda_numero} → Não alocados`,
+      `Recebimento encomenda ${item.encomenda_numero} → ${locCodigo}${locNome ? ` (${locNome})` : ''}`,
       data.encomenda_item_id,
     ]);
     movimentacaoId = mov.rows[0].id;
@@ -1095,7 +1121,7 @@ async function receberEncomendaItem(data) {
       freteUnitario,
       ipiUnitario,
       destino,
-      localizacaoNaoAlocadosId,
+      localizacaoId,
       destino === 'cliente' ? (item.venda_item_id || data.venda_item_id || null) : null,
       movimentacaoId,
       data.observacoes || null,
