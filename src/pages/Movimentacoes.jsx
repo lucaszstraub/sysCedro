@@ -9,18 +9,15 @@ import {
 import { useFeedback } from '../context/FeedbackContext';
 import PageAlert from '../components/PageAlert';
 import { formatDateTime } from '../utils/format';
-import AlocarProdutoModal from '../components/AlocarProdutoModal';
 import MovimentacaoModal from '../components/MovimentacaoModal';
 
 export default function Movimentacoes() {
   const [pendencias, setPendencias] = useState([]);
   const [movimentacoes, setMovimentacoes] = useState([]);
-  const [produtos, setProdutos] = useState([]);
   const [localizacoes, setLocalizacoes] = useState([]);
   const [buscaPendencias, setBuscaPendencias] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [itemAlocar, setItemAlocar] = useState(null);
   const [modalMovimentacao, setModalMovimentacao] = useState(null);
   const { success: showSuccess } = useFeedback();
 
@@ -38,15 +35,13 @@ export default function Movimentacoes() {
     setLoading(true);
     setError('');
     try {
-      const [p, m, prod, locs] = await Promise.all([
+      const [p, m, locs] = await Promise.all([
         api.listPendenciasAlocacao(term),
         api.listMovimentacoes(100),
-        api.listProdutos(''),
         api.listLocalizacoes(),
       ]);
       setPendencias(p);
       setMovimentacoes(m);
-      setProdutos(prod);
       setLocalizacoes(locs);
     } catch (err) {
       setError(err.message);
@@ -57,19 +52,28 @@ export default function Movimentacoes() {
 
   useEffect(() => { load(); }, []);
 
-  const handleAlocar = async (data) => {
-    await api.alocarProduto(data);
-    setItemAlocar(null);
-    showSuccess('Produto alocado com sucesso no endereço de estoque.');
-    await load();
-  };
-
   const handleSaveMovimentacao = async (data) => {
-    await api.createMovimentacao(data);
+    const linhas = Array.isArray(data.linhas) ? data.linhas : [];
+    if (linhas.length === 0) throw new Error('Informe ao menos uma quantidade de origem.');
+
+    for (const linha of linhas) {
+      await api.createMovimentacao({
+        tipo: data.tipo,
+        produto_id: data.produto_id,
+        quantidade: linha.quantidade,
+        localizacao_origem_id: linha.localizacao_origem_id,
+        localizacao_destino_id: data.localizacao_destino_id,
+        motivo: data.motivo,
+        usuario: data.usuario || 'operador',
+        data_movimento: data.data_movimento,
+      });
+    }
+
     setModalMovimentacao(null);
+    const total = linhas.reduce((sum, l) => sum + Number(l.quantidade), 0);
     const msg = data.tipo === 'entregue'
-      ? 'Entrega registrada: estoque e compromisso atualizados.'
-      : 'Movimentação registrada com sucesso!';
+      ? `Entregue registrado: ${total} un. (estoque e compromisso atualizados).`
+      : `Movimentação registrada: ${total} un.`;
     showSuccess(msg);
     await load();
   };
@@ -79,23 +83,32 @@ export default function Movimentacoes() {
     load(buscaPendencias);
   };
 
+  const abrirMoverProduto = (produto = null, { alocarPendencia = false } = {}) => {
+    setModalMovimentacao({
+      produto: produto
+        ? { id: produto.produto_id || produto.id, sku: produto.sku, nome: produto.produto_nome || produto.nome }
+        : null,
+      sugerirDeNaoAlocados: alocarPendencia,
+    });
+  };
+
   return (
     <>
       <header className="page-header visao-vendas-header">
         <div>
           <h2>Alocação e movimentações</h2>
           <p>
-            Guarde produtos em endereços, registre saídas ao cliente como <strong>Entregue</strong>
-            e consulte o histórico com data e hora.
+            Busque o produto, escolha quanto sair de cada localização e defina o destino
+            (endereço ou <strong>Entregue</strong>).
           </p>
         </div>
         <div className="visao-vendas-header-actions">
           <button
             type="button"
             className="btn btn-primary"
-            onClick={() => setModalMovimentacao({ tipo: 'entregue' })}
+            onClick={() => abrirMoverProduto()}
           >
-            Registrar entregue
+            Mover produto
           </button>
           <Link to="/gestao-estoque/estoque" className="btn btn-secondary">
             Voltar ao estoque
@@ -123,7 +136,7 @@ export default function Movimentacoes() {
       {pendencias.length > 0 && (
         <div className="alert alert-warning alocacao-alert">
           <strong>Prioridade:</strong> há {pendencias.length} produto(s) recebido(s) aguardando endereço definitivo.
-          Alocar reduz o risco de extravio e libera a área de recebimento.
+          Use <strong>Alocar</strong> para mover de Não alocados para um endereço.
         </div>
       )}
 
@@ -188,7 +201,7 @@ export default function Movimentacoes() {
                       <button
                         type="button"
                         className="btn btn-primary btn-sm"
-                        onClick={() => setItemAlocar(p)}
+                        onClick={() => abrirMoverProduto(p, { alocarPendencia: true })}
                       >
                         Alocar
                       </button>
@@ -202,23 +215,14 @@ export default function Movimentacoes() {
       </div>
 
       <div className="toolbar">
-        <h3 className="section-inline-title">Outras movimentações</h3>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => setModalMovimentacao({ tipo: 'entregue' })}
-          >
-            + Entregue
-          </button>
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={() => setModalMovimentacao({ tipo: 'transferencia' })}
-          >
-            + Transferência / saída / ajuste
-          </button>
-        </div>
+        <h3 className="section-inline-title">Histórico</h3>
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={() => abrirMoverProduto()}
+        >
+          + Mover produto
+        </button>
       </div>
 
       <div className="card">
@@ -256,7 +260,11 @@ export default function Movimentacoes() {
                     <td>{m.sku} — {m.produto_nome}</td>
                     <td>{m.quantidade}</td>
                     <td>{m.origem_codigo || '—'}</td>
-                    <td>{m.destino_codigo || '—'}</td>
+                    <td>
+                      {m.referencia_tipo === 'entregue'
+                        ? 'Entregue'
+                        : (m.destino_codigo || '—')}
+                    </td>
                     <td>{m.motivo || '—'}</td>
                     <td>{m.usuario || '—'}</td>
                   </tr>
@@ -267,21 +275,11 @@ export default function Movimentacoes() {
         </div>
       </div>
 
-      {itemAlocar && (
-        <AlocarProdutoModal
-          item={itemAlocar}
-          localizacoesDestino={localizacoesDestino}
-          onClose={() => setItemAlocar(null)}
-          onConfirm={handleAlocar}
-        />
-      )}
-
       {modalMovimentacao && (
         <MovimentacaoModal
-          produtos={produtos}
-          localizacoes={localizacoes}
           localizacoesDestino={localizacoesDestino}
-          initialTipo={modalMovimentacao.tipo}
+          initialProduto={modalMovimentacao.produto}
+          sugerirDeNaoAlocados={Boolean(modalMovimentacao.sugerirDeNaoAlocados)}
           onClose={() => setModalMovimentacao(null)}
           onSave={handleSaveMovimentacao}
         />

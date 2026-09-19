@@ -263,6 +263,7 @@ async function listEstoque(busca = '') {
   const db = getPool();
   const termo = `%${busca}%`;
   // Inclui linhas físicas (qty > 0) e produtos só com compromisso (encomenda sem chegada).
+  // ultima_movimentacao_em considera qualquer registro em movimentacoes (inclui recebimento).
   const result = await db.query(`
     WITH totais AS (
       SELECT
@@ -277,7 +278,12 @@ async function listEstoque(busca = '') {
           SELECT SUM(r.quantidade)
           FROM estoque_reservas r
           WHERE r.produto_id = p.id AND r.status = 'ativa'
-        ), 0)::int AS reservado
+        ), 0)::int AS reservado,
+        (
+          SELECT MAX(m.criado_em)
+          FROM movimentacoes m
+          WHERE m.produto_id = p.id
+        ) AS ultima_movimentacao_produto_em
       FROM produtos p
       WHERE p.ativo = true
         AND ($1 = '' OR p.nome ILIKE $1 OR p.sku ILIKE $1)
@@ -293,13 +299,23 @@ async function listEstoque(busca = '') {
         t.estoque_minimo,
         t.estoque_total,
         t.reservado,
+        t.ultima_movimentacao_produto_em,
         l.id AS localizacao_id,
         l.codigo AS localizacao_codigo,
-        l.nome AS localizacao_nome
+        l.nome AS localizacao_nome,
+        COALESCE((
+          SELECT MAX(m.criado_em)
+          FROM movimentacoes m
+          WHERE m.produto_id = t.produto_id
+            AND (
+              m.localizacao_origem_id = l.id
+              OR m.localizacao_destino_id = l.id
+            )
+        ), e.atualizado_em) AS ultima_movimentacao_em
       FROM totais t
       JOIN estoque e ON e.produto_id = t.produto_id AND e.quantidade > 0
       JOIN localizacoes l ON l.id = e.localizacao_id
-      WHERE $1 = '' OR t.sku ILIKE $1 OR t.produto_nome ILIKE $1 OR l.codigo ILIKE $1
+      WHERE $1 = '' OR t.sku ILIKE $1 OR t.produto_nome ILIKE $1 OR l.codigo ILIKE $1 OR l.nome ILIKE $1
     ),
     so_compromisso AS (
       SELECT
@@ -312,9 +328,11 @@ async function listEstoque(busca = '') {
         t.estoque_minimo,
         t.estoque_total,
         t.reservado,
+        t.ultima_movimentacao_produto_em,
         NULL::int AS localizacao_id,
         NULL::varchar AS localizacao_codigo,
-        NULL::varchar AS localizacao_nome
+        NULL::varchar AS localizacao_nome,
+        t.ultima_movimentacao_produto_em AS ultima_movimentacao_em
       FROM totais t
       WHERE t.estoque_total = 0 AND t.reservado > 0
         AND NOT EXISTS (
