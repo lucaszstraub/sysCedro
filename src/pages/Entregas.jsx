@@ -96,7 +96,7 @@ export default function Entregas() {
   const [observacoesEntrega, setObservacoesEntrega] = useState(null);
   const [showAssistenciaModal, setShowAssistenciaModal] = useState(false);
   const [statsResumo, setStatsResumo] = useState({ disponivel: 0, parcial: 0, indisponivel: 0 });
-  const { success: showSuccess, runWithFeedback } = useFeedback();
+  const { success: showSuccess, runWithFeedback, confirm } = useFeedback();
   const { ativa: faseImplantacaoAtiva } = useFaseImplantacao();
 
   const loadDisponibilidade = async (term = busca, filtroAtual = filtro) => {
@@ -170,13 +170,43 @@ export default function Entregas() {
     loadKanban(termo || busca);
   };
 
+  const imprimirTicket = async (entregaRef) => {
+    const id = entregaRef?.id ?? entregaRef;
+    if (!id) return;
+    try {
+      await runWithFeedback(
+        () => api.gerarPdfEntrega(id),
+        {
+          loading: 'Gerando ticket de entrega...',
+          success: 'Ticket de entrega gerado com sucesso.',
+          error: 'Não foi possível gerar o ticket.',
+        }
+      );
+    } catch {
+      /* feedback exibido */
+    }
+  };
+
+  const oferecerImpressaoTicket = async (entrega) => {
+    if (!entrega?.id) return;
+    const ok = await confirm({
+      title: 'Imprimir ticket',
+      message: 'Deseja imprimir o ticket de entrega?',
+      confirmLabel: 'Imprimir',
+      cancelLabel: 'Agora não',
+      variant: 'primary',
+    });
+    if (ok) await imprimirTicket(entrega);
+  };
+
   const handleAgendar = async (data) => {
-    await api.agendarExpedicao(entregaAtiva.venda_id, data);
+    const novaEntrega = await api.agendarExpedicao(entregaAtiva.venda_id, data);
     const pedido = entregaAtiva.numero_pedido || entregaAtiva.venda_numero;
     setEntregaAtiva(null);
     showSuccess(`Expedição agendada para o pedido ${pedido}. Confirme com o cliente na aba Expedições.`);
     await load();
     setAba('agendadas');
+    await oferecerImpressaoTicket(novaEntrega);
   };
 
   const handleEditarAgendada = async (data) => {
@@ -230,20 +260,7 @@ export default function Entregas() {
   };
 
   const handlePrint = async (entregaRef = entregaAtiva) => {
-    const id = entregaRef?.id || entregaAtiva?.id;
-    if (!id) return;
-    try {
-      await runWithFeedback(
-        () => api.gerarPdfEntrega(id),
-        {
-          loading: 'Gerando ticket de entrega...',
-          success: 'Ticket de entrega gerado com sucesso.',
-          error: 'Não foi possível gerar o ticket.',
-        }
-      );
-    } catch {
-      /* feedback exibido */
-    }
+    await imprimirTicket(entregaRef ?? entregaAtiva);
   };
 
   const salvarObservacoes = async (texto) => {
@@ -617,11 +634,12 @@ export default function Entregas() {
       {showAssistenciaModal && (
         <NovaAssistenciaEntregaModal
           onClose={() => setShowAssistenciaModal(false)}
-          onCreated={() => {
+          onCreated={async (criada) => {
             setShowAssistenciaModal(false);
             showSuccess('Assistência técnica agendada.');
-            loadKanban();
+            await loadKanban();
             setAba('agendadas');
+            await oferecerImpressaoTicket(criada);
           }}
         />
       )}

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useFeedback } from '../context/FeedbackContext';
 
 const ALERT_META = {
@@ -69,11 +70,12 @@ function AlertContent({ type, children, onDismiss, className }) {
   );
 }
 
+/** Erro/aviso dentro de modais e formulários — permanece no contexto do formulário. */
 export function InlineAlert({
   type = 'error',
   children,
   onDismiss,
-  showToast = true,
+  showToast = false,
 }) {
   useAlertToast(type, children, showToast, false);
   if (!children) return null;
@@ -89,23 +91,25 @@ export function InlineAlert({
   );
 }
 
+/** Aviso de página (ex.: falha ao salvar) — centralizado, com botão fechar. */
 export default function PageAlert({
   type = 'error',
   children,
   onDismiss,
   showToast = false,
-  scrollToTop = true,
+  scrollToTop = false,
 }) {
   useAlertToast(type, children, showToast, scrollToTop);
   if (!children) return null;
 
-  return (
+  return createPortal(
     <AlertContent
       type={type}
       onDismiss={onDismiss}
       className={`alert alert-${type} page-alert page-alert-${type}`}
     >
       {children}
-    </AlertContent>
+    </AlertContent>,
+    document.body
   );
 }
